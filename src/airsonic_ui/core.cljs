@@ -1,6 +1,7 @@
 (ns airsonic-ui.core
   (:require [reagent.core :as reagent]
             [re-frame.core :as re-frame]
+            [day8.re-frame.http-fx]
             [airsonic-ui.events :as events]
             [airsonic-ui.views :as views]
             [airsonic-ui.config :as config]))
