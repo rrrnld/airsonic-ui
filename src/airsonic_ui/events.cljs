@@ -1,9 +1,16 @@
 (ns airsonic-ui.events
   (:require [re-frame.core :as re-frame]
             [ajax.core :as ajax]
+            [bide.core :as r]
+            [airsonic-ui.routes :as routes]
             [airsonic-ui.config :as config]
             [airsonic-ui.db :as db]
             [clojure.string :as string]))
+
+
+;; TODO: Remove impurities
+
+;; api related functions
 
 (defn ^:private uri-escape [s]
   (js/encodeURIComponent s))
@@ -43,6 +50,8 @@
  ::auth-successful
  (fn [db [_ user pass response]]
    ;; TODO: Handle failures differently
+   ;; TODO: Refactor navigation into effect
+   (r/navigate! routes/router ::routes/main)
    (-> (update db :active-requests dec)
        (assoc :login {:u user
                       :p pass}))))
@@ -52,6 +61,26 @@
  (fn [db event]
    (println "api call gone bad; CORS headers missing? check for :status 0" event)
    db))
+
+;; app interface
+
+(defn authed?
+  "Predicate to determine whether we can access a specific route."
+  [route credentials]
+  (or (not (routes/protected route)) credentials))
+
+(re-frame/reg-event-db
+ ::navigate
+ (fn [db [_ route]]
+   (println "authed?" route (authed? route (:login db)))
+   (if (authed? route (:login db)) 
+     ;; continue to correct page
+     ;; TODO: Fetch data based on route
+     (assoc db :route route)
+     ;; logout and redirect to login
+     (do (re-frame/dispatch [::initialize-db])
+         (r/navigate! routes/router routes/default)
+         db))))
 
 (re-frame/reg-event-db
  ::initialize-db

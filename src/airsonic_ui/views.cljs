@@ -1,6 +1,7 @@
 (ns airsonic-ui.views
   (:require [re-frame.core :as re-frame]
             [reagent.core :as r]
+            [airsonic-ui.routes :as routes]
             [airsonic-ui.events :as events]
             [airsonic-ui.subs :as subs]))
 
@@ -20,14 +21,16 @@
        [:div
         [:button {:on-click #(re-frame/dispatch [::events/authenticate @user @pass])} "Submit"]]])))
 
-(defn app [user]
-  [:div
-   [:h2 (str "Currently logged in as " user)]
-   [:a {:on-click #(re-frame/dispatch [::events/initialize-db]) :href "#"} "Logout"]])
+(defn app [current-page]
+  (let [login @(re-frame/subscribe [::subs/login])]
+    [:div
+     [:h2 (str "Currently logged in as " (:u login))]
+     [:a {:on-click #(re-frame/dispatch [::events/initialize-db]) :href "#"} "Logout"]]))
 
 (defn main-panel []
-  [:div
-   [:h1 "Airsonic"]
-   (if-let [login @(re-frame/subscribe [::subs/login])]
-     [app (:u login)]
-     [login-form])])
+  (let [current-page @(re-frame/subscribe [::subs/current-page])]
+    [:div
+     [:h1 "Airsonic"]
+     (case current-page
+       ::routes/login [login-form]
+       [app current-page])]))
