@@ -21,16 +21,16 @@
        [:div
         [:button {:on-click #(re-frame/dispatch [::events/authenticate @user @pass])} "Submit"]]])))
 
-(defn app [current-page]
+(defn app [route]
   (let [login @(re-frame/subscribe [::subs/login])]
     [:div
      [:h2 (str "Currently logged in as " (:u login))]
      [:a {:on-click #(re-frame/dispatch [::events/initialize-db]) :href "#"} "Logout"]]))
 
 (defn main-panel []
-  (let [current-page @(re-frame/subscribe [::subs/current-page])]
+  (let [[route params query] @(re-frame/subscribe [::subs/current-route])]
     [:div
      [:h1 "Airsonic"]
-     (case current-page
+     (case route
        ::routes/login [login-form]
-       [app current-page])]))
+       [app route])]))

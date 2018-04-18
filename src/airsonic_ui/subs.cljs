@@ -11,6 +11,6 @@
 ;; ---
 
 (re-frame/reg-sub
- ::current-page
+ ::current-route
  (fn [db]
-   (:route db)))
+   (:current-route db)))

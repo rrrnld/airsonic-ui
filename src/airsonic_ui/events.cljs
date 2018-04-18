@@ -46,15 +46,14 @@
                  :on-success [::auth-successful user pass]
                  :on-failure [::api-failure]}}))
 
-(re-frame/reg-event-db
+(re-frame/reg-event-fx
  ::auth-successful
- (fn [db [_ user pass response]]
+ (fn [{:keys [db]} [_ user pass response]]
    ;; TODO: Handle failures differently
-   ;; TODO: Refactor navigation into effect
-   (r/navigate! routes/router ::routes/main)
-   (-> (update db :active-requests dec)
-       (assoc :login {:u user
-                      :p pass}))))
+   (let [login {:u user :p pass}]
+     {:navigate [login ::routes/main]
+      :db (-> (update db :active-requests dec)
+              (assoc :login login))})))
 
 (re-frame/reg-event-db
  ::api-failure
@@ -62,25 +61,24 @@
    (println "api call gone bad; CORS headers missing? check for :status 0" event)
    db))
 
-;; app interface
+;; routing
 
-(defn authed?
-  "Predicate to determine whether we can access a specific route."
-  [route credentials]
-  (or (not (routes/protected route)) credentials))
+(re-frame/reg-event-fx
+ ::hash-change
+ (fn [{:keys [db]} [_ route params query]]
+   ;; all the naviagation logic is in routes.cljs; all we need to do here
+   ;; is say what actually happens once we've navigated succesfully
+   {:navigate [(:login db) route params query]
+    :db (assoc db :current-route [route params query])}))
 
-(re-frame/reg-event-db
- ::navigate
- (fn [db [_ route]]
-   (println "authed?" route (authed? route (:login db)))
-   (if (authed? route (:login db)) 
-     ;; continue to correct page
-     ;; TODO: Fetch data based on route
-     (assoc db :route route)
-     ;; logout and redirect to login
-     (do (re-frame/dispatch [::initialize-db])
-         (r/navigate! routes/router routes/default)
-         db))))
+(re-frame/reg-event-fx
+ ::routes/forbidden-route
+ (fn [fx _]
+   ;; log out on 403
+   {:db db/default-db
+    :navigate [nil routes/default-route]}))
+
+;; database reset / init
 
 (re-frame/reg-event-db
  ::initialize-db

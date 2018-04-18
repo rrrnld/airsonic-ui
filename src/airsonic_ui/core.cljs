@@ -14,18 +14,17 @@
     (println "dev mode")))
 
 (defn on-navigate
-  [name params query]
-  (println "Route changed to " name params query)
-  (re-frame/dispatch [::events/navigate name params query]))
+  [id params query]
+  (println "Route changed to " id params query)
+  (re-frame/dispatch [::events/hash-change id params query]))
 
 (defn mount-root []
   (re-frame/clear-subscription-cache!)
-  (reagent/render [views/main-panel]
-                  (.getElementById js/document "app")))
+  (reagent/render [views/main-panel] (.getElementById js/document "app")))
 
 (defn ^:export init []
+  (routes/start-routing! {:default routes/default-route
+                          :on-navigate on-navigate})
   (re-frame/dispatch-sync [::events/initialize-db])
-  (r/start! routes/router {:default ::routes/login
-                           :on-navigate on-navigate})
   (dev-setup)
   (mount-root))
