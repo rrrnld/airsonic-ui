@@ -7,15 +7,14 @@
             [airsonic-ui.db :as db]
             [clojure.string :as string]))
 
-
-;; TODO: Remove impurities
+;; TODO:
 
 ;; api related functions
 
 (defn ^:private uri-escape [s]
   (js/encodeURIComponent s))
 
-(defn api-url [endpoint params]
+(defn ^:private api-url [endpoint params]
   (let [query (->> (assoc params
                           :f "json"
                           :c "airsonic-ui-cljs"
@@ -25,13 +24,13 @@
                    (string/join "&"))]
     (str config/server "/rest/" endpoint "?" query)))
 
-(defn api-error?
+(defn ^:private api-error?
   "We need to look at the message body because the subsonic api always responds
   with status 200"
   [response]
   (= "failed" (-> response :subsonic-response :status)))
 
-(defn error-message
+(defn ^:private error-message
   [response]
   (let [{:keys [code message]} (-> response :subsonic-response :error)]
     (str "Code " code ": " message)))
@@ -43,17 +42,38 @@
     :http-xhrio {:method :get
                  :uri (api-url "ping" {:u user :p pass})
                  :response-format (ajax/json-response-format {:keywords? true})
-                 :on-success [::auth-successful user pass]
+                 :on-success [::auth-success user pass]
                  :on-failure [::api-failure]}}))
 
+;; TODO: Test that credentials are associated
+
 (re-frame/reg-event-fx
- ::auth-successful
+ ::auth-success
  (fn [{:keys [db]} [_ user pass response]]
    ;; TODO: Handle failures differently
    (let [login {:u user :p pass}]
      {:navigate [login ::routes/main]
-      :db (-> (update db :active-requests dec)
-              (assoc :login login))})))
+      :db (-> (update db :active-requests #(max (dec %) 0))
+              (assoc :login login))
+      :dispatch [::api-request "getAlbumList2" :albumList2 {:type "recent"}]})))
+
+;; TODO: Test that credentials are actually taken
+
+(re-frame/reg-event-fx
+ ::api-request
+ (fn [{:keys [db]} [_ endpoint k params]]
+   {:http-xhrio {:method :get
+                 :uri (api-url endpoint (merge params (:login db)))
+                 :response-format (ajax/json-response-format {:keywords? true})
+                 :on-success [::api-success k]
+                 :on-failure [::api-failure]}}))
+
+(re-frame/reg-event-db
+ ::api-success
+ (fn [db [_ k response]]
+   (println "api response" response)
+   ;; we "unwrap" the responses
+   (assoc db :response (-> response :subsonic-response k))))
 
 (re-frame/reg-event-db
  ::api-failure
@@ -68,6 +88,7 @@
  (fn [{:keys [db]} [_ route params query]]
    ;; all the naviagation logic is in routes.cljs; all we need to do here
    ;; is say what actually happens once we've navigated succesfully
+   ;; FIXME: This is really bad and wonky actually
    {:navigate [(:login db) route params query]
     :db (assoc db :current-route [route params query])}))
 
@@ -75,8 +96,8 @@
  ::routes/forbidden-route
  (fn [fx _]
    ;; log out on 403
-   {:db db/default-db
-    :navigate [nil routes/default-route]}))
+   {:navigate [nil routes/default-route]
+    :db db/default-db}))
 
 ;; database reset / init
 
