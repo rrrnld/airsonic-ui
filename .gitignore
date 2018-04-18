@@ -3,6 +3,13 @@
 node_modules/
 public/app/
 
+# LaTeX
+
+docs/*.aux
+docs/*.log
+docs/*.out
+docs/*.pdf
+
 # Created by https://www.gitignore.io/api/emacs
 
 ### Emacs ###
