@@ -2,7 +2,6 @@
   (:require [reagent.core :as reagent]
             [re-frame.core :as re-frame]
             [day8.re-frame.http-fx]
-            [bide.core :as r]
             [airsonic-ui.routes :as routes]
             [airsonic-ui.events :as events]
             [airsonic-ui.views :as views]
@@ -13,18 +12,12 @@
     (enable-console-print!)
     (println "dev mode")))
 
-(defn on-navigate
-  [id params query]
-  (println "Route changed to " id params query)
-  (re-frame/dispatch [::events/hash-change id params query]))
-
 (defn mount-root []
   (re-frame/clear-subscription-cache!)
   (reagent/render [views/main-panel] (.getElementById js/document "app")))
 
 (defn ^:export init []
-  (routes/start-routing! {:default routes/default-route
-                          :on-navigate on-navigate})
+  (routes/start-routing!)
   (re-frame/dispatch-sync [::events/initialize-db])
   (dev-setup)
   (mount-root))

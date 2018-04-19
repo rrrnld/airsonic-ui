@@ -12,27 +12,43 @@
 
 (def protected-routes #{::main ::album-view})
 
-(defn is-authorized? [login route]
-  (or (not (protected-routes route)) login))
-
 (defn url-for [k params]
   (str "#" (r/resolve router k params)))
 
-;; shouldn't need to change this
+;; shouldn't need to change anything below
 
-;; TODO: This is kind of ugly because at the moment r/navigate! is called twice.
-;; the order is click -> hash-change -> {:navigate [bla] :db [bla]} -> (hash-change) -> ...
+;; these are helper effects we can use to navigate; the first two manage an atom
+;; holding credentials, which is necessary to restrict certain routes, and the
+;; last one is used for actual navigation
+
+(def login (atom nil))
+
+(re-frame/reg-fx
+ ::set-credentials
+ (fn [credentials]
+   (reset! login credentials)))
+
+(re-frame/reg-fx
+ ::unset-credentials
+ (fn [credentials]
+   (reset! login nil)))
+
+(re-frame/reg-fx
+ ::navigate
+ (fn [[route-id params query]]
+   (r/navigate! router route-id params query)))
+
+(defn can-access? [route]
+  (or (not (protected-routes route)) @login))
+
+(defn on-navigate
+  [route-id params query]
+  (if (can-access? route-id)
+    (re-frame/dispatch [::navigation route-id params query])
+    (re-frame/dispatch [::unauthorized route-id params query])))
 
 (defn start-routing!
-  "Registers a :navigate effect that can be used for navigation; opts will be
-  passed to bide.core/start!"
-  [opts]
-  (re-frame/reg-fx
-   :navigate
-   (fn [[login route-id params query]]
-     (if (is-authorized? login route-id)
-       (r/navigate! router route-id params query)
-       (do ;; 403 gets a special event
-         (println "Not authorized to navigate to " route-id)
-         (re-frame/dispatch [::forbidden-route])))))
-  (r/start! router opts))
+  "Initializes the router and makes sure the correct events get dispatched."
+  []
+  (r/start! router {:default default-route
+                    :on-navigate on-navigate}))

@@ -1,7 +1,6 @@
 (ns airsonic-ui.events
   (:require [re-frame.core :as re-frame]
             [ajax.core :as ajax]
-            [bide.core :as r]
             [airsonic-ui.routes :as routes]
             [airsonic-ui.config :as config]
             [airsonic-ui.db :as db]
@@ -52,10 +51,17 @@
  (fn [{:keys [db]} [_ user pass response]]
    ;; TODO: Handle failures differently
    (let [login {:u user :p pass}]
-     {:navigate [login ::routes/main]
+     {::routes/set-credentials login
       :db (-> (update db :active-requests #(max (dec %) 0))
               (assoc :login login))
-      :dispatch [::api-request "getAlbumList2" :albumList2 {:type "recent"}]})))
+      :dispatch-n (list [::start-page]
+                        [::api-request "getAlbumList2" :albumList2 {:type "recent"}])})))
+
+;; we do this in two steps to make sure the credentials are set once we navigate
+(re-frame/reg-event-fx
+ ::start-page
+ (fn [_ _]
+   {::routes/navigate [::routes/main]}))
 
 ;; TODO: Test that credentials are actually taken
 
@@ -83,20 +89,19 @@
 
 ;; routing
 
-(re-frame/reg-event-fx
- ::hash-change
- (fn [{:keys [db]} [_ route params query]]
+(re-frame/reg-event-db
+ ::routes/navigation
+ (fn [db [_ route params query]]
    ;; all the naviagation logic is in routes.cljs; all we need to do here
    ;; is say what actually happens once we've navigated succesfully
-   ;; FIXME: This is really bad and wonky actually
-   {:navigate [(:login db) route params query]
-    :db (assoc db :current-route [route params query])}))
+   (assoc db :current-route [route params query])))
 
 (re-frame/reg-event-fx
- ::routes/forbidden-route
+ ::routes/unauthorized
  (fn [fx _]
    ;; log out on 403
-   {:navigate [nil routes/default-route]
+   {:navigate [routes/default-route]
+    ::routes/unset-credentials nil
     :db db/default-db}))
 
 ;; database reset / init
