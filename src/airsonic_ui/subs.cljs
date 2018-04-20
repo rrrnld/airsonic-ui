@@ -18,7 +18,8 @@
 ;; ---
 
 ;; TODO: Make this nice and clean
+
 (re-frame/reg-sub
- ::current-album-list
+ ::current-content
  (fn [db]
-   (-> db :response :album)))
+   (-> db :response)))

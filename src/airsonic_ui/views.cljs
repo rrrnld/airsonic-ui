@@ -23,7 +23,7 @@
        [:div
         [:button {:on-click #(re-frame/dispatch [::events/authenticate @user @pass])} "Submit"]]])))
 
-;; album list
+;; album list (start page)
 
 (defn album-item [album]
   (let [{:keys [artist artistId name coverArt year id]} album]
@@ -34,21 +34,42 @@
      ;; link to album
      [:a {:href (routes/url-for ::routes/album-view {:id id})} name] (when year (str " (" year ")"))]))
 
-(defn album-list []
-  (let [albums @(re-frame/subscribe [::subs/current-album-list])]
-    [:ul
-     (map-indexed (fn [idx album]
-                    [:li {:key idx} [album-item album]])
-                  albums)]))
+;; TODO: album-list shouldn't know about the structure of content and should just get a list
+(defn album-list [content]
+  [:div
+   [:h2 (str "Recently played")]
+   [:ul
+    (map-indexed
+     (fn [idx album]
+       [:li {:key idx} [album-item album]])
+     (:album content))]])
+
+;; single album
+
+(defn song-item [song]
+  [:div (str (:artist song) " - " (:title song))])
+
+(defn song-list [songs]
+  [:ul
+   (map-indexed
+    (fn [idx song] [:li {:key idx} [song-item song]])
+    songs)])
+
+(defn album-detail [content]
+  [:div
+   [:h2 (str (:artist content) " - " (:name content))]
+   [song-list (:song content)]])
 
 ;; putting everything together
 
 (defn app [route params query]
-  (let [login @(re-frame/subscribe [::subs/login])]
+  (let [login @(re-frame/subscribe [::subs/login])
+        content @(re-frame/subscribe [::subs/current-content])]
     [:div
-     [:h2 (str "Currently logged in as " (:u login))]
-     [:h3 (str "Recently played")]
-     [album-list]
+     [:span (str "Currently logged in as " (:u login))]
+     (case route
+       ::routes/main [album-list content]
+       ::routes/album-view [album-detail content])
      [:a {:on-click #(re-frame/dispatch [::events/initialize-db]) :href "#"} "Logout"]]))
 
 (defn main-panel []
