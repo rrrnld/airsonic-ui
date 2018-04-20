@@ -47,7 +47,10 @@
 ;; single album
 
 (defn song-item [song]
-  [:div (str (:artist song) " - " (:title song))])
+  [:div (str (:artist song) " - ")
+   [:a
+    {:on-click #(re-frame/dispatch [::events/play-song song])}
+    (:title song)]])
 
 (defn song-list [songs]
   [:ul

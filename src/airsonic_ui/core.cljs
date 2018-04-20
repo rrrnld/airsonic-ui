@@ -2,6 +2,7 @@
   (:require [reagent.core :as reagent]
             [re-frame.core :as re-frame]
             [day8.re-frame.http-fx]
+            [airsonic-ui.audio] ; <- just registers effects
             [airsonic-ui.routes :as routes]
             [airsonic-ui.events :as events]
             [airsonic-ui.views :as views]

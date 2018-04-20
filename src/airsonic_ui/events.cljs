@@ -62,6 +62,16 @@
    (println "api call gone bad; CORS headers missing? check for :status 0" event)
    db))
 
+;; musique
+
+(re-frame/reg-event-fx
+ ::play-song
+ (fn [{:keys [db]} [_ song]]
+   (let [song-url (api/url "stream" (merge {:id (:id song)}
+                                           (:login db)))]
+     (println "Requesting to stream song at" song-url)
+     {:play-song song-url})))
+
 ;; routing
 
 (re-frame/reg-event-fx
