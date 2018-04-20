@@ -10,10 +10,29 @@
              ["/album/:id" ::album-view]
              ["/artist/:id" ::artist-view]]))
 
-(def protected-routes #{::main ::album-view})
-
+; use this in views to construct a url
 (defn url-for [k params]
   (str "#" (r/resolve router k params)))
+
+; which routes need valid login credentials?
+(def protected-routes #{::main ::album-view})
+
+; which data should be requested for which route? can either be a vector or a function returning a vector
+(def route-data
+  {::main [:api-request "getAlbumList2" :albumList2 {:type "recent"}]
+   ::album-view (fn [route-id params _]
+                  [:api-request "getAlbum" :album {:id (:id params)}])})
+
+
+(defn data-for
+  "Wrapper around route-data so we can call it like a function no matter whether
+  the value associated with the route key is a function or not."
+  [route params query]
+  (if-let [route-data' (route-data route)]
+    (if (vector? route-data')
+      route-data'
+      (route-data' route params query))
+    []))
 
 ;; shouldn't need to change anything below
 
@@ -36,6 +55,7 @@
 (re-frame/reg-fx
  ::navigate
  (fn [[route-id params query]]
+   (println "calling ::navigate with" route-id params query)
    (r/navigate! router route-id params query)))
 
 (defn can-access? [route]
