@@ -20,16 +20,19 @@
   (doseq [event ["loadstart" "progress" "play" "timeupdate" "pause"]]
     (.addEventListener el event #(re-frame/dispatch [:audio-update (->status el)]))))
 
-
 (re-frame/reg-fx
  :play-song
  (fn [song-url]
+   (some-> @current-audio .pause)
    (let [audio (js/Audio. song-url)]
      (reset! current-audio audio)
      (attach-listeners! audio)
      (.play audio))))
 
 (re-frame/reg-fx
- :pause-song
+ :toggle-play-pause
  (fn [_]
-   (some-> @current-audio .pause)))
+   (when-let [a @current-audio]
+     (if (.-paused a)
+       (.play a)
+       (.pause a)))))

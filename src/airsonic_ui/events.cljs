@@ -73,10 +73,10 @@
       :db (assoc-in db [:currently-playing :item] song)})))
 
 (re-frame/reg-event-fx
- ::pause-song
+ ::toggle-play-pause
  (fn [_ _]
    ; pauses the current song
-   {:pause-song nil}))
+   {:toggle-play-pause nil}))
 
 (re-frame/reg-event-db
  :audio-update
@@ -91,7 +91,6 @@
  (fn [{:keys [db]} [_ route params query]]
    ;; all the naviagation logic is in routes.cljs; all we need to do here
    ;; is say what actually happens once we've navigated succesfully
-   (println "routes/route-data" (routes/route-data route params query))
    {:db (assoc db :current-route [route params query])
     :dispatch (routes/route-data route params query)}))
 

@@ -69,7 +69,7 @@
 (defn playback-controls []
   [:div
    [:button "previous"]
-   [:button "play / pause"]
+   [:button {:on-click #(re-frame/dispatch [::events/toggle-play-pause])} "play / pause"]
    [:button "next"]
    [:label [:input {:type "checkbox"}] "shuffle"]
    [:label [:input {:type "checkbox"}] "repeat"]])
