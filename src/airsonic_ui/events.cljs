@@ -5,6 +5,18 @@
             [airsonic-ui.db :as db]
             [airsonic-ui.api :as api]))
 
+;; this is where all of the event handling takes place; the names put the events into
+;; the following categories:
+;; ::events/something-happening -> relevant to only this app
+;; :single-colon/something -> coming from external sources (e.g. :audio/... or :routes/...) that are potentially reusable
+
+;; database reset / init
+
+(re-frame/reg-event-db
+ ::initialize-db
+ (fn [_]
+   db/default-db))
+
 ;; this is called with user and password to try and see if the credentials are
 ;; correct; if yes, ::auth-success will be fired
 
@@ -25,7 +37,7 @@
  (fn [{:keys [db]} [_ user pass response]]
    ;; TODO: Handle failures differently
    (let [login {:u user :p pass}]
-     {::routes/set-credentials login
+     {:routes/set-credentials login
       :db (-> (update db :active-requests #(max (dec %) 0))
               (assoc :login login))
       :dispatch [::logged-in]})))
@@ -34,7 +46,7 @@
 (re-frame/reg-event-fx
  ::logged-in
  (fn [_ _]
-   {::routes/navigate [::routes/main]}))
+   {:routes/navigate [::routes/main]}))
 
 ;; TODO: Test that credentials are actually taken
 ;; TODO: Move these in the future? events.cljs should just do wiring. We could
@@ -79,7 +91,7 @@
    {:toggle-play-pause nil}))
 
 (re-frame/reg-event-db
- :audio-update
+ :audio/update
  (fn [db [_ status]]
    ; we receive this from the player once it's playing
    (assoc-in db [:currently-playing :status] status)))
@@ -87,7 +99,7 @@
 ;; routing
 
 (re-frame/reg-event-fx
- ::routes/navigation
+ :routes/navigation
  (fn [{:keys [db]} [_ route params query]]
    ;; all the naviagation logic is in routes.cljs; all we need to do here
    ;; is say what actually happens once we've navigated succesfully
@@ -95,16 +107,9 @@
     :dispatch (routes/route-data route params query)}))
 
 (re-frame/reg-event-fx
- ::routes/unauthorized
+ :routes/unauthorized
  (fn [fx _]
    ;; log out on 403
-   {::routes/navigate [routes/default-route]
-    ::routes/unset-credentials nil
+   {:routes/navigate [routes/default-route]
+    :routes/unset-credentials nil
     :db db/default-db}))
-
-;; database reset / init
-
-(re-frame/reg-event-db
- ::initialize-db
- (fn [_]
-   db/default-db))

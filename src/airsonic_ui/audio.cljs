@@ -18,7 +18,7 @@
 ; explanation of these events: https://developer.mozilla.org/en-US/Apps/Fundamentals/Audio_and_video_delivery/Cross-browser_audio_basics
 (defn attach-listeners! [el]
   (doseq [event ["loadstart" "progress" "play" "timeupdate" "pause"]]
-    (.addEventListener el event #(re-frame/dispatch [:audio-update (->status el)]))))
+    (.addEventListener el event #(re-frame/dispatch [:audio/update (->status el)]))))
 
 (re-frame/reg-fx
  :play-song

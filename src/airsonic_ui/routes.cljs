@@ -42,17 +42,17 @@
 (def credentials (atom nil))
 
 (re-frame/reg-fx
- ::set-credentials
+ :routes/set-credentials
  (fn [credentials']
    (reset! credentials credentials')))
 
 (re-frame/reg-fx
- ::unset-credentials
+ :routes/unset-credentials
  (fn []
    (reset! credentials nil)))
 
 (re-frame/reg-fx
- ::navigate
+ :routes/navigate
  (fn [[route-id params query]]
    (println "calling ::navigate with" route-id params query)
    (r/navigate! router route-id params query)))
@@ -63,8 +63,8 @@
 (defn on-navigate
   [route-id params query]
   (if (can-access? route-id)
-    (re-frame/dispatch [::navigation route-id params query])
-    (re-frame/dispatch [::unauthorized route-id params query])))
+    (re-frame/dispatch [:routes/navigation route-id params query])
+    (re-frame/dispatch [:routes/unauthorized route-id params query])))
 
 (defn start-routing!
   "Initializes the router and makes sure the correct events get dispatched."
