@@ -63,6 +63,29 @@
    [:h2 (str (:artist content) " - " (:name content))]
    [song-list (:song content)]])
 
+;; currently playing / coming next / audio controls...
+
+(defn current-song-info [{:keys [item status]}]
+  [:div
+   [:b "Currently playing: "]
+   [:div (:artist item) " - " (:title item)]
+   [:div (:current-time status) "s / " (:duration item) "s"]])
+
+(defn playback-controls []
+  [:div
+   [:button "previous"]
+   [:button "play / pause"]
+   [:button "next"]
+   [:label [:input {:type "checkbox"}] "shuffle"]
+   [:label [:input {:type "checkbox"}] "repeat"]])
+
+(defn bottom-bar []
+  [:div
+   (if-let [currently-playing @(re-frame/subscribe [::subs/currently-playing])]
+     [current-song-info currently-playing]
+     [:span "Currently no song selected"])
+   [playback-controls]])
+
 ;; putting everything together
 
 (defn app [route params query]
@@ -73,7 +96,8 @@
      (case route
        ::routes/main [album-list content]
        ::routes/album-view [album-detail content])
-     [:a {:on-click #(re-frame/dispatch [::events/initialize-db]) :href "#"} "Logout"]]))
+     [:a {:on-click #(re-frame/dispatch [::events/initialize-db]) :href "#"} "Logout"]
+     [bottom-bar]]))
 
 (defn main-panel []
   (let [[route params query] @(re-frame/subscribe [::subs/current-route])]

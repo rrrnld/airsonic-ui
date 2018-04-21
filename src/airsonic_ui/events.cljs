@@ -52,8 +52,7 @@
 (re-frame/reg-event-db
  ::api-success
  (fn [db [_ k response]]
-   (println "api response" response)
-   ;; we "unwrap" the responses
+   ; we "unwrap" the responses
    (assoc db :response (-> response :subsonic-response k))))
 
 (re-frame/reg-event-db
@@ -67,10 +66,23 @@
 (re-frame/reg-event-fx
  ::play-song
  (fn [{:keys [db]} [_ song]]
+   ; sets up the db and starts to play a song
    (let [song-url (api/url "stream" (merge {:id (:id song)}
                                            (:login db)))]
-     (println "Requesting to stream song at" song-url)
-     {:play-song song-url})))
+     {:play-song song-url
+      :db (assoc-in db [:currently-playing :item] song)})))
+
+(re-frame/reg-event-fx
+ ::pause-song
+ (fn [_ _]
+   ; pauses the current song
+   {:pause-song nil}))
+
+(re-frame/reg-event-db
+ :audio-update
+ (fn [db [_ status]]
+   ; we receive this from the player once it's playing
+   (assoc-in db [:currently-playing :status] status)))
 
 ;; routing
 

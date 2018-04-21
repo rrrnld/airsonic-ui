@@ -23,3 +23,9 @@
  ::current-content
  (fn [db]
    (-> db :response)))
+
+(re-frame/reg-sub
+ ; returns info on the current song as is (basically the metadata you can read from the file system)
+ ::currently-playing
+ (fn [db]
+   (-> db :currently-playing)))
