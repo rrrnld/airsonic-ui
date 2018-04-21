@@ -18,21 +18,20 @@
 (def protected-routes #{::main ::album-view})
 
 ; which data should be requested for which route? can either be a vector or a function returning a vector
-(def route-data
-  {::main [:api-request "getAlbumList2" :albumList2 {:type "recent"}]
-   ::album-view (fn [route-id params _]
-                  [:api-request "getAlbum" :album {:id (:id params)}])})
 
+(defmulti route-data
+  "Returns the events that take care of correct data being fetched."
+  (fn [route-id & _] route-id))
 
-(defn data-for
-  "Wrapper around route-data so we can call it like a function no matter whether
-  the value associated with the route key is a function or not."
-  [route params query]
-  (if-let [route-data' (route-data route)]
-    (if (vector? route-data')
-      route-data'
-      (route-data' route params query))
-    []))
+(defmethod route-data :default [route-id params query] []) ; no data
+
+(defmethod route-data ::main
+  [route-id params query]
+  [:api-request "getAlbumList2" :albumList2 {:type "recent"}])
+
+(defmethod route-data ::album-view
+  [route-id params query]
+  [:api-request "getAlbum" :album {:id (:id params)}])
 
 ;; shouldn't need to change anything below
 
@@ -40,17 +39,17 @@
 ;; holding credentials, which is necessary to restrict certain routes, and the
 ;; last one is used for actual navigation
 
-(def login (atom nil))
+(def credentials (atom nil))
 
 (re-frame/reg-fx
  ::set-credentials
- (fn [credentials]
-   (reset! login credentials)))
+ (fn [credentials']
+   (reset! credentials credentials')))
 
 (re-frame/reg-fx
  ::unset-credentials
- (fn [credentials]
-   (reset! login nil)))
+ (fn []
+   (reset! credentials nil)))
 
 (re-frame/reg-fx
  ::navigate
@@ -59,7 +58,7 @@
    (r/navigate! router route-id params query)))
 
 (defn can-access? [route]
-  (or (not (protected-routes route)) @login))
+  (or (not (protected-routes route)) @credentials))
 
 (defn on-navigate
   [route-id params query]

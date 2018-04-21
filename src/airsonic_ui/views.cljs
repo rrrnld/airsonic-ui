@@ -38,11 +38,8 @@
 (defn album-list [content]
   [:div
    [:h2 (str "Recently played")]
-   [:ul
-    (map-indexed
-     (fn [idx album]
-       [:li {:key idx} [album-item album]])
-     (:album content))]])
+   [:ul (for [[idx album] (map-indexed vector (:album content))]
+          [:li {:key idx} [album-item album]])]])
 
 ;; single album
 
@@ -53,10 +50,8 @@
     (:title song)]])
 
 (defn song-list [songs]
-  [:ul
-   (map-indexed
-    (fn [idx song] [:li {:key idx} [song-item song]])
-    songs)])
+  [:ul (for [[idx song] (map-indexed vector songs)]
+         [:li {:key idx} [song-item song]])])
 
 (defn album-detail [content]
   [:div

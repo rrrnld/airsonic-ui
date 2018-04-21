@@ -91,9 +91,9 @@
  (fn [{:keys [db]} [_ route params query]]
    ;; all the naviagation logic is in routes.cljs; all we need to do here
    ;; is say what actually happens once we've navigated succesfully
-   (println "routes/route-data" (routes/data-for route params query))
+   (println "routes/route-data" (routes/route-data route params query))
    {:db (assoc db :current-route [route params query])
-    :dispatch (routes/data-for route params query)}))
+    :dispatch (routes/route-data route params query)}))
 
 (re-frame/reg-event-fx
  ::routes/unauthorized
