@@ -1,5 +1,5 @@
 (ns airsonic-ui.views
-  (:require [re-frame.core :as re-frame]
+  (:require [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
             [airsonic-ui.routes :as routes]
             [airsonic-ui.events :as events]
@@ -21,7 +21,7 @@
         [:span "Password"]
         [:input {:type "password" :name "pass" :on-change #(reset! pass (-> % .-target .-value))}]]
        [:div
-        [:button {:on-click #(re-frame/dispatch [::events/authenticate @user @pass])} "Submit"]]])))
+        [:button {:on-click #(dispatch [::events/authenticate @user @pass])} "Submit"]]])))
 
 ;; album list (start page)
 
@@ -43,15 +43,15 @@
 
 ;; single album
 
-(defn song-item [song]
+(defn song-item [songs song]
   [:div (str (:artist song) " - ")
    [:a
-    {:on-click #(re-frame/dispatch [::events/play-song song])}
+    {:on-click #(dispatch [::events/play-songs songs song])}
     (:title song)]])
 
 (defn song-list [songs]
   [:ul (for [[idx song] (map-indexed vector songs)]
-         [:li {:key idx} [song-item song]])])
+         [:li {:key idx} [song-item songs song]])])
 
 (defn album-detail [content]
   [:div
@@ -68,15 +68,15 @@
 
 (defn playback-controls []
   [:div
-   [:button "previous"]
-   [:button {:on-click #(re-frame/dispatch [::events/toggle-play-pause])} "play / pause"]
-   [:button "next"]
+   [:button {:on-click #(dispatch [::events/previous-song])} "previous"]
+   [:button {:on-click #(dispatch [::events/toggle-play-pause])} "play / pause"]
+   [:button {:on-click #(dispatch [::events/next-song])} "next"]
    [:label [:input {:type "checkbox"}] "shuffle"]
    [:label [:input {:type "checkbox"}] "repeat"]])
 
 (defn bottom-bar []
   [:div
-   (if-let [currently-playing @(re-frame/subscribe [::subs/currently-playing])]
+   (if-let [currently-playing @(subscribe [::subs/currently-playing])]
      [current-song-info currently-playing]
      [:span "Currently no song selected"])
    [playback-controls]])
@@ -84,18 +84,18 @@
 ;; putting everything together
 
 (defn app [route params query]
-  (let [login @(re-frame/subscribe [::subs/login])
-        content @(re-frame/subscribe [::subs/current-content])]
+  (let [login @(subscribe [::subs/login])
+        content @(subscribe [::subs/current-content])]
     [:div
      [:span (str "Currently logged in as " (:u login))]
      (case route
        ::routes/main [album-list content]
        ::routes/album-view [album-detail content])
-     [:a {:on-click #(re-frame/dispatch [::events/initialize-db]) :href "#"} "Logout"]
+     [:a {:on-click #(dispatch [::events/initialize-db]) :href "#"} "Logout"]
      [bottom-bar]]))
 
 (defn main-panel []
-  (let [[route params query] @(re-frame/subscribe [::subs/current-route])]
+  (let [[route params query] @(subscribe [::subs/current-route])]
     [:div
      [:h1 "Airsonic"]
      (case route

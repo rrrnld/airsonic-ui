@@ -1,9 +1,9 @@
 (ns airsonic-ui.audio
   (:require [re-frame.core :as re-frame]))
 
-;; TODO: Manage multiple songs, buffering, stopping, progress notification...
+;; TODO: Manage buffering
 
-(defonce current-audio (atom nil))
+(defonce audio (atom nil))
 
 (defn ->status
   "Takes an audio object and returns a map describing its current status"
@@ -23,16 +23,17 @@
 (re-frame/reg-fx
  :play-song
  (fn [song-url]
-   (some-> @current-audio .pause)
-   (let [audio (js/Audio. song-url)]
-     (reset! current-audio audio)
-     (attach-listeners! audio)
-     (.play audio))))
+   (when-not @audio
+     (reset! audio (js/Audio.))
+     (attach-listeners! @audio))
+   (.pause @audio)
+   (set! (.-src @audio) song-url)
+   (.play @audio)))
 
 (re-frame/reg-fx
  :toggle-play-pause
  (fn [_]
-   (when-let [a @current-audio]
+   (let [a @audio]
      (if (.-paused a)
        (.play a)
        (.pause a)))))

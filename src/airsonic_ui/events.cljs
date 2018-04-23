@@ -3,7 +3,8 @@
             [ajax.core :as ajax]
             [airsonic-ui.routes :as routes]
             [airsonic-ui.db :as db]
-            [airsonic-ui.api :as api]))
+            [airsonic-ui.api :as api]
+            [day8.re-frame.tracing :refer-macros [fn-traced]])) ; <- useful to debug handlers
 
 ;; this is where all of the event handling takes place; the names put the events into
 ;; the following categories:
@@ -75,19 +76,43 @@
 
 ;; musique
 
+(defn ->song-url [song credentials]
+  (api/url "stream" (merge {:id (:id song)} credentials)))
+
+; TODO: Make play, next and previous a bit prettier and more DRY
+
 (re-frame/reg-event-fx
- ::play-song
- (fn [{:keys [db]} [_ song]]
-   ; sets up the db and starts to play a song
-   (let [song-url (api/url "stream" (merge {:id (:id song)}
-                                           (:login db)))]
-     {:play-song song-url
-      :db (assoc-in db [:currently-playing :item] song)})))
+ ; sets up the db, starts to play a song and adds the rest to a playlist
+ ::play-songs
+ (fn [{:keys [db]} [_ songs song]]
+   {:play-song (->song-url song (:login db))
+    :db (-> db
+            (assoc-in [:currently-playing :item] song)
+            (assoc-in [:currently-playing :playlist] songs))}))
+
+(re-frame/reg-event-fx
+ ::next-song
+ (fn [{:keys [db]} _]
+   (let [playlist (-> db :currently-playing :playlist)
+         current (-> db :currently-playing :item)
+         next (first (rest (drop-while #(not= % current) playlist)))]
+     (when next
+       {:play-song (->song-url next (:login db))
+        :db (assoc-in db [:currently-playing :item] next)}))))
+
+(re-frame/reg-event-fx
+ ::previous-song
+ (fn [{:keys [db]} _]
+   (let [playlist (-> db :currently-playing :playlist)
+         current (-> db :currently-playing :item)
+         previous (last (take-while #(not= % current) playlist))]
+     (when previous
+       {:play-song (->song-url previous (:login db))
+        :db (assoc-in db [:currently-playing :item] previous)}))))
 
 (re-frame/reg-event-fx
  ::toggle-play-pause
  (fn [_ _]
-   ; pauses the current song
    {:toggle-play-pause nil}))
 
 (re-frame/reg-event-db
