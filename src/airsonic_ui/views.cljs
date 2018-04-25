@@ -2,7 +2,7 @@
   (:require [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
             [airsonic-ui.config :as config]
-            [airsonic-ui.routes :as routes]
+            [airsonic-ui.routes :as routes :refer [url-for]]
             [airsonic-ui.events :as events]
             [airsonic-ui.subs :as subs]))
 
@@ -44,7 +44,7 @@
   (let [artist-id (:artistId song)]
     [:div
      [:a
-      (when artist-id {:href (routes/url-for ::routes/artist-view {:id artist-id})})
+      (when artist-id {:href (url-for ::routes/artist-view {:id artist-id})})
       (:artist song)]
      " - "
      [:a
@@ -66,15 +66,14 @@
   (let [{:keys [artist artistId name coverArt year id]} album]
     [:div
      ;; link to artist page
-     [:a {:href (routes/url-for ::routes/artist-view {:id artistId})} artist]
+     [:a {:href (url-for ::routes/artist-view {:id artistId})} artist]
      " - "
      ;; link to album
-     [:a {:href (routes/url-for ::routes/album-view {:id id})} name] (when year (str " (" year ")"))]))
+     [:a {:href (url-for ::routes/album-view {:id id})} name] (when year (str " (" year ")"))]))
 
 (defn artist-detail [content]
   [:div
    [:h2 (:name content)]
-   [:p (:albumCount content) " items"]
    [:ul (for [[idx album] (map-indexed vector (:album content))]
           [:li {:key idx} [album-item album]])]])
 
@@ -85,6 +84,32 @@
    [:h2 "Recently played"]
    [:ul (for [[idx album] (map-indexed vector (:album content))]
           [:li {:key idx} [album-item album]])]])
+
+;; top navigation
+
+(defn content-type
+  "Helper to see what kind of server response"
+  [content]
+  (cond
+    (and (vector? (:album content)) (:id content)) :artist
+    (vector? (:song content)) :album
+    :else :unknown-content))
+
+(defmulti breadcrumbs content-type)
+
+(defmethod breadcrumbs :default [content]
+  [:div [:span "Start"]])
+
+(defmethod breadcrumbs :artist [content] 
+  [:div
+   [:span [:a {:href (url-for ::routes/main)} "Start"]]
+   [:span " · " (:name content)]])
+
+(defmethod breadcrumbs :album [content]
+  [:div
+   [:span [:a {:href (url-for ::routes/main)} "Start"]]
+   [:span " · " [:a {:href (url-for ::routes/artist-view {:id (:artistId content)})} (:artist content)]]
+   [:span " · " (:name content)]])
 
 ;; currently playing / coming next / audio controls...
 
@@ -116,6 +141,7 @@
         content @(subscribe [::subs/current-content])]
     [:div
      [:span (str "Currently logged in as " (:u login))]
+     [breadcrumbs content]
      (case route
        ::routes/main [most-recent content]
        ::routes/artist-view [artist-detail content]

@@ -11,8 +11,9 @@
              ["/album/:id" ::album-view]]))
 
 ; use this in views to construct a url
-(defn url-for [k params]
-  (str "#" (r/resolve router k params)))
+(defn url-for
+  ([k] (url-for k {}))
+  ([k params] (str "#" (r/resolve router k params))))
 
 ; which routes need valid login credentials?
 (def protected-routes #{::main ::artist-view ::album-view})
