@@ -2,6 +2,15 @@
 
 This is just meant for exploration. If you want to see something more serious, take a look at [airsonic-ui](https://github.com/airsonic/airsonic-ui).
 
+## Implemented so far
+
+* Login
+* Welcome screen (most recently played)
+* Artist detail
+* Album detail
+* Play Track w/ next and previous
+* Currently playing notification
+
 ## Development
 
 The project is written in [ClojureScript](https://clojurescript.org/) and uses [re-frame](https://github.com/Day8/re-frame) for structure and peace of mind. The build tool is [shadow-cljs](https://shadow-cljs.github.io/docs/UsersGuide.html), which offers nice editor integration and interoparibility with the whole JavaScript ecosystem.
