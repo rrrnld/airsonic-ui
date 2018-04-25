@@ -7,15 +7,15 @@
 (def router
   (r/router [["/" ::login]
              ["/hello" ::main]
-             ["/album/:id" ::album-view]
-             ["/artist/:id" ::artist-view]]))
+             ["/artist/:id" ::artist-view]
+             ["/album/:id" ::album-view]]))
 
 ; use this in views to construct a url
 (defn url-for [k params]
   (str "#" (r/resolve router k params)))
 
 ; which routes need valid login credentials?
-(def protected-routes #{::main ::album-view})
+(def protected-routes #{::main ::artist-view ::album-view})
 
 ; which data should be requested for which route? can either be a vector or a function returning a vector
 
@@ -29,9 +29,13 @@
   [route-id params query]
   [:api-request "getAlbumList2" :albumList2 {:type "recent"}])
 
+(defmethod route-data ::artist-view
+  [route-id params query]
+  [:api-request "getArtist" :artist (select-keys params [:id])])
+
 (defmethod route-data ::album-view
   [route-id params query]
-  [:api-request "getAlbum" :album {:id (:id params)}])
+  [:api-request "getAlbum" :album (select-keys params [:id])])
 
 ;; shouldn't need to change anything below
 

@@ -38,7 +38,29 @@
        [:div
         [:button {:on-click #(dispatch [::events/authenticate @user @pass @server])} "Submit"]]])))
 
-;; album list (start page)
+;; single album
+
+(defn song-item [songs song]
+  (let [artist-id (:artistId song)]
+    [:div
+     [:a
+      (when artist-id {:href (routes/url-for ::routes/artist-view {:id artist-id})})
+      (:artist song)]
+     " - "
+     [:a
+      {:href "#" :on-click (fn [e]
+                             (.preventDefault e)
+                             (dispatch [::events/play-songs songs song]))}
+      (:title song)]]))
+
+(defn album-detail [content]
+  [:div
+   [:h2 (str (:artist content) " - " (:name content))]
+   (let [songs (:song content)]
+     [:ul (for [[idx song] (map-indexed vector songs)]
+            [:li {:key idx} [song-item songs song]])])])
+
+;; single artist
 
 (defn album-item [album]
   (let [{:keys [artist artistId name coverArt year id]} album]
@@ -49,29 +71,20 @@
      ;; link to album
      [:a {:href (routes/url-for ::routes/album-view {:id id})} name] (when year (str " (" year ")"))]))
 
-;; TODO: album-list shouldn't know about the structure of content and should just get a list
-(defn album-list [content]
+(defn artist-detail [content]
   [:div
-   [:h2 (str "Recently played")]
+   [:h2 (:name content)]
+   [:p (:albumCount content) " items"]
    [:ul (for [[idx album] (map-indexed vector (:album content))]
           [:li {:key idx} [album-item album]])]])
 
-;; single album
+;; TODO: album-list shouldn't know about the structure of content and should just get a list
 
-(defn song-item [songs song]
-  [:div (str (:artist song) " - ")
-   [:a
-    {:on-click #(dispatch [::events/play-songs songs song])}
-    (:title song)]])
-
-(defn song-list [songs]
-  [:ul (for [[idx song] (map-indexed vector songs)]
-         [:li {:key idx} [song-item songs song]])])
-
-(defn album-detail [content]
+(defn most-recent [content]
   [:div
-   [:h2 (str (:artist content) " - " (:name content))]
-   [song-list (:song content)]])
+   [:h2 "Recently played"]
+   [:ul (for [[idx album] (map-indexed vector (:album content))]
+          [:li {:key idx} [album-item album]])]])
 
 ;; currently playing / coming next / audio controls...
 
@@ -104,7 +117,8 @@
     [:div
      [:span (str "Currently logged in as " (:u login))]
      (case route
-       ::routes/main [album-list content]
+       ::routes/main [most-recent content]
+       ::routes/artist-view [artist-detail content]
        ::routes/album-view [album-detail content])
      [:a {:on-click #(dispatch [::events/initialize-db]) :href "#"} "Logout"]
      [bottom-bar]]))
