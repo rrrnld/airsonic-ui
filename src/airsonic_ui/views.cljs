@@ -1,27 +1,42 @@
 (ns airsonic-ui.views
   (:require [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
+            [airsonic-ui.config :as config]
             [airsonic-ui.routes :as routes]
             [airsonic-ui.events :as events]
             [airsonic-ui.subs :as subs]))
+
+(defn- >reset!
+  "Sends all target values to the given atom"
+  [atom]
+  #(reset! atom (.. % -target -value)))
 
 ;; login form
 
 (defn login-form []
   (let [user (r/atom "")
-        pass (r/atom "")]
+        pass (r/atom "")
+        server (r/atom config/server)]
     (fn []
       [:div
        [:div
         [:span "User"]
         [:input {:type "text"
                  :name "user"
-                 :on-change #(reset! user (-> % .-target .-value))}]]
+                 :on-change (>reset! user)}]]
        [:div
         [:span "Password"]
-        [:input {:type "password" :name "pass" :on-change #(reset! pass (-> % .-target .-value))}]]
+        [:input {:type "password"
+                 :name "pass"
+                 :on-change (>reset! pass)}]]
        [:div
-        [:button {:on-click #(dispatch [::events/authenticate @user @pass])} "Submit"]]])))
+        [:span "Server"]
+        [:input {:type "text"
+                 :name "server"
+                 :on-change (>reset! server)
+                 :value @server}]]
+       [:div
+        [:button {:on-click #(dispatch [::events/authenticate @user @pass @server])} "Submit"]]])))
 
 ;; album list (start page)
 

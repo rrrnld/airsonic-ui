@@ -23,10 +23,11 @@
 
 (re-frame/reg-event-fx
  ::authenticate
- (fn [{:keys [db]} [_ user pass]]
-   {:db (update db :active-requests inc)
+ (fn [{:keys [db]} [_ user pass server]]
+   {:db (-> (update db :active-requests inc)
+            (assoc :server server))
     :http-xhrio {:method :get
-                 :uri (api/url "ping" {:u user :p pass})
+                 :uri (api/url server "ping" {:u user :p pass})
                  :response-format (ajax/json-response-format {:keywords? true})
                  :on-success [::auth-success user pass]
                  :on-failure [::api-failure]}}))
@@ -57,7 +58,7 @@
  :api-request
  (fn [{:keys [db]} [_ endpoint k params]]
    {:http-xhrio {:method :get
-                 :uri (api/url endpoint (merge params (:login db)))
+                 :uri (api/url (:server db) endpoint (merge params (:login db)))
                  :response-format (ajax/json-response-format {:keywords? true})
                  :on-success [::api-success k]
                  :on-failure [::api-failure]}}))
@@ -76,16 +77,13 @@
 
 ;; musique
 
-(defn ->song-url [song credentials]
-  (api/url "stream" (merge {:id (:id song)} credentials)))
-
 ; TODO: Make play, next and previous a bit prettier and more DRY
 
 (re-frame/reg-event-fx
  ; sets up the db, starts to play a song and adds the rest to a playlist
  ::play-songs
  (fn [{:keys [db]} [_ songs song]]
-   {:play-song (->song-url song (:login db))
+   {:play-song (api/song-url (:server db) (:login db) song)
     :db (-> db
             (assoc-in [:currently-playing :item] song)
             (assoc-in [:currently-playing :playlist] songs))}))
@@ -97,7 +95,7 @@
          current (-> db :currently-playing :item)
          next (first (rest (drop-while #(not= % current) playlist)))]
      (when next
-       {:play-song (->song-url next (:login db))
+       {:play-song (api/song-url (:server db) (:login db) next)
         :db (assoc-in db [:currently-playing :item] next)}))))
 
 (re-frame/reg-event-fx
@@ -107,7 +105,7 @@
          current (-> db :currently-playing :item)
          previous (last (take-while #(not= % current) playlist))]
      (when previous
-       {:play-song (->song-url previous (:login db))
+       {:play-song (api/song-url (:server db) (:login db) previous)
         :db (assoc-in db [:currently-playing :item] previous)}))))
 
 (re-frame/reg-event-fx
