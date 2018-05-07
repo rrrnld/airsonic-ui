@@ -14,7 +14,7 @@
     "create-react-class": "^15.6.3",
     "react": "^16.3.2",
     "react-dom": "^16.3.2",
-    "shadow-cljs": "^2.3.0"
+    "shadow-cljs": "^2.3.19"
   },
   "devDependencies": {
     "react-flip-move": "^3.0.1",
