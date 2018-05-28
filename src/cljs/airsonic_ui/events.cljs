@@ -3,7 +3,7 @@
             [ajax.core :as ajax]
             [airsonic-ui.routes :as routes]
             [airsonic-ui.db :as db]
-            [airsonic-ui.api :as api]
+            [airsonic-ui.utils.api :as api]
             [day8.re-frame.tracing :refer-macros [fn-traced]])) ; <- useful to debug handlers
 
 ;; this is where all of the event handling takes place; the names put the events into

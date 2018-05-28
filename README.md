@@ -1,4 +1,4 @@
-# Airsonic Web Client
+# Airsonic Web Client [![Build Status](https://travis-ci.org/heyarne/airsonic-ui.svg?branch=master)](https://travis-ci.org/heyarne/airsonic-ui)
 
 This is just meant for exploration. If you want to see something more serious, take a look at [airsonic-ui](https://github.com/airsonic/airsonic-ui).
 
@@ -28,6 +28,17 @@ $ npm run build
 ```
 
 **Note:** In dev mode this project comes with re-frame-10x. You can hit `Ctrl + h` to display the overlay and have a time traveling debugger.
+
+## Tests
+
+This project uses [karma](https://karma-runner.github.io/) for tests. Make sure to have Google Chrome installed, otherwise the watcher will time out. If you want to run tests continuously in the background, you may want to have Growl installed to show notifications ([see setup instructions](https://www.npmjs.com/package/karma-growl-reporter#installation)).
+
+```
+# run tests once
+$ npm test
+# run tests continuously, watching for changes
+$ npm run test:watch
+```
 
 ## Build artifacts
 
