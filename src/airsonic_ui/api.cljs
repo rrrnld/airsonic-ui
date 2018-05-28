@@ -17,7 +17,10 @@
     (str server (when-not (str/ends-with? server "/") "/") "rest/" endpoint "?" query)))
 
 (defn song-url [server credentials song]
-  (url server "stream" (merge {:id (:id song)} credentials)))
+  (url server "stream" (merge (select-keys song [:id]) credentials)))
+
+(defn cover-url [server credentials item size]
+  (url server "getCoverArt" (merge {:id (:coverArt item) :size size} credentials)))
 
 (defn- api-error?
   "We need to look at the message body because the subsonic api always responds

@@ -2,11 +2,17 @@
   (:require [re-frame.core :as re-frame]))
 
 ;; can be used to query the user's credentials
+;; TODO: Organize login credentials and server location differently (i.e. together)
 
 (re-frame/reg-sub
  ::login
  (fn [db]
    (:login db)))
+
+(re-frame/reg-sub
+ ::server
+ (fn [db]
+   (:server db)))
 
 ;; current hashbang
 

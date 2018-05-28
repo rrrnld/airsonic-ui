@@ -44,11 +44,20 @@
               (assoc :login login))
       :dispatch [::logged-in]})))
 
+;; TODO: We have to find another solution for this once we have routes that
+;; don't require a login but have the bottom controls
+
+(re-frame/reg-fx
+ :show-nav-bar
+ (fn [_]
+   (.. js/document -documentElement -classList (add "has-navbar-fixed-bottom"))))
+
 ;; we do this in two steps to make sure the credentials are set once we navigate
 (re-frame/reg-event-fx
  ::logged-in
  (fn [_ _]
-   {:routes/navigate [::routes/main]}))
+   {:routes/navigate [::routes/main]
+    :show-nav-bar nil}))
 
 ;; TODO: Test that credentials are actually taken
 ;; TODO: Move these in the future? events.cljs should just do wiring. We could

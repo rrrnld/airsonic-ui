@@ -21,7 +21,7 @@ To build the project make sure you have Node.js (v6.0.0), npm and Java 8 install
 ```
 # after cloning the project, first install all dependencies
 $ npm install
-# start a continuous build with hot-code-reloading; first build takes a while
+# start a continuous build with hot-code-reloading; first build takes a while. open http://localhost:8080
 $ npm run dev
 # build and optimize the code once for production
 $ npm run build
