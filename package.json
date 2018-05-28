@@ -6,13 +6,14 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build:cljs": "shadow-cljs release app",
-    "build:sass": "node-sass --output-style compressed sass/app.sass public/app/style.css | sed 's/^/sass - /'",
-    "build": "rm -r public/app/*; run-p build:*; sed -i '' 's/\"\\/app\\//\".\\/app\\//g' public/index.html",
+    "build:html": "sed 's/\"\\/app\\//\".\\/app\\//g' src/html/index.html > public/index.html",
+    "build:sass": "node-sass --output-style compressed src/sass/app.sass public/app/style.css",
+    "build": "rm -r public/*; run-p build:*; ",
     "deploy": "npm run build && gh-pages -d public",
     "dev:cljs": "shadow-cljs watch app",
-    "dev:sass": "{ node-sass sass/app.sass public/app/style.css; node-sass -w sass/app.sass public/app/style.css; } | sed 's/^/sass - /'",
-    "dev": "sed -i '' 's/\"\\.\\/app\\//\"\\/app\\//g' public/index.html; run-p dev:*",
-    "deploy": "npm rum build && gh-pages -d public"
+    "dev:html": "sed 's/\"\\.\\/app\\//\"\\/app\\//g' src/html/index.html > public/index.html",
+    "dev:sass": "npm run build:sass; node-sass -w src/sass/app.sass public/app/style.css",
+    "dev": "run-p dev:*"
   },
   "author": "Arne Schlüter",
   "license": "ISC",
