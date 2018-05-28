@@ -32,3 +32,10 @@ $ npm run build
 ## Build artifacts
 
 Everything you need to serve the app can be found inside the `public` folder.
+
+## Deploy to github
+
+```
+# will build everything and publish everything in /public via gh-pages
+$ npm run deploy
+```

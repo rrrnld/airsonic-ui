@@ -8,10 +8,11 @@
     "build:cljs": "shadow-cljs release app",
     "build:sass": "node-sass --output-style compressed sass/app.sass public/app/style.css | sed 's/^/sass - /'",
     "build": "rm -r public/app/*; run-p build:*; sed -i '' 's/\"\\/app\\//\".\\/app\\//g' public/index.html",
+    "deploy": "npm run build && gh-pages -d public",
     "dev:cljs": "shadow-cljs watch app",
     "dev:sass": "{ node-sass sass/app.sass public/app/style.css; node-sass -w sass/app.sass public/app/style.css; } | sed 's/^/sass - /'",
     "dev": "sed -i '' 's/\"\\.\\/app\\//\"\\/app\\//g' public/index.html; run-p dev:*",
-    "deploy": "gh-pages -d public"
+    "deploy": "npm rum build && gh-pages -d public"
   },
   "author": "Arne Schlüter",
   "license": "ISC",
