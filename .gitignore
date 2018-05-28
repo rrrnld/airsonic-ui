@@ -1,14 +1,7 @@
 .nrepl-port
 .shadow-cljs/
 node_modules/
-public/app/
-
-# LaTeX
-
-docs/*.aux
-docs/*.log
-docs/*.out
-docs/*.pdf
+public/*
 
 # Created by https://www.gitignore.io/api/emacs
 
