@@ -8,3 +8,4 @@ cache:
   directories:
     - node_modules
     - .shadow-cljs
+    - $HOME/.m2
