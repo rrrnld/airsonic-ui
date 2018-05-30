@@ -18,31 +18,33 @@
  (fn [_]
    db/default-db))
 
-;; this is called with user and password to try and see if the credentials are
-;; correct; if yes, ::auth-success will be fired
+;; auth logic
+
+(defn authenticate
+  "Tries to authenticate a user by pinging the server with credentials, saving
+  them when the request was succesful."
+  [{:keys [db]} [_ user pass server]]
+  {:db (assoc db :server server)
+   :http-xhrio {:method :get
+                :uri (api/url server "ping" {:u user :p pass})
+                :response-format (ajax/json-response-format {:keywords? true})
+                :on-success [::credentials-verified user pass]
+                :on-failure [::api-failure]}})
 
 (re-frame/reg-event-fx
- ::authenticate
- (fn [{:keys [db]} [_ user pass server]]
-   {:db (-> (update db :active-requests inc)
-            (assoc :server server))
-    :http-xhrio {:method :get
-                 :uri (api/url server "ping" {:u user :p pass})
-                 :response-format (ajax/json-response-format {:keywords? true})
-                 :on-success [::auth-success user pass]
-                 :on-failure [::api-failure]}}))
+ ::authenticate authenticate)
 
-;; TODO: Test that credentials are associated
+(defn credentials-verified
+  "Gets called after the server indicates that the credentials entered by a user
+  are correct (see `authenticate`)."
+  [{:keys [db]} [_ user pass response]]
+  (let [login {:u user :p pass}]
+    {:routes/set-credentials login
+     :db (assoc db :login login)
+     :dispatch [::logged-in]}))
 
 (re-frame/reg-event-fx
- ::auth-success
- (fn [{:keys [db]} [_ user pass response]]
-   ;; TODO: Handle failures differently
-   (let [login {:u user :p pass}]
-     {:routes/set-credentials login
-      :db (-> (update db :active-requests #(max (dec %) 0))
-              (assoc :login login))
-      :dispatch [::logged-in]})))
+ ::credentials-verified credentials-verified)
 
 ;; TODO: We have to find another solution for this once we have routes that
 ;; don't require a login but have the bottom controls

@@ -2,8 +2,8 @@
   (:require [re-frame.core :as re-frame]))
 
 ;; can be used to query the user's credentials
-;; TODO: Organize login credentials and server location differently (i.e. together)
 
+;; FIXME: this is used for cover images and it's quite ugly tbh
 (re-frame/reg-sub
  ::login
  (fn [db]

@@ -38,6 +38,8 @@ This project uses [karma](https://karma-runner.github.io/) for tests. Make sure 
 $ npm test
 ```
 
+**Note:** If you want nice console output in your tests, make sure to `(enable-console-print!)`. You can call `println` afterwards like you're used to.
+
 ## Build artifacts
 
 
