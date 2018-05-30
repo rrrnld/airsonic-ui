@@ -1,8 +1,11 @@
 (ns airsonic-ui.core
   (:require [reagent.core :as reagent]
             [re-frame.core :as re-frame]
+            ;; 3rd party effects / coeffects
             [day8.re-frame.http-fx]
-            [airsonic-ui.audio] ; <- just registers effects
+            [akiroz.re-frame.storage :as storage]
+            ;; our app
+            [airsonic-ui.audio] ; <- just registers effects here
             [airsonic-ui.routes :as routes]
             [airsonic-ui.events :as events]
             [airsonic-ui.views :as views]
@@ -19,6 +22,9 @@
 
 (defn ^:export init []
   (routes/start-routing!)
+  (storage/reg-co-fx! :airsonic-ui {:fx :store
+                                    :cofx :store})
   (re-frame/dispatch-sync [::events/initialize-db])
+  (re-frame/dispatch [::events/try-remember-user])
   (dev-setup)
   (mount-root))

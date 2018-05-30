@@ -22,9 +22,10 @@
 
 (defn authenticate
   "Tries to authenticate a user by pinging the server with credentials, saving
-  them when the request was succesful."
+  them when the request was succesful. Bypasses the request when a user saved
+  their credentials."
   [{:keys [db]} [_ user pass server]]
-  {:db (assoc db :server server)
+  {:db (assoc-in db [:credentials :server] server)
    :http-xhrio {:method :get
                 :uri (api/url server "ping" {:u user :p pass})
                 :response-format (ajax/json-response-format {:keywords? true})
@@ -34,17 +35,34 @@
 (re-frame/reg-event-fx
  ::authenticate authenticate)
 
+(defn try-remember-user
+  "Enables skipping the auth request when credentials are saved in the
+  local storage; otherwise has no effect"
+  [{:keys [db store]} [_]]
+  (when-let [credentials (:credentials store)]
+    {:db (assoc-in db [:credentials :server] (:server credentials))
+     :dispatch [::credentials-verified (:u credentials) (:p credentials) nil]}))
+
+(re-frame/reg-event-fx
+ ::try-remember-user
+ [(re-frame/inject-cofx :store)]
+ try-remember-user)
+
 (defn credentials-verified
   "Gets called after the server indicates that the credentials entered by a user
-  are correct (see `authenticate`)."
-  [{:keys [db]} [_ user pass response]]
-  (let [login {:u user :p pass}]
-    {:routes/set-credentials login
-     :db (assoc db :login login)
+  are correct (see `authenticate`)"
+  [{:keys [db store]} [_event user pass _response]]
+  (let [auth {:u user :p pass}
+        credentials (merge (:credentials db) auth)]
+    {:routes/set-credentials auth
+     :store {:credentials credentials}
+     :db (assoc db :credentials credentials)
      :dispatch [::logged-in]}))
 
 (re-frame/reg-event-fx
- ::credentials-verified credentials-verified)
+ ::credentials-verified
+ [(re-frame/inject-cofx :store)]
+ credentials-verified)
 
 ;; TODO: We have to find another solution for this once we have routes that
 ;; don't require a login but have the bottom controls
@@ -65,11 +83,15 @@
 ;; TODO: Move these in the future? events.cljs should just do wiring. We could
 ;; implement api.cljs as a completely independent module.
 
+(defn- api-url [db endpoint params]
+  (let [creds (:credentials db)]
+    (api/url (:server creds) endpoint (merge params (select-keys creds [:u :p])))))
+
 (re-frame/reg-event-fx
  :api-request
  (fn [{:keys [db]} [_ endpoint k params]]
    {:http-xhrio {:method :get
-                 :uri (api/url (:server db) endpoint (merge params (:login db)))
+                 :uri (api-url db endpoint params)
                  :response-format (ajax/json-response-format {:keywords? true})
                  :on-success [::api-success k]
                  :on-failure [::api-failure]}}))
@@ -90,11 +112,15 @@
 
 ; TODO: Make play, next and previous a bit prettier and more DRY
 
+(defn- song-url [db song]
+  (let [creds (:credentials db)]
+    (api/song-url (:server creds) (select-keys creds [:u :p]) song)))
+
 (re-frame/reg-event-fx
  ; sets up the db, starts to play a song and adds the rest to a playlist
  ::play-songs
  (fn [{:keys [db]} [_ songs song]]
-   {:play-song (api/song-url (:server db) (:login db) song)
+   {:play-song (song-url db song)
     :db (-> db
             (assoc-in [:currently-playing :item] song)
             (assoc-in [:currently-playing :playlist] songs))}))
@@ -106,7 +132,7 @@
          current (-> db :currently-playing :item)
          next (first (rest (drop-while #(not= % current) playlist)))]
      (when next
-       {:play-song (api/song-url (:server db) (:login db) next)
+       {:play-song (song-url db next)
         :db (assoc-in db [:currently-playing :item] next)}))))
 
 (re-frame/reg-event-fx
@@ -116,7 +142,7 @@
          current (-> db :currently-playing :item)
          previous (last (take-while #(not= % current) playlist))]
      (when previous
-       {:play-song (api/song-url (:server db) (:login db) previous)
+       {:play-song (song-url db previous)
         :db (assoc-in db [:currently-playing :item] previous)}))))
 
 (re-frame/reg-event-fx

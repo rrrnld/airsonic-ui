@@ -7,12 +7,12 @@
 (re-frame/reg-sub
  ::login
  (fn [db]
-   (:login db)))
+   (select-keys (:credentials db) [:u :p])))
 
 (re-frame/reg-sub
  ::server
  (fn [db]
-   (:server db)))
+   (get-in db [:credentials :server])))
 
 ;; current hashbang
 

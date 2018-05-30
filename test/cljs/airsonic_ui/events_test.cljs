@@ -14,7 +14,7 @@
         (is (str/starts-with? (:uri request) server))
         (is (str/includes? (:uri request) "/ping")))
       (testing "saves the given server location"
-        (is (= server (get-in fx [:db :server]))))
+        (is (= server (get-in fx [:db :credentials :server]))))
       (testing "invokes correct success callback"
         (is (= ::events/credentials-verified (first (:on-success request)))))))
   (testing "On succesfull response"
@@ -23,6 +23,7 @@
       (testing "credentials are sent to the router for access rights"
         (is (= credentials (:routes/set-credentials fx))))
       (testing "credentials are saved in the global state"
-        (is (= credentials (get-in fx [:db :login]))))
+        (is (= credentials (-> (get-in fx [:db :credentials])
+                               (select-keys [:u :p])))))
       (testing "the login process is finalized"
         (is (= [::events/logged-in] (:dispatch fx)))))))
