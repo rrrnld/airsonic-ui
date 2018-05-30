@@ -18,12 +18,28 @@
       (testing "invokes correct success callback"
         (is (= ::events/credentials-verified (first (:on-success request)))))))
   (testing "On succesfull response"
-    (let [fx (events/credentials-verified {:db {}} [:_ "user" "pass"])
-          credentials {:u "user" :p "pass"}]
+    (let [creds-before {:server "https://localhost"}
+          fx (events/credentials-verified {:db {:credentials creds-before}}
+                                          [:_ "user" "pass"])
+          auth {:u "user" :p "pass"}]
       (testing "credentials are sent to the router for access rights"
-        (is (= credentials (:routes/set-credentials fx))))
+        (is (= auth (:routes/set-credentials fx))))
       (testing "credentials are saved in the global state"
-        (is (= credentials (-> (get-in fx [:db :credentials])
+        (is (= auth (-> (get-in fx [:db :credentials])
                                (select-keys [:u :p])))))
+      (testing "credentials are persisted together with the server address"
+        (is (= (merge creds-before auth) (get-in fx [:store :credentials]))))
       (testing "the login process is finalized"
-        (is (= [::events/logged-in] (:dispatch fx)))))))
+        (is (= [::events/logged-in] (:dispatch fx))))))
+  (testing "When remembering previous login data"
+    (let [credentials {:server "http://localhost"
+                       :u "another-user"
+                       :p "some_random_password123"}
+          fx (events/try-remember-user {:store {:credentials credentials}})]
+      (testing "the auth request is skipped"
+        (is (nil? (:http-xhrio fx))))
+      (testing "we get sent straight to the home page"
+        (is (= ::events/credentials-verified (first (:dispatch fx)))))))
+  (testing "When there's no previous login data"
+    (testing "remembering has no effect"
+      (is (nil? (events/try-remember-user {}))))))
