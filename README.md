@@ -21,10 +21,10 @@ To build the project make sure you have Node.js (v6.0.0), npm and Java 8 install
 ```
 # after cloning the project, first install all dependencies
 $ npm install
-# start a continuous build with hot-code-reloading; first build takes a while. open http://localhost:8080
+
+# start a continuous build with hot-code-reloading and continuous testing
+# first build takes a while. open http://localhost:8080
 $ npm run dev
-# build and optimize the code once for production
-$ npm run build
 ```
 
 **Note:** In dev mode this project comes with re-frame-10x. You can hit `Ctrl + h` to display the overlay and have a time traveling debugger.
@@ -36,17 +36,21 @@ This project uses [karma](https://karma-runner.github.io/) for tests. Make sure 
 ```
 # run tests once
 $ npm test
-# run tests continuously, watching for changes
-$ npm run test:watch
 ```
+
+**Note:** If you want nice console output in your tests, make sure to `(enable-console-print!)`. You can call `println` afterwards like you're used to.
 
 ## Build artifacts
 
-Everything you need to serve the app can be found inside the `public` folder.
 
-## Deploy to github
+## Deployment
 
 ```
-# will build everything and publish everything in /public via gh-pages
+# build and optimize the code once for production
+$ npm run build
+
+# runs npm run build and publishes everything via gh-pages
 $ npm run deploy
 ```
+
+All build artifacts will be output in `/public`. Don't change anything in there as changes will be overwritten.
