@@ -30,9 +30,10 @@
 
 (defn sidebar [user]
   [:aside.menu.section
-   [:p.menu-label (str "User: " (:name user))]
+   [:p.menu-label user]
    [:ul.menu-list
     [:li [:a "Settings"]]
+    ;; FIXME: Create proper logout event
     [:li [:a {:on-click #(dispatch [::events/initialize-db]) :href "#"} "Logout"]]]])
 
 ;; putting everything together
