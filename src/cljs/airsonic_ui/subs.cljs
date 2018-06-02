@@ -10,6 +10,11 @@
    (select-keys (:credentials db) [:u :p])))
 
 (re-frame/reg-sub
+ ::user
+ (fn [{:keys [credentials]}]
+   {:name (:u credentials)}))
+
+(re-frame/reg-sub
  ::server
  (fn [db]
    (get-in db [:credentials :server])))

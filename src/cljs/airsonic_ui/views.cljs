@@ -28,21 +28,29 @@
    [:h2.title "Recently played"]
    [album/listing (:album content)]])
 
+(defn sidebar [user]
+  [:aside.menu.section
+   [:p.menu-label (str "User: " (:name user))]
+   [:ul.menu-list
+    [:li [:a "Settings"]]
+    [:li [:a {:on-click #(dispatch [::events/initialize-db]) :href "#"} "Logout"]]]])
+
 ;; putting everything together
 
 (defn app [route params query]
-  (let [login @(subscribe [::subs/login])
+  (let [user @(subscribe [::subs/user])
         content @(subscribe [::subs/current-content])]
     [:div
-     [:section.section>div.container
-      [:div.level
-       [:div.level-left [:span (str "Currently logged in as " (:u login))]]
-       [:div.level-right [:a {:on-click #(dispatch [::events/initialize-db]) :href "#"} "Logout"]]]
-      [breadcrumbs content]
-      (case route
-        ::routes/main [most-recent content]
-        ::routes/artist-view [artist-detail content]
-        ::routes/album-view [album-detail content])]
+     [:div.columns
+      [:div.column.is-2.sidebar
+       [sidebar]]
+      [:div.column
+       [:section.section
+        [breadcrumbs content]
+        (case route
+          ::routes/main [most-recent content]
+          ::routes/artist-view [artist-detail content]
+          ::routes/album-view [album-detail content])]]]
      [bottom-bar]]))
 
 (defn main-panel []

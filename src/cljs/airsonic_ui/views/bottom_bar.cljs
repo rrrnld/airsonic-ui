@@ -21,11 +21,11 @@
             [:p.control>button.button.is-light {:on-click #(dispatch [event])} label])
           buttons))])
 
-(def logo-url "https://airsonic.github.io/airsonic-ui/assets/images/logo/airsonic-dark-350x100.png")
+  (def logo-url "https://airsonic.github.io/airsonic-ui/assets/images/logo/airsonic-light-350x100.png")
 
 (defn bottom-bar []
   (let [currently-playing @(subscribe [::subs/currently-playing])]
-    [:nav.navbar.is-fixed-bottom
+    [:nav.navbar.is-fixed-bottom.playback-area
      [:div.navbar-brand
       [:div.navbar-item
        [:img {:src logo-url}]]]
@@ -38,4 +38,4 @@
           [:div.media-content [current-song-info currently-playing]]]
          [:div.level-right [playback-controls]]]
         ;; not playing anything
-        [:span "Currently no song selected"])]]))
+        [:p.idle-notification "Currently no song selected"])]]))
