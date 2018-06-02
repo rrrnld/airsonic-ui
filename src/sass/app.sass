@@ -17,14 +17,17 @@
 .progress.is-tiny
   height: 0.25rem
 
+// cover images
 .image.is-256x256
-  // for cover images
   width: 256px
   height: 256px
 
-.album-preview .image.is-256x256
+  .missing-cover
+    display: block
+
   // make sure the grid doesn't overflow
-  width: auto
-  height: auto
-  max-width: 256px
-  max-height: 256px
+  .album-preview &
+    width: auto
+    height: auto
+    max-width: 256px
+    max-height: 256px
