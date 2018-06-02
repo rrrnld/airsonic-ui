@@ -35,11 +35,11 @@
     (let [credentials {:server "http://localhost"
                        :u "another-user"
                        :p "some_random_password123"}
-          fx (events/try-remember-user {:store {:credentials credentials}})]
+          fx (events/try-remember-user {:store {:credentials credentials}} [:_])]
       (testing "the auth request is skipped"
         (is (nil? (:http-xhrio fx))))
       (testing "we get sent straight to the home page"
         (is (= ::events/credentials-verified (first (:dispatch fx)))))))
   (testing "When there's no previous login data"
     (testing "remembering has no effect"
-      (is (nil? (events/try-remember-user {}))))))
+      (is (nil? (events/try-remember-user {} [:_]))))))
