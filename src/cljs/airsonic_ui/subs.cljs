@@ -33,10 +33,19 @@
 (re-frame/reg-sub
  ::current-content
  (fn [db]
-   (-> db :response)))
+   (db :response)))
 
 (re-frame/reg-sub
  ; returns info on the current song as is (basically the metadata you can read from the file system)
  ::currently-playing
  (fn [db]
-   (-> db :currently-playing)))
+   (db :currently-playing)))
+
+(re-frame/reg-sub
+ ::is-playing?
+ (fn [query-v _]
+   [(re-frame/subscribe [::currently-playing])])
+ (fn [[currently-playing]]
+   (let [status (:status currently-playing)]
+     (and (not (:paused? status))
+          (not (:ended? status))))))
