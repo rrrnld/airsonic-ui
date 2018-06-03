@@ -10,8 +10,9 @@
 (defn current-song-info [{:keys [item status]}]
   [:article
    [:div (:artist item) " - " (:title item)]
+   ;; FIXME: Sometimes items don't have a duration
    [:progress.progress.is-tiny {:value (:current-time status)
-                                 :max (:duration item)}]])
+                                :max (:duration item)}]])
 
 (defn playback-controls [is-playing?]
   ;; TODO: Toggle play pause icon based on playback status
