@@ -49,8 +49,14 @@
   .missing-cover
     display: block
 
-  // make sure the grid doesn't overflow
-  .album-preview &
+.album-preview
+  .title,
+  .subtitle
+    overflow: hidden
+    white-space: nowrap
+    text-overflow: ellipsis
+
+  .image.is-256x256
     width: auto
     height: auto
     max-width: 256px

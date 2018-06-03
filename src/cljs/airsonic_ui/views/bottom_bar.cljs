@@ -20,8 +20,9 @@
                   [(if is-playing? :media-pause :media-play) ::events/toggle-play-pause]
                   [:media-step-forward ::events/next-song]]]
      (map (fn [[icon-glyph event]]
-            [:p.control>button.button.is-light {:on-click #(dispatch [event])}
-             [icon icon-glyph]])
+            ^{:key icon-glyph} [:p.control>button.button.is-light
+                                {:on-click #(dispatch [event])}
+                                [icon icon-glyph]])
           buttons))])
 
   (def logo-url "https://airsonic.github.io/airsonic-ui/assets/images/logo/airsonic-light-350x100.png")
@@ -29,7 +30,6 @@
 (defn bottom-bar []
   (let [currently-playing @(subscribe [::subs/currently-playing])
         is-playing? @(subscribe [::subs/is-playing?])]
-    (println "is-playing?" is-playing?)
     [:nav.navbar.is-fixed-bottom.playback-area
      [:div.navbar-brand
       [:div.navbar-item
