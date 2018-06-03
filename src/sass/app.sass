@@ -2,14 +2,20 @@
 @import "../../node_modules/open-iconic/font/css/open-iconic.scss"
 
 // area holding content & side navi
-#app main
-  margin-bottom: 0
+#app
+  main
+    margin-bottom: 0
 
 // navi on the left side
 .sidebar
+  min-height: 100vh
   background: $dark
   a
     color: $light
+
+.has-navbar-fixed-bottom .sidebar
+  // 2.5 = 3.25 ($navbar-height) - 0.75 ($padding)
+  min-height: calc(100vh - 2.5rem)
 
 // bottom bar
 .playback-area
