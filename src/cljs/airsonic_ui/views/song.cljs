@@ -1,7 +1,8 @@
 (ns airsonic-ui.views.song
   (:require [re-frame.core :refer [dispatch]]
             [airsonic-ui.events :as events]
-            [airsonic-ui.routes :as routes :refer [url-for]]))
+            [airsonic-ui.routes :as routes :refer [url-for]]
+            [airsonic-ui.views.icon :refer [icon]]))
 
 (defn item [songs song]
   (let [artist-id (:artistId song)]
@@ -19,5 +20,10 @@
 ;; FIXME: This is very similar to album-listing
 
 (defn listing [songs]
-  [:ul (for [[idx song] (map-indexed vector songs)]
-         [:li {:key idx} [item songs song]])])
+  [:table.table.is-striped.is-hoverable.is-fullwidth>tbody
+   (for [[idx song] (map-indexed vector songs)]
+     ^{:key idx} [:tr
+                  [:td.grow [item songs song]]
+                  ;; FIXME: Not implemented yet
+                  [:td>a {:title "Play next"} [icon :plus]]
+                  [:td>a {:title "Play last"} [icon :arrow-thick-right]]])])

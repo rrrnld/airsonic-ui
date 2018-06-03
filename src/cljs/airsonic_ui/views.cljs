@@ -28,21 +28,40 @@
    [:h2.title "Recently played"]
    [album/listing (:album content)]])
 
+(defn sidebar [user]
+  [:aside.menu.section
+   [:p.menu-label "Music"]
+   [:ul.menu-list
+    [:li [:a "By artist"]]
+    [:li [:a "Top rated"]]
+    [:li [:a "Most played"]]]
+   [:p.menu-label "Playlists"]
+   [:p.menu-label "Shares"]
+   [:p.menu-label "Podcasts"]
+   [:p.menu-label "User area"]
+   [:ul.menu-list
+    [:li [:a "Settings"]]
+    ;; FIXME: Create proper logout event
+    [:li [:a
+          {:on-click #(dispatch [::events/initialize-db]) :href "#"}
+          (str "Logout (" (:name user) ")")]]]])
+
 ;; putting everything together
 
 (defn app [route params query]
-  (let [login @(subscribe [::subs/login])
+  (let [user @(subscribe [::subs/user])
         content @(subscribe [::subs/current-content])]
     [:div
-     [:section.section>div.container
-      [:div.level
-       [:div.level-left [:span (str "Currently logged in as " (:u login))]]
-       [:div.level-right [:a {:on-click #(dispatch [::events/initialize-db]) :href "#"} "Logout"]]]
-      [breadcrumbs content]
-      (case route
-        ::routes/main [most-recent content]
-        ::routes/artist-view [artist-detail content]
-        ::routes/album-view [album-detail content])]
+     [:main.columns
+      [:div.column.is-2.sidebar
+       [sidebar user]]
+      [:div.column
+       [:section.section
+        [breadcrumbs content]
+        (case route
+          ::routes/main [most-recent content]
+          ::routes/artist-view [artist-detail content]
+          ::routes/album-view [album-detail content])]]]
      [bottom-bar]]))
 
 (defn main-panel []

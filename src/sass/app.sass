@@ -1,16 +1,75 @@
 @import "../../node_modules/bulma/bulma"
+@import "../../node_modules/open-iconic/font/css/open-iconic.scss"
+
+// area holding content & side navi
+#app
+  main
+    margin-bottom: 0
+
+// navi on the left side
+.sidebar
+  min-height: 100vh
+  background: $dark
+  a
+    color: $light
+
+.has-navbar-fixed-bottom .sidebar
+  // 2.5 = 3.25 ($navbar-height) - 0.75 ($padding)
+  min-height: calc(100vh - 2.5rem)
+
+// bottom bar
+.playback-area
+  background: $dark
+  color: $light
+
+  .navbar-menu
+    align-items: center
+
+  .audio-interaction
+    flex-grow: 1
+
+    .level-left
+      flex-grow: 1
+      flex-shrink: 0
+    .level-right
+      flex-grow: 0
+      flex-shrink: 1
+      padding-left: .5rem
+      padding-left: .5rem
+      padding-right: .5rem
+
+  .media
+    flex-grow: 1
+    align-items: center
+
+  progress
+    width: 100%
 
 .progress.is-tiny
-  height: 0.25rem
+  height: .25rem
 
+// cover images
 .image.is-256x256
-  // for cover images
   width: 256px
   height: 256px
 
-.album-preview .image.is-256x256
-  // make sure the grid doesn't overflow
-  width: auto
-  height: auto
-  max-width: 256px
-  max-height: 256px
+  .missing-cover
+    display: block
+
+.album-preview
+  .title,
+  .subtitle
+    overflow: hidden
+    white-space: nowrap
+    text-overflow: ellipsis
+
+  .image.is-256x256
+    width: auto
+    height: auto
+    max-width: 256px
+    max-height: 256px
+
+// occurs in album detail view
+.table
+  .grow
+    width: 100%

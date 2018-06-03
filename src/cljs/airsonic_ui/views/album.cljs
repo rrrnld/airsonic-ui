@@ -17,7 +17,7 @@
 (defn listing [albums]
   ;; always show 5 in a row
   [:div
-   (for [albums (partition-all 5 albums)]
-     [:div.columns
-      (for [[idx album] (map-indexed vector albums)]
-        [:div.column {:key idx} [preview album]])])])
+   [:div.columns.is-multiline.is-mobile
+    (for [[idx album] (map-indexed vector albums)]
+      ^{:key idx} [:div.column.is-one-fifth-desktop.is-one-quarter-tablet.is-one-half-mobile
+                   [preview album]])]])
