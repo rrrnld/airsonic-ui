@@ -19,5 +19,5 @@
   [:div
    [:div.columns.is-multiline.is-mobile
     (for [[idx album] (map-indexed vector albums)]
-      ^{:key idx} [:div.column.is-one-fifth-desktop.is-one-quarter-tablet.is-one-half-mobile
+      ^{:key idx} [:div.column.is-one-fifth-desktop.is-one-quarter-tablet.is-half-mobile
                    [preview album]])]])
