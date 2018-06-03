@@ -28,7 +28,8 @@
 
 (defmethod route-data ::main
   [route-id params query]
-  [:api-request "getAlbumList2" :albumList2 {:type "recent"}])
+  [:api-request "getAlbumList2" :albumList2 {:type "recent"
+                                             :size 18}])
 
 (defmethod route-data ::artist-view
   [route-id params query]

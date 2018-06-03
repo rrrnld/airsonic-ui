@@ -17,7 +17,7 @@
 (defn listing [albums]
   ;; always show 5 in a row
   [:div
-   (for [albums (partition-all 5 albums)]
+   (for [albums (partition-all 6 albums)]
      [:div.columns
       (for [[idx album] (map-indexed vector albums)]
-        [:div.column {:key idx} [preview album]])])])
+        [:div.column.is-2 {:key idx} [preview album]])])])

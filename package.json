@@ -8,7 +8,7 @@
     "build:html": "sed 's/\"\\/app\\//\".\\/app\\//g' src/html/index.html > public/index.html",
     "build:sass": "node-sass --output-style compressed src/sass/app.sass public/app/style.css",
     "build": "rm -r public/*; run-p build:*; ",
-    "deploy": "npm run build && gh-pages -d public",
+    "deploy": "npm run build && gh-pages -d public -m \"Deploying $(git rev-parse --short HEAD)\"",
     "dev:cljs": "shadow-cljs watch app test",
     "dev:html": "sed 's/\"\\.\\/app\\//\"\\/app\\//g' src/html/index.html > public/index.html",
     "dev:sass": "npm run build:sass; node-sass -w src/sass/app.sass public/app/style.css",

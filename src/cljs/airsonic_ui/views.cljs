@@ -30,11 +30,21 @@
 
 (defn sidebar [user]
   [:aside.menu.section
-   [:p.menu-label user]
+   [:p.menu-label "Music"]
+   [:ul.menu-list
+    [:li [:a "By artist"]]
+    [:li [:a "Top rated"]]
+    [:li [:a "Most played"]]]
+   [:p.menu-label "Playlists"]
+   [:p.menu-label "Shares"]
+   [:p.menu-label "Podcasts"]
+   [:p.menu-label "User area"]
    [:ul.menu-list
     [:li [:a "Settings"]]
     ;; FIXME: Create proper logout event
-    [:li [:a {:on-click #(dispatch [::events/initialize-db]) :href "#"} "Logout"]]]])
+    [:li [:a
+          {:on-click #(dispatch [::events/initialize-db]) :href "#"}
+          (str "Logout (" (:name user) ")")]]]])
 
 ;; putting everything together
 
@@ -42,9 +52,9 @@
   (let [user @(subscribe [::subs/user])
         content @(subscribe [::subs/current-content])]
     [:div
-     [:div.columns
+     [:main.columns
       [:div.column.is-2.sidebar
-       [sidebar]]
+       [sidebar user]]
       [:div.column
        [:section.section
         [breadcrumbs content]

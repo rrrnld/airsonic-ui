@@ -1,5 +1,9 @@
 @import "../../node_modules/bulma/bulma"
 
+// area holding content & side navi
+#app main
+  margin-bottom: 0
+
 // navi on the left side
 .sidebar
   background: $dark
@@ -13,6 +17,16 @@
 
   .navbar-menu
     align-items: center
+
+  .audio-interaction
+    flex-grow: 1
+
+    .level-left
+      flex-grow: 1
+      flex-shrink: 0
+    .level-right
+      flex-grow: 0
+      flex-shrink: 1
 
 .progress.is-tiny
   height: 0.25rem

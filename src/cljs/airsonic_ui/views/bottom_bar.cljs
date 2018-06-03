@@ -32,7 +32,7 @@
      [:div.navbar-menu.is-active
       (if currently-playing
         ;; show song info
-        [:section.level
+        [:section.level.audio-interaction
          [:div.level-left>article.media
           [:div.media-left [cover (:item currently-playing) 48]]
           [:div.media-content [current-song-info currently-playing]]]
