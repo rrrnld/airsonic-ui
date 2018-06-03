@@ -11,7 +11,8 @@
 (defn palette
   "Generate a hsl palette of two colors that's unique for a given item"
   [item]
-  (let [[h s l] (js->clj (.hsl color-hash (str (:name item) (:artist item))))
+  (let [identifier (str (:artistId item) "-" (or (:albumId item) (:id item)))
+        [h s l] (js->clj (.hsl color-hash identifier))
         s (str (* 100 s) "%")
         l (str (* 100 l) "%")]
     (->>
