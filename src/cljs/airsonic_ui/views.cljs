@@ -42,9 +42,8 @@
    [:p.menu-label "User area"]
    [:ul.menu-list
     [:li [:a "Settings"]]
-    ;; FIXME: Create proper logout event
     [:li [:a
-          {:on-click #(dispatch [::events/initialize-db]) :href "#"}
+          {:on-click #(dispatch [::events/logout]) :href "#"}
           (str "Logout (" (:name user) ")")]]]])
 
 ;; putting everything together

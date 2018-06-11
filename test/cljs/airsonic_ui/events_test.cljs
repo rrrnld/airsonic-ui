@@ -2,6 +2,8 @@
   (:require [cljs.test :refer [deftest testing is]]
             [clojure.string :as str]
             [airsonic-ui.fixtures :refer [responses]]
+            [airsonic-ui.db :as db]
+            [airsonic-ui.routes :as routes]
             [airsonic-ui.events :as events]))
 
 (enable-console-print!)
@@ -50,6 +52,17 @@
   (testing "When there's no previous login data"
     (testing "remembering has no effect"
       (is (nil? (events/try-remember-user {} [:_]))))))
+
+(deftest logout
+  (let [fx (events/logout {} [:_])]
+    (testing "Should clear all stored data"
+      (is (nil? (:store fx))))
+    (testing "Should redirect to the login screen"
+      (is (= [::routes/login] (:routes/navigate fx))))
+    (testing "Should unset authentication in the router"
+      (is (contains? fx :routes/unset-credentials)))
+    (testing "Should reset the app-db"
+      (is (= db/default-db (:db fx))))))
 
 (defn- first-notification [fx]
   (-> (get-in fx [:db :notifications]) vals first))

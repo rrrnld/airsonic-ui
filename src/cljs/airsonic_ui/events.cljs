@@ -24,7 +24,9 @@
  (fn [_]
    db/default-db))
 
+;; ---
 ;; auth logic
+;; ---
 
 (defn authenticate
   "Tries to authenticate a user by pinging the server with credentials, saving
@@ -50,8 +52,7 @@
                [::credentials-verified user pass])})
 
 (re-frame/reg-event-fx
- ::verify-auth-response
- verify-auth-response)
+ ::verify-auth-response verify-auth-response)
 
 (defn try-remember-user
   "Enables skipping the auth request when credentials are saved in the
@@ -97,9 +98,20 @@
    {:routes/navigate [::routes/main]
     :show-nav-bar nil}))
 
-;; TODO: Test that credentials are actually taken
-;; TODO: Move these in the future? events.cljs should just do wiring. We could
-;; implement api.cljs as a completely independent module.
+(defn logout
+  "Clears all credentials and redirects the user to the login page"
+  [_ _]
+  {:routes/navigate [::routes/login]
+   :routes/unset-credentials nil
+   :store nil
+   :db db/default-db})
+
+(re-frame/reg-event-fx
+ ::logout logout)
+
+;; ---
+;; api interaction
+;; ---
 
 (defn- api-url [db endpoint params]
   (let [creds (:credentials db)]
@@ -113,8 +125,7 @@
                 :on-failure [:api/bad-response]}})
 
 (re-frame/reg-event-fx
- :api/request
- api-request)
+ :api/request api-request)
 
 (defn good-api-response [fx [_ response]]
   (try
@@ -123,8 +134,7 @@
       {:dispatch [:notification/show :error (api/error-msg e)]})))
 
 (re-frame/reg-event-fx
- :api/good-response
- good-api-response)
+ :api/good-response good-api-response)
 
 (re-frame/reg-event-fx
  :api/bad-response
@@ -132,7 +142,9 @@
    {:log ["API call gone bad; are CORS headers missing? check for :status 0" event]
     :dispatch [:notification/show :error "Communication with server failed. Check browser logs for details."]}))
 
+;; ---
 ;; musique
+;; ---
 
 ; TODO: Make play, next and previous a bit prettier and more DRY
 
@@ -180,7 +192,9 @@
    ; we receive this from the player once it's playing
    (assoc-in db [:currently-playing :status] status)))
 
+;; ---
 ;; routing
+;; ---
 
 (re-frame/reg-event-fx
  :routes/navigation
@@ -192,13 +206,12 @@
 
 (re-frame/reg-event-fx
  :routes/unauthorized
- (fn [fx _]
-   ;; log out on 403
-   {:routes/navigate [routes/default-route]
-    :routes/unset-credentials nil
-    :db db/default-db}))
+ (fn [_ _]
+   {:dispatch [::logout]}))
 
+;; ---
 ;; user messages
+;; ---
 
 (def notification-duration
   {:info 2500
@@ -222,13 +235,11 @@
           (assoc :dispatch-later (hide-later level))))))
 
 (re-frame/reg-event-fx
- :notification/show
- show-notification)
+ :notification/show show-notification)
 
 (defn hide-notification
   [db [_ notification-id]]
   (update db :notifications dissoc notification-id))
 
 (re-frame/reg-event-db
- :notification/hide
- hide-notification)
+ :notification/hide hide-notification)
