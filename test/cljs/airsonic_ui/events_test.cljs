@@ -51,8 +51,8 @@
     (testing "remembering has no effect"
       (is (nil? (events/try-remember-user {} [:_]))))))
 
-(defn- first-notification [db]
-  (-> (:notifications db) vals first))
+(defn- first-notification [fx]
+  (-> (get-in fx [:db :notifications]) vals first))
 
 (deftest api-interaction
   (testing "Should show an error notification when airsonic responds with an error"
@@ -77,4 +77,7 @@
           id (-> (:notifications state)
                  keys
                  first)]
-      (is (empty? (:notifications (events/hide-notification state [:_ id])))))))
+      (is (empty? (:notifications (events/hide-notification state [:_ id]))))))
+  (testing "Should automatically remove a message after a while"
+    (let [fx (events/show-notification {} [:_ :info "This is a notification"])]
+      (is (= :notification/hide (-> (:dispatch-later fx) first :dispatch first))))))

@@ -200,19 +200,28 @@
 
 ;; user messages
 
+(def notification-duration
+  {:info 2500
+   :error 10000})
+
 (defn show-notification
   "Displays an informative message to the user"
-  [db [_ level message]]
-  (let [id (.now js/performance)]
+  [fx [_ level message]]
+  (let [id (.now js/performance)
+        hide-later (fn [level]
+                     [{:ms (get notification-duration level)
+                       :dispatch [:notification/hide id]}])]
     (if (nil? message)
       (let [message level
             level :info]
-        (assoc-in db [:notifications id] {:level level
-                                          :message message}))
-      (assoc-in db [:notifications id] {:level level
-                                        :message message}))))
+        (-> (assoc-in fx [:db :notifications id] {:level level
+                                                  :message message})
+            (assoc :dispatch-later (hide-later level))))
+      (-> (assoc-in fx [:db :notifications id] {:level level
+                                                :message message})
+          (assoc :dispatch-later (hide-later level))))))
 
-(re-frame/reg-event-db
+(re-frame/reg-event-fx
  :notification/show
  show-notification)
 
