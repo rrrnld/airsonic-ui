@@ -3,7 +3,6 @@
             [re-frame.core :refer [subscribe]]
             [reagent.core :as reagent]
             [airsonic-ui.subs :as subs]
-            [airsonic-ui.utils.api :as api]
             ["@hugojosefson/color-hash" :as ColorHash]))
 
 (def color-hash (ColorHash.))
@@ -19,8 +18,6 @@
      [[h s l]
       [(mod (+ h (* h 0.3) 10) 360) s l]]
      (map #(str "hsl(" (str/join "," %) ")")))))
-
-;; FIXME: The direct dependency on these subs is a bit ugly
 
 (defn generate-cover [canvas item]
   (let [ctx (.getContext canvas "2d")
@@ -57,13 +54,14 @@
 (defn has-cover? [item]
   (:coverArt item))
 
+;; FIXME: The direct dependency on these subs is a bit ugly
+
 (defn cover
   [item size]
-  (let [server @(subscribe [::subs/server])
-        login @(subscribe [::subs/login])
-        url (partial api/cover-url server login item)]
+  (let [original @(subscribe [::subs/cover-url item size])
+        retina @(subscribe [::subs/cover-url item (* 2 size)])]
     [:figure {:class-name (str "image is-" size "x" size)}
      (if (has-cover? item)
-       [:img {:src (url size)
-              :srcSet (str (url size) ", " (url (* 2 size)) " 2x")}]
+       [:img {:src original
+              :srcSet (str original ", " retina " 2x")}]
        [missing-cover item size])]))

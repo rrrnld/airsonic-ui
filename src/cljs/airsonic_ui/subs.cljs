@@ -1,23 +1,30 @@
 (ns airsonic-ui.subs
-  (:require [re-frame.core :as re-frame]))
+  (:require [re-frame.core :as re-frame :refer [subscribe]]
+            [airsonic-ui.utils.api :as api]))
 
 ;; can be used to query the user's credentials
 
-;; FIXME: this is used for cover images and it's quite ugly tbh
 (re-frame/reg-sub
- ::login
+ ::credentials
  (fn [db _]
-   (select-keys (:credentials db) [:u :p])))
+   (:credentials db)))
 
 (re-frame/reg-sub
  ::user
- (fn [{:keys [credentials]} [_]]
+ (fn [_ _] [(subscribe [::credentials])])
+ (fn [[credentials] _]
    {:name (:u credentials)}))
 
+(defn cover-url
+  "Provides a convenient way for views to get cover images so they don't have
+  to build them themselves and can live a simple and happy life."
+  [[{:keys [server u p]}] [_ song size]]
+  (api/cover-url server {:u u :p p} song size))
+
 (re-frame/reg-sub
- ::server
- (fn [db _]
-   (get-in db [:credentials :server])))
+ ::cover-url
+ (fn [_ _] [(subscribe [::credentials])])
+ cover-url)
 
 ;; current hashbang
 
@@ -43,7 +50,7 @@
  ::is-playing?
  (fn [query-v _]
    [(re-frame/subscribe [::currently-playing])])
- (fn [[currently-playing]]
+ (fn [[currently-playing] _]
    (let [status (:status currently-playing)]
      (and (not (:paused? status))
           (not (:ended? status))))))

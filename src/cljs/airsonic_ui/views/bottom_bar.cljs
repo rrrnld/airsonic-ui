@@ -15,7 +15,6 @@
                                 :max (:duration item)}]])
 
 (defn playback-controls [is-playing?]
-  ;; TODO: Toggle play pause icon based on playback status
   [:div.field.has-addons
    (let [buttons [[:media-step-backward ::events/previous-song]
                   [(if is-playing? :media-pause :media-play) ::events/toggle-play-pause]

@@ -17,13 +17,11 @@
                              (dispatch [::events/play-songs songs song]))}
       (:title song)]]))
 
-;; FIXME: This is very similar to album-listing
-
 (defn listing [songs]
   [:table.table.is-striped.is-hoverable.is-fullwidth>tbody
    (for [[idx song] (map-indexed vector songs)]
      ^{:key idx} [:tr
-                  [:td.grow [item songs song]]
-                  ;; FIXME: Not implemented yet
-                  [:td>a {:title "Play next"} [icon :plus]]
-                  [:td>a {:title "Play last"} [icon :arrow-thick-right]]])])
+                     [:td.grow [item songs song]]
+                     ;; FIXME: Not implemented yet
+                     [:td>a {:title "Play next"} [icon :plus]]
+                     [:td>a {:title "Play last"} [icon :arrow-thick-right]]])])
