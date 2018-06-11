@@ -87,14 +87,16 @@
   (let [creds (:credentials db)]
     (api/url (:server creds) endpoint (merge params (select-keys creds [:u :p])))))
 
+(defn api-request [{:keys [db]} [_ endpoint k params]]
+  {:http-xhrio {:method :get
+                :uri (api-url db endpoint params)
+                :response-format (ajax/json-response-format {:keywords? true})
+                :on-success [::api-success k]
+                :on-failure [::api-failure]}})
+
 (re-frame/reg-event-fx
  :api-request
- (fn [{:keys [db]} [_ endpoint k params]]
-   {:http-xhrio {:method :get
-                 :uri (api-url db endpoint params)
-                 :response-format (ajax/json-response-format {:keywords? true})
-                 :on-success [::api-success k]
-                 :on-failure [::api-failure]}}))
+ api-request)
 
 (re-frame/reg-event-db
  ::api-success
@@ -173,3 +175,29 @@
    {:routes/navigate [routes/default-route]
     :routes/unset-credentials nil
     :db db/default-db}))
+
+;; user messages
+
+(defn show-notification
+  "Displays an informative message to the user"
+  [db [_ level message]]
+  (let [id (.now js/performance)]
+    (if (nil? message)
+      (let [message level
+            level :info]
+        (assoc-in db [:notifications id] {:level level
+                                          :message message}))
+      (assoc-in db [:notifications id] {:level level
+                                        :message message}))))
+
+(re-frame/reg-event-db
+ :notification/show
+ show-notification)
+
+(defn hide-notification
+  [db [_ notification-id]]
+  (update db :notifications dissoc notification-id))
+
+(re-frame/reg-event-db
+ :notification/hide
+ hide-notification)

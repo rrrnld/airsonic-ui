@@ -14,6 +14,8 @@
   ;; for CIDER
   [cider/cider-nrepl "0.18.0-SNAPSHOT"]]
 
+ :nrepl {:port 9000}
+
  :builds
  {:app {:target :browser
         :output-dir "public/app/js"

@@ -46,12 +46,26 @@
           {:on-click #(dispatch [::events/initialize-db]) :href "#"}
           (str "Logout (" (:name user) ")")]]]])
 
+;; user notifications
+
+(defn notification-list [notifications]
+  [:div.notifications
+   (for [[id notification] notifications]
+     (let [class (case (:level notification)
+                   :error "danger"
+                   "info")]
+       ^{:key id} [:div {:class-name (str "notification is-small is-" class)}
+                   [:button.delete {:on-click #(dispatch [:notification/hide id])}]
+                   (:message notification)]))])
+
 ;; putting everything together
 
 (defn app [route params query]
   (let [user @(subscribe [::subs/user])
+        notifications @(subscribe [::subs/notifications])
         content @(subscribe [::subs/current-content])]
     [:div
+     [notification-list notifications]
      [:main.columns
       [:div.column.is-2.sidebar
        [sidebar user]]

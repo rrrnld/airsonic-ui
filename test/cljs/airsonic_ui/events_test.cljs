@@ -43,3 +43,26 @@
   (testing "When there's no previous login data"
     (testing "remembering has no effect"
       (is (nil? (events/try-remember-user {} [:_]))))))
+
+(defn- first-notification [db]
+  (-> (:notifications db) vals first))
+
+(deftest user-notifications
+  (testing "Should be able to display a message with an assigned level"
+    (is (= :error (:level (first-notification (events/show-notification {} [:_ :error "foo"])))))
+    (is (= :info (:level (first-notification (events/show-notification {} [:_ :info "some other message"]))))))
+  (testing "Should default to level :info"
+    (is (= :info (:level (first-notification (events/show-notification {} [:_ "and another one"]))))))
+  (testing "Should create a unique id for each message"
+    (let [state (->
+                 {}
+                 (events/show-notification [:_ :info "Something something"])
+                 (events/show-notification [:_ :error "Something important"]))
+          ids (keys (:notifications state))]
+      (is (= (count ids) (count (set ids))))))
+  (testing "Should remove a message, given it's id"
+    (let [state (events/show-notification {} [:_ "This is a notification"])
+          id (-> (:notifications state)
+                 keys
+                 first)]
+      (is (empty? (:notifications (events/hide-notification state [:_ id])))))))

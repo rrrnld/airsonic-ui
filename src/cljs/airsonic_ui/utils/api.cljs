@@ -22,3 +22,18 @@
 
 (defn cover-url [server credentials item size]
   (url server "getCoverArt" (merge {:id (:coverArt item) :size size} credentials)))
+
+(defn is-error? [response]
+  (= "failed" (get-in response [:subsonic-response :status])))
+
+(defn unwrap-response
+  "Retrieves the actual response body"
+  [response]
+  (if (is-error? response)
+    (let [error (:error response)]
+      (throw (ex-info (:message response) error)))
+    (-> (get-in response [:subsonic-response])
+        (dissoc :status :version)
+        vals
+        first)))
+

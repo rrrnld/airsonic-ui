@@ -9,7 +9,17 @@
   (api/url server endpoint {}))
 
 (def fixtures
-  {:default-url (url "http://localhost:8080" "ping")})
+  {:default-url (url "http://localhost:8080" "ping")
+   :responses {:error {:subsonic-response
+                       {:error {:code 40
+                                :message "Wrong username or password"}
+                        :status "failed"
+                        :version "1.15.0"}}}
+               :ok {:subsonic-response
+                    {:scanStatus {:count 10326
+                                  :scanning false}
+                     :status "ok"
+                     :version "1.15.0"}}})
 
 (deftest general-url-construction
   (testing "Handles missing slashes"
@@ -30,3 +40,19 @@
       (is (true? (str/includes? (api/cover-url "http://server.tld" {} album -1) (str "id=" (:coverArt album))))))
     (testing "Should scale an image to a given size"
       (is (true? (str/includes? (api/cover-url "http://server.tld" {} album 48) "size=48"))))))
+
+(deftest response-handling
+  (testing "Should unwrap responses"
+    (let [response (get-in fixtures [:responses :ok])]
+      (is (= (get-in response [:subsonic-response :scanStatus])
+             (api/unwrap-response response)))))
+  (testing "Should detect errors"
+    (is (true? (api/is-error? (get-in fixtures [:responses :error]))))
+    (is (false? (api/is-error? (get-in fixtures [:responses :ok])))))
+  (testing "Should throw an informative error when trying to unwrap an erroneous response"
+    (let [error-response (get-in fixtures [:responses :error])]
+      (is (thrown? ExceptionInfo (api/unwrap-response error-response)))
+      (try
+        (api/unwrap-response error-response)
+        (catch ExceptionInfo e
+          (= (:error error-response) (ex-data e)))))))
