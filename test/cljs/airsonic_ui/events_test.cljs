@@ -1,6 +1,7 @@
 (ns airsonic-ui.events-test
   (:require [cljs.test :refer [deftest testing is]]
             [clojure.string :as str]
+            [airsonic-ui.fixtures :refer [responses]]
             [airsonic-ui.events :as events]))
 
 (enable-console-print!)
@@ -16,8 +17,14 @@
       (testing "saves the given server location"
         (is (= server (get-in fx [:db :credentials :server]))))
       (testing "invokes correct success callback"
-        (is (= ::events/credentials-verified (first (:on-success request)))))))
-  (testing "On succesfull response"
+        (is (= ::events/verify-auth-response (first (:on-success request)))))))
+  (testing "Auth response verification"
+    (is (= :notification/show
+           (first (:dispatch (events/verify-auth-response {} [:_ "user" "pass" (:error responses)]))))
+        "shows an error when we have an error response")
+    (let [event (:dispatch (events/verify-auth-response {} [:_ "username" "password" (:auth-success responses)]))]
+      (is (= [::events/credentials-verified "username" "password"] event))))
+  (testing "On succesful response"
     (let [creds-before {:server "https://localhost"}
           fx (events/credentials-verified {:db {:credentials creds-before}}
                                           [:_ "user" "pass"])
@@ -43,3 +50,34 @@
   (testing "When there's no previous login data"
     (testing "remembering has no effect"
       (is (nil? (events/try-remember-user {} [:_]))))))
+
+(defn- first-notification [fx]
+  (-> (get-in fx [:db :notifications]) vals first))
+
+(deftest api-interaction
+  (testing "Should show an error notification when airsonic responds with an error"
+    (let [fx (events/good-api-response {} [:_ (:error responses)])]
+      (is (= :error (-> fx :dispatch second))))))
+
+(deftest user-notifications
+  (testing "Should be able to display a message with an assigned level"
+    (is (= :error (:level (first-notification (events/show-notification {} [:_ :error "foo"])))))
+    (is (= :info (:level (first-notification (events/show-notification {} [:_ :info "some other message"]))))))
+  (testing "Should default to level :info"
+    (is (= :info (:level (first-notification (events/show-notification {} [:_ "and another one"]))))))
+  (testing "Should create a unique id for each message"
+    (let [state (->
+                 {}
+                 (events/show-notification [:_ :info "Something something"])
+                 (events/show-notification [:_ :error "Something important"]))
+          ids (keys (:notifications state))]
+      (is (= (count ids) (count (set ids))))))
+  (testing "Should remove a message, given it's id"
+    (let [state (events/show-notification {} [:_ "This is a notification"])
+          id (-> (:notifications state)
+                 keys
+                 first)]
+      (is (empty? (:notifications (events/hide-notification state [:_ id]))))))
+  (testing "Should automatically remove a message after a while"
+    (let [fx (events/show-notification {} [:_ :info "This is a notification"])]
+      (is (= :notification/hide (-> (:dispatch-later fx) first :dispatch first))))))

@@ -11,6 +11,12 @@
 ;; ::events/something-happening -> relevant to only this app
 ;; :single-colon/something -> coming from external sources (e.g. :audio/... or :routes/...) that are potentially reusable
 
+(re-frame/reg-fx
+ ;; a simple effect to keep println statements out of our event handlers
+ :log
+ (fn [params]
+   (apply println params)))
+
 ;; database reset / init
 
 (re-frame/reg-event-db
@@ -29,11 +35,23 @@
    :http-xhrio {:method :get
                 :uri (api/url server "ping" {:u user :p pass})
                 :response-format (ajax/json-response-format {:keywords? true})
-                :on-success [::credentials-verified user pass]
-                :on-failure [::api-failure]}})
+                :on-success [::verify-auth-response user pass]
+                :on-failure [:api/bad-response]}})
 
 (re-frame/reg-event-fx
  ::authenticate authenticate)
+
+(defn verify-auth-response
+  "Since we don't get real status codes, we have to look into the server's
+  response and see whether we actually sent the correct credentials"
+  [fx [_ user pass response]]
+  {:dispatch (if (api/is-error? response)
+               [:notification/show :error (api/error-msg (api/->exception response))]
+               [::credentials-verified user pass])})
+
+(re-frame/reg-event-fx
+ ::verify-auth-response
+ verify-auth-response)
 
 (defn try-remember-user
   "Enables skipping the auth request when credentials are saved in the
@@ -51,7 +69,7 @@
 (defn credentials-verified
   "Gets called after the server indicates that the credentials entered by a user
   are correct (see `authenticate`)"
-  [{:keys [db store]} [_event user pass _response]]
+  [{:keys [db store]} [_ user pass]]
   (let [auth {:u user :p pass}
         credentials (merge (:credentials db) auth)]
     {:routes/set-credentials auth
@@ -87,26 +105,32 @@
   (let [creds (:credentials db)]
     (api/url (:server creds) endpoint (merge params (select-keys creds [:u :p])))))
 
+(defn api-request [{:keys [db]} [_ endpoint params]]
+  {:http-xhrio {:method :get
+                :uri (api-url db endpoint params)
+                :response-format (ajax/json-response-format {:keywords? true})
+                :on-success [:api/good-response]
+                :on-failure [:api/bad-response]}})
+
 (re-frame/reg-event-fx
- :api-request
- (fn [{:keys [db]} [_ endpoint k params]]
-   {:http-xhrio {:method :get
-                 :uri (api-url db endpoint params)
-                 :response-format (ajax/json-response-format {:keywords? true})
-                 :on-success [::api-success k]
-                 :on-failure [::api-failure]}}))
+ :api/request
+ api-request)
 
-(re-frame/reg-event-db
- ::api-success
- (fn [db [_ k response]]
-   ; we "unwrap" the responses
-   (assoc db :response (-> response :subsonic-response k))))
+(defn good-api-response [fx [_ response]]
+  (try
+    (assoc-in fx [:db :response] (api/unwrap-response response))
+    (catch ExceptionInfo e
+      {:dispatch [:notification/show :error (api/error-msg e)]})))
 
-(re-frame/reg-event-db
- ::api-failure
+(re-frame/reg-event-fx
+ :api/good-response
+ good-api-response)
+
+(re-frame/reg-event-fx
+ :api/bad-response
  (fn [db event]
-   (println "api call gone bad; CORS headers missing? check for :status 0" event)
-   db))
+   {:log ["API call gone bad; are CORS headers missing? check for :status 0" event]
+    :dispatch [:notification/show :error "Communication with server failed. Check browser logs for details."]}))
 
 ;; musique
 
@@ -173,3 +197,38 @@
    {:routes/navigate [routes/default-route]
     :routes/unset-credentials nil
     :db db/default-db}))
+
+;; user messages
+
+(def notification-duration
+  {:info 2500
+   :error 10000})
+
+(defn show-notification
+  "Displays an informative message to the user"
+  [fx [_ level message]]
+  (let [id (.now js/performance)
+        hide-later (fn [level]
+                     [{:ms (get notification-duration level)
+                       :dispatch [:notification/hide id]}])]
+    (if (nil? message)
+      (let [message level
+            level :info]
+        (-> (assoc-in fx [:db :notifications id] {:level level
+                                                  :message message})
+            (assoc :dispatch-later (hide-later level))))
+      (-> (assoc-in fx [:db :notifications id] {:level level
+                                                :message message})
+          (assoc :dispatch-later (hide-later level))))))
+
+(re-frame/reg-event-fx
+ :notification/show
+ show-notification)
+
+(defn hide-notification
+  [db [_ notification-id]]
+  (update db :notifications dissoc notification-id))
+
+(re-frame/reg-event-db
+ :notification/hide
+ hide-notification)

@@ -1,6 +1,7 @@
 (ns airsonic-ui.utils.api-test
   (:require [cljs.test :refer [deftest testing is]]
             [clojure.string :as str]
+            [airsonic-ui.fixtures :refer [responses]]
             [airsonic-ui.utils.api :as api]))
 
 (defn- url
@@ -30,3 +31,19 @@
       (is (true? (str/includes? (api/cover-url "http://server.tld" {} album -1) (str "id=" (:coverArt album))))))
     (testing "Should scale an image to a given size"
       (is (true? (str/includes? (api/cover-url "http://server.tld" {} album 48) "size=48"))))))
+
+(deftest response-handling
+  (testing "Should unwrap responses"
+    (let [response (:ok responses)]
+      (is (= (get-in response [:subsonic-response :scanStatus])
+             (api/unwrap-response response)))))
+  (testing "Should detect errors"
+    (is (true? (api/is-error? (:error responses))))
+    (is (false? (api/is-error? (:ok responses)))))
+  (testing "Should throw an informative error when trying to unwrap an erroneous response"
+    (let [error-response (:error responses)]
+      (is (thrown? ExceptionInfo (api/unwrap-response error-response)))
+      (try
+        (api/unwrap-response error-response)
+        (catch ExceptionInfo e
+          (= (:error error-response) (ex-data e)))))))

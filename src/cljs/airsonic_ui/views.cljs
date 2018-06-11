@@ -5,6 +5,7 @@
             [airsonic-ui.events :as events]
             [airsonic-ui.subs :as subs]
 
+            [airsonic-ui.views.notifications :refer [notification-list]]
             [airsonic-ui.views.breadcrumbs :refer [breadcrumbs]]
             [airsonic-ui.views.bottom-bar :refer [bottom-bar]]
             [airsonic-ui.views.login :refer [login-form]]
@@ -65,7 +66,10 @@
      [bottom-bar]]))
 
 (defn main-panel []
-  (let [[route params query] @(subscribe [::subs/current-route])]
-    (case route
-      ::routes/login [login-form]
-      [app route params query])))
+  (let [[route params query] @(subscribe [::subs/current-route])
+        notifications @(subscribe [::subs/notifications])]
+    [:div
+     [notification-list notifications]
+     (case route
+       ::routes/login [login-form]
+       [app route params query])]))

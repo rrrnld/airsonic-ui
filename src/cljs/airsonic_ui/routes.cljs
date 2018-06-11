@@ -28,16 +28,16 @@
 
 (defmethod route-data ::main
   [route-id params query]
-  [:api-request "getAlbumList2" :albumList2 {:type "recent"
-                                             :size 18}])
+  [:api/request "getAlbumList2" {:type "recent"
+                                 :size 18}])
 
 (defmethod route-data ::artist-view
   [route-id params query]
-  [:api-request "getArtist" :artist (select-keys params [:id])])
+  [:api/request "getArtist" (select-keys params [:id])])
 
 (defmethod route-data ::album-view
   [route-id params query]
-  [:api-request "getAlbum" :album (select-keys params [:id])])
+  [:api/request "getAlbum" (select-keys params [:id])])
 
 ;; shouldn't need to change anything below
 
