@@ -20,8 +20,7 @@
  {:app {:target :browser
         :output-dir "public/app/js"
         :asset-path "/app/js"
-        :closure-defines {"re_frame.trace.trace_enabled_QMARK_" true
-                          "day8.re_frame.tracing.trace_enabled_QMARK_" true}
+        :closure-defines {"re_frame.trace.trace_enabled_QMARK_" true}
         :modules {:main {:entries [airsonic-ui.core]}}
         :devtools {:http-root "public"
                    :http-port 8080
