@@ -5,6 +5,7 @@
             [airsonic-ui.events :as events]
             [airsonic-ui.subs :as subs]
 
+            [airsonic-ui.views.notifications :refer [notification-list]]
             [airsonic-ui.views.breadcrumbs :refer [breadcrumbs]]
             [airsonic-ui.views.bottom-bar :refer [bottom-bar]]
             [airsonic-ui.views.login :refer [login-form]]
@@ -46,26 +47,12 @@
           {:on-click #(dispatch [::events/initialize-db]) :href "#"}
           (str "Logout (" (:name user) ")")]]]])
 
-;; user notifications
-
-(defn notification-list [notifications]
-  [:div.notifications
-   (for [[id notification] notifications]
-     (let [class (case (:level notification)
-                   :error "danger"
-                   "info")]
-       ^{:key id} [:div {:class-name (str "notification is-small is-" class)}
-                   [:button.delete {:on-click #(dispatch [:notification/hide id])}]
-                   (:message notification)]))])
-
 ;; putting everything together
 
 (defn app [route params query]
   (let [user @(subscribe [::subs/user])
-        notifications @(subscribe [::subs/notifications])
         content @(subscribe [::subs/current-content])]
     [:div
-     [notification-list notifications]
      [:main.columns
       [:div.column.is-2.sidebar
        [sidebar user]]
@@ -79,7 +66,10 @@
      [bottom-bar]]))
 
 (defn main-panel []
-  (let [[route params query] @(subscribe [::subs/current-route])]
-    (case route
-      ::routes/login [login-form]
-      [app route params query])))
+  (let [[route params query] @(subscribe [::subs/current-route])
+        notifications @(subscribe [::subs/notifications])]
+    [:div
+     [notification-list notifications]
+     (case route
+       ::routes/login [login-form]
+       [app route params query])]))

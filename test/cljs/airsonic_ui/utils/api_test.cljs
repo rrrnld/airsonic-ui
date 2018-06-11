@@ -1,6 +1,7 @@
 (ns airsonic-ui.utils.api-test
   (:require [cljs.test :refer [deftest testing is]]
             [clojure.string :as str]
+            [airsonic-ui.fixtures :refer [responses]]
             [airsonic-ui.utils.api :as api]))
 
 (defn- url
@@ -9,17 +10,7 @@
   (api/url server endpoint {}))
 
 (def fixtures
-  {:default-url (url "http://localhost:8080" "ping")
-   :responses {:error {:subsonic-response
-                       {:error {:code 40
-                                :message "Wrong username or password"}
-                        :status "failed"
-                        :version "1.15.0"}}}
-               :ok {:subsonic-response
-                    {:scanStatus {:count 10326
-                                  :scanning false}
-                     :status "ok"
-                     :version "1.15.0"}}})
+  {:default-url (url "http://localhost:8080" "ping")})
 
 (deftest general-url-construction
   (testing "Handles missing slashes"
@@ -43,14 +34,14 @@
 
 (deftest response-handling
   (testing "Should unwrap responses"
-    (let [response (get-in fixtures [:responses :ok])]
+    (let [response (:ok responses)]
       (is (= (get-in response [:subsonic-response :scanStatus])
              (api/unwrap-response response)))))
   (testing "Should detect errors"
-    (is (true? (api/is-error? (get-in fixtures [:responses :error]))))
-    (is (false? (api/is-error? (get-in fixtures [:responses :ok])))))
+    (is (true? (api/is-error? (:error responses))))
+    (is (false? (api/is-error? (:ok responses)))))
   (testing "Should throw an informative error when trying to unwrap an erroneous response"
-    (let [error-response (get-in fixtures [:responses :error])]
+    (let [error-response (:error responses)]
       (is (thrown? ExceptionInfo (api/unwrap-response error-response)))
       (try
         (api/unwrap-response error-response)
