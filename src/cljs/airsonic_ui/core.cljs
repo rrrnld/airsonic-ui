@@ -21,10 +21,8 @@
   (reagent/render [views/main-panel] (.getElementById js/document "app")))
 
 (defn ^:export init []
-  (routes/start-routing!)
   (storage/reg-co-fx! :airsonic-ui {:fx :store
                                     :cofx :store})
-  (re-frame/dispatch-sync [::events/initialize-db])
-  (re-frame/dispatch [::events/try-remember-user])
+  (re-frame/dispatch-sync [::events/initialize-app])
   (dev-setup)
   (mount-root))

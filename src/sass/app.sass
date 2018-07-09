@@ -6,6 +6,17 @@
   main
     margin-bottom: 0
 
+// big loading spinner
+.app-loading
+  display: flex
+  justify-content: center
+  align-items: center
+  height: 100vh
+  font-size: 4.8rem
+  color: $grey-light
+  .loader
+    +loader
+
 // navi on the left side
 .sidebar
   min-height: 100vh
@@ -87,11 +98,11 @@
 @keyframes you-spin-my-head-right-round
   from
     transform: rotate(0deg)
-    transform-origin: 50% 48%
+    transform-origin: 49% 50%
 
   to
     transform: rotate(359deg)
-    transform-origin: 50% 48%
+    transform-origin: 49% 50%
 
 .loading-spinner
   .icon

@@ -4,12 +4,7 @@
             [airsonic-ui.routes :as routes]
             [airsonic-ui.db :as db]
             [airsonic-ui.utils.api :as api]
-            [day8.re-frame.tracing :refer-macros [fn-traced]])) ; <- useful to debug handlers
-
-;; this is where all of the event handling takes place; the names put the events into
-;; the following categories:
-;; ::events/something-happening -> relevant to only this app
-;; :single-colon/something -> coming from external sources (e.g. :audio/... or :routes/...) that are potentially reusable
+            [day8.re-frame.tracing :refer-macros [fn-traced defn-traced]])) ; <- useful to debug handlers
 
 (re-frame/reg-fx
  ;; a simple effect to keep println statements out of our event handlers
@@ -17,71 +12,88 @@
  (fn [params]
    (apply println params)))
 
-;; database reset / init
+;; ---
+;; app boot flow
+;; * restoring a previous session
+;; * initializing the router
+;; * sending out the appropriate requests
+;; ---
 
-(re-frame/reg-event-db
- ::initialize-db
+(re-frame/reg-event-fx
+ ::initialize-app
  (fn [_]
-   db/default-db))
+   {:db db/default-db
+    :dispatch [:init-flow/restore-previous-session]}))
+
+(defn restore-previous-session
+  "See comment above for different steps; what's important here is that we check
+  for a previous session before anything else, otherwise we might run into auth
+  troubles with our router."
+  [{:keys [db store]} _]
+  (let [credentials (:credentials store)]
+    {:db (assoc db :credentials credentials)
+     :dispatch-n [(if credentials
+                    [:init-flow/credentials-found credentials]
+                    [:init-flow/credentials-missing])]
+     :routes/start-routing nil}))
+
+(re-frame/reg-event-fx
+ :init-flow/restore-previous-session
+ [(re-frame/inject-cofx :store)]
+ restore-previous-session)
+
+(defn credentials-found [_ [_ {:keys [u p server]}]]
+  {:dispatch [:credentials/verification-request u p server]})
+
+(re-frame/reg-event-fx
+ :init-flow/credentials-found credentials-found)
+
+(re-frame/reg-event-fx
+ :init-flow/credentials-missing
+ ;; we don't do anything special here, it's just for the sake of clarity
+ (fn [_ _] {}))
 
 ;; ---
 ;; auth logic
 ;; ---
 
-(defn authenticate
+(defn-traced credentials-verification-request
   "Tries to authenticate a user by pinging the server with credentials, saving
-  them when the request was succesful. Bypasses the request when a user saved
+  them when the request was successful. Bypasses the request when a user saved
   their credentials."
-  [{:keys [db]} [_ user pass server]]
-  {:db (assoc-in db [:credentials :server] server)
-   :http-xhrio {:method :get
+  [_ [_ user pass server]]
+  {:http-xhrio {:method :get
                 :uri (api/url server "ping" {:u user :p pass})
                 :response-format (ajax/json-response-format {:keywords? true})
-                :on-success [::verify-auth-response user pass]
+                :on-success [:credentials/verification-response user pass server]
                 :on-failure [:api/bad-response]}})
 
 (re-frame/reg-event-fx
- ::authenticate authenticate)
+ :credentials/verification-request credentials-verification-request)
 
-(defn verify-auth-response
+(defn credentials-verification-response
   "Since we don't get real status codes, we have to look into the server's
   response and see whether we actually sent the correct credentials"
-  [fx [_ user pass response]]
+  [fx [_ user pass server response]]
   {:dispatch (if (api/is-error? response)
                [:notification/show :error (api/error-msg (api/->exception response))]
-               [::credentials-verified user pass])})
+               [:credentials/verified user pass server])})
 
 (re-frame/reg-event-fx
- ::verify-auth-response verify-auth-response)
-
-(defn try-remember-user
-  "Enables skipping the auth request when credentials are saved in the
-  local storage; otherwise has no effect"
-  [{:keys [db store]} [_]]
-  (when-let [credentials (:credentials store)]
-    {:db (assoc-in db [:credentials :server] (:server credentials))
-     :dispatch [::credentials-verified (:u credentials) (:p credentials) nil]}))
-
-(re-frame/reg-event-fx
- ::try-remember-user
- [(re-frame/inject-cofx :store)]
- try-remember-user)
+ :credentials/verification-response credentials-verification-response)
 
 (defn credentials-verified
   "Gets called after the server indicates that the credentials entered by a user
-  are correct (see `authenticate`)"
-  [{:keys [db store]} [_ user pass]]
-  (let [auth {:u user :p pass}
-        credentials (merge (:credentials db) auth)]
-    {:routes/set-credentials auth
+  are correct (see `credentials-verification-request`)"
+  [{:keys [db]} [_ user pass server]]
+  (let [credentials {:u user :p pass :server server}]
+    {:routes/set-credentials credentials
      :store {:credentials credentials}
      :db (assoc db :credentials credentials)
      :dispatch [::logged-in]}))
 
 (re-frame/reg-event-fx
- ::credentials-verified
- [(re-frame/inject-cofx :store)]
- credentials-verified)
+ :credentials/verified credentials-verified)
 
 ;; TODO: We have to find another solution for this once we have routes that
 ;; don't require a login but have the bottom controls
@@ -91,20 +103,28 @@
  (fn [_]
    (.. js/document -documentElement -classList (add "has-navbar-fixed-bottom"))))
 
-;; we do this in two steps to make sure the credentials are set once we navigate
+(defn logged-in
+  [cofx _]
+  (let [redirect (or (get-in cofx [:routes/from-query-param :redirect])
+                     [::routes/main])]
+    {:routes/navigate redirect
+     :show-nav-bar nil}))
+
 (re-frame/reg-event-fx
  ::logged-in
- (fn [_ _]
-   {:routes/navigate [::routes/main]
-    :show-nav-bar nil}))
+ [(re-frame/inject-cofx :routes/from-query-param :redirect)]
+ logged-in)
 
 (defn logout
   "Clears all credentials and redirects the user to the login page"
-  [_ _]
-  {:routes/navigate [::routes/login]
-   :routes/unset-credentials nil
-   :store nil
-   :db db/default-db})
+  [_ [_ & args]]
+  (let [args (apply hash-map args)]
+    {:routes/navigate (if-let [redirect (:redirect-to args)]
+                        [::routes/login {} {:redirect (routes/encode-route redirect)}]
+                        [::routes/login])
+     :routes/unset-credentials nil
+     :store nil
+     :db db/default-db}))
 
 (re-frame/reg-event-fx
  ::logout logout)
@@ -136,11 +156,12 @@
 (re-frame/reg-event-fx
  :api/good-response good-api-response)
 
+(defn bad-api-response [db event]
+  {:log ["API call gone bad; are CORS headers missing? check for :status 0" event]
+   :dispatch [:notification/show :error "Communication with server failed. Check browser logs for details."]})
+
 (re-frame/reg-event-fx
- :api/bad-response
- (fn [db event]
-   {:log ["API call gone bad; are CORS headers missing? check for :status 0" event]
-    :dispatch [:notification/show :error "Communication with server failed. Check browser logs for details."]}))
+ :api/bad-response bad-api-response)
 
 ;; ---
 ;; musique
@@ -206,8 +227,9 @@
 
 (re-frame/reg-event-fx
  :routes/unauthorized
- (fn [_ _]
-   {:dispatch [::logout]}))
+ [(re-frame/inject-cofx :routes/current-route)]
+ (fn [{:routes/keys [current-route]} _]
+   {:dispatch [::logout :redirect-to current-route]}))
 
 ;; ---
 ;; user messages

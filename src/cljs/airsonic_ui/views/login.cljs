@@ -16,7 +16,7 @@
         server (r/atom (.. js/window -location -origin))
         submit (fn [e]
                  (.preventDefault e)
-                 (dispatch [::events/authenticate @user @pass @server]))]
+                 (dispatch [:credentials/verification-request @user @pass @server]))]
     (fn []
       [:section.hero.is-fullheight>div.hero-body
        [:div.container.has-text-centered>div.column.is-4.is-offset-4

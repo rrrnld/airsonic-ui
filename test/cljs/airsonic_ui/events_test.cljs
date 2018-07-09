@@ -8,50 +8,64 @@
 
 (enable-console-print!)
 
+(into [] (conj [[:foo :bar :baz]] nil))
+
+(defn dispatches?
+  "Helper to see whether an event is dispatched in a coeffect; `ev` can either
+  be a whole vector or a keyword which is interpreted as the event name."
+  [cofx ev]
+  (let [all-events (conj (or (:dispatch-n cofx) []) (:dispatch cofx))]
+    (some #(if (vector? ev)
+             (= ev %)
+             (= ev (first %)))
+          all-events)))
+
+(deftest session-restoration
+  (letfn [(no-previous-session []
+            (events/restore-previous-session {} [:_]))
+          (has-previous-session []
+            (events/restore-previous-session {:store {:u "test"
+                                                      :p "test"
+                                                      :server "https://demo.airsonic.io/"}} [:_]))]
+    (testing "Should initialize routing after checking for previous credentials"
+      (is (contains? (no-previous-session) :routes/start-routing))
+      (is (contains? (has-previous-session) :routes/start-routing)))
+    (testing "Should indicate success or failure"
+      (is (dispatches? (no-previous-session)) :init-flow/credentials-missing)
+      (is (dispatches? (has-previous-session)) :init-flow/credentials-found))
+    (testing "Should send an auth request on success"
+      (is (dispatches? (events/credentials-found {} [:_]) :credentials/verification-request)))
+    (testing "Should redirect to the login form when there's no previous session to be restored")))
+
 (deftest authentication
-  (testing "Credential verification"
+  (testing "Server ping for verifications"
     (let [server "https://localhost"
-          fx (events/authenticate {:db {}} [:_ "user" "pass" server])
+          fx (events/credentials-verification-request {} [:_ "user" "pass" server])
           request (:http-xhrio fx)]
       (testing "uses correct server url"
         (is (str/starts-with? (:uri request) server))
-        (is (str/includes? (:uri request) "/ping")))
-      (testing "saves the given server location"
-        (is (= server (get-in fx [:db :credentials :server]))))
+        (is (str/includes? (:uri request) "/ping"))
+        (is (str/includes? (:uri request) "p=pass"))
+        (is (str/includes? (:uri request) "u=user")))
       (testing "invokes correct success callback"
-        (is (= ::events/verify-auth-response (first (:on-success request)))))))
+        (is (= :credentials/verification-response (first (:on-success request)))))))
   (testing "Auth response verification"
-    (is (= :notification/show
-           (first (:dispatch (events/verify-auth-response {} [:_ "user" "pass" (:error responses)]))))
-        "shows an error when we have an error response")
-    (let [event (:dispatch (events/verify-auth-response {} [:_ "username" "password" (:auth-success responses)]))]
-      (is (= [::events/credentials-verified "username" "password"] event))))
+    (let [server "https://localhost"
+          fx (events/credentials-verification-response {} [:_ "user" "pass" server (:error responses)])]
+      (is (= (dispatches? fx :notification/show))
+          "shows an error when we have a bad response"))
+    (let [server "https://localhost"
+          fx (events/credentials-verification-response {} [:_ "username" "password" server (:auth-success responses)])]
+      (is (dispatches? fx [:credentials/verified "username" "password" server]))))
   (testing "On succesful response"
-    (let [creds-before {:server "https://localhost"}
-          fx (events/credentials-verified {:db {:credentials creds-before}}
-                                          [:_ "user" "pass"])
-          auth {:u "user" :p "pass"}]
-      (testing "credentials are sent to the router for access rights"
-        (is (= auth (:routes/set-credentials fx))))
-      (testing "credentials are saved in the global state"
-        (is (= auth (-> (get-in fx [:db :credentials])
-                               (select-keys [:u :p])))))
-      (testing "credentials are persisted together with the server address"
-        (is (= (merge creds-before auth) (get-in fx [:store :credentials]))))
-      (testing "the login process is finalized"
-        (is (= [::events/logged-in] (:dispatch fx))))))
-  (testing "When remembering previous login data"
-    (let [credentials {:server "http://localhost"
-                       :u "another-user"
-                       :p "some_random_password123"}
-          fx (events/try-remember-user {:store {:credentials credentials}} [:_])]
-      (testing "the auth request is skipped"
-        (is (nil? (:http-xhrio fx))))
-      (testing "we get sent straight to the home page"
-        (is (= ::events/credentials-verified (first (:dispatch fx)))))))
-  (testing "When there's no previous login data"
-    (testing "remembering has no effect"
-      (is (nil? (events/try-remember-user {} [:_]))))))
+    (let [credentials {:u "user" :p "pass" :server "https://localhost"}
+          fx (events/credentials-verified {} [:_ (:u credentials) (:p credentials) (:server credentials)])]
+    (testing "credentials are sent to the router for access rights"
+      (is (= credentials (:routes/set-credentials fx))))
+    (testing "credentials are saved in the global state"
+      (is (= credentials (get-in fx [:db :credentials]))))
+    (testing "the login process is finalized"
+      (is (dispatches? fx ::events/logged-in))))))
 
 (deftest logout
   (let [fx (events/logout {} [:_])]
@@ -62,7 +76,11 @@
     (testing "Should unset authentication in the router"
       (is (contains? fx :routes/unset-credentials)))
     (testing "Should reset the app-db"
-      (is (= db/default-db (:db fx))))))
+      (is (= db/default-db (:db fx)))))
+  (testing "Should be able to keep a redirection parameter"
+    (let [redirect [:route {:with-data #{1 2 3 4 5}}]
+          fx (events/logout {} [:_ :redirect-to redirect])]
+      (is (= [::routes/login {:redirect redirect}])))))
 
 (defn- first-notification [fx]
   (-> (get-in fx [:db :notifications]) vals first))

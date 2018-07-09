@@ -1,5 +1,6 @@
 (ns airsonic-ui.routes
   (:require [bide.core :as r]
+            [cljs.reader :refer [read-string]]
             [re-frame.core :as re-frame]))
 
 (def default-route ::login)
@@ -72,8 +73,41 @@
     (re-frame/dispatch [:routes/navigation route-id params query])
     (re-frame/dispatch [:routes/unauthorized route-id params query])))
 
+(defn encode-route
+  "Takes a parsed route and returns a representation that's suitable for
+  transportation in a uri component"
+  [route]
+  (js/encodeURIComponent (str route)))
+
+(defn decode-route
+  "Decodes and encoded route from a uri component into a parsed route"
+  [encoded-route]
+  (read-string (js/decodeURIComponent encoded-route)))
+
+(defn current-route
+  "Returns the parsed route for window.location.hash"
+  []
+  (r/match router (subs (.. js/window -location -hash) 1)))
+
+(re-frame/reg-cofx
+ :routes/current-route
+ (fn [coeffects _]
+   (assoc coeffects :routes/current-route (current-route))))
+
+(re-frame/reg-cofx
+ :routes/from-query-param
+ (fn [coeffects param]
+   ;; this allows us to encode a complete route in a url fragment; useful for
+   ;; doing redirects
+   (let [[_ _ query] (current-route)
+         from-param (decode-route (get query param))]
+     (assoc-in coeffects [:routes/from-query-param param] from-param))))
+
 (defn start-routing!
   "Initializes the router and makes sure the correct events get dispatched."
-  []
-  (r/start! router {:default default-route
-                    :on-navigate on-navigate}))
+  ([] (r/start! router {:default default-route
+                        :on-navigate on-navigate}))
+  ([_] (start-routing!))) ;; <- 1-arity is for the re-frame effect exposed below
+
+(re-frame/reg-fx
+ :routes/start-routing start-routing!)
