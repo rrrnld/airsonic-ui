@@ -1,24 +1,13 @@
 (ns airsonic-ui.events-test
   (:require [cljs.test :refer [deftest testing is]]
             [clojure.string :as str]
+            [airsonic-ui.test-helpers :refer [dispatches?]]
             [airsonic-ui.fixtures :refer [responses]]
             [airsonic-ui.db :as db]
             [airsonic-ui.routes :as routes]
             [airsonic-ui.events :as events]))
 
 (enable-console-print!)
-
-(into [] (conj [[:foo :bar :baz]] nil))
-
-(defn dispatches?
-  "Helper to see whether an event is dispatched in a coeffect; `ev` can either
-  be a whole vector or a keyword which is interpreted as the event name."
-  [cofx ev]
-  (let [all-events (conj (or (:dispatch-n cofx) []) (:dispatch cofx))]
-    (some #(if (vector? ev)
-             (= ev %)
-             (= ev (first %)))
-          all-events)))
 
 (deftest session-restoration
   (letfn [(no-previous-session []
