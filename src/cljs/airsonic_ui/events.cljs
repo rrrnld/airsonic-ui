@@ -12,6 +12,11 @@
  (fn [params]
    (apply println params)))
 
+(defn noop
+  "An event handler that can be used for clarity; doesn't do anything, but might
+  give a name to an event"
+  [cofx _] cofx)
+
 ;; ---
 ;; app boot flow
 ;; * restoring a previous session
@@ -31,10 +36,9 @@
   troubles with our router."
   [{:keys [db store]} _]
   (let [credentials (:credentials store)]
-    {:db (assoc db :credentials credentials)
-     :dispatch-n [(if credentials
+    {:dispatch-n [(if credentials
                     [:init-flow/credentials-found credentials]
-                    [:init-flow/credentials-missing])]
+                    [:init-flow/credentials-not-found])]
      :routes/start-routing nil}))
 
 (re-frame/reg-event-fx
@@ -45,19 +49,21 @@
 (defn credentials-found [_ [_ {:keys [u p server]}]]
   {:dispatch [:credentials/verification-request u p server]})
 
-(re-frame/reg-event-fx
- :init-flow/credentials-found credentials-found)
+(re-frame/reg-event-fx :init-flow/credentials-found credentials-found)
 
-(re-frame/reg-event-fx
- :init-flow/credentials-missing
- ;; we don't do anything special here, it's just for the sake of clarity
- (fn [_ _] {}))
+;; we don't do anything special here, it's just for the sake of clarity
+
+(defn credentials-not-found
+  [cofx _]
+  (assoc-in cofx [:db :credentials] :credentials/not-found))
+
+(re-frame/reg-event-fx :init-flow/credentials-not-found credentials-not-found)
 
 ;; ---
 ;; auth logic
 ;; ---
 
-(defn-traced credentials-verification-request
+(defn credentials-verification-request
   "Tries to authenticate a user by pinging the server with credentials, saving
   them when the request was successful. Bypasses the request when a user saved
   their credentials."
@@ -66,21 +72,25 @@
                 :uri (api/url server "ping" {:u user :p pass})
                 :response-format (ajax/json-response-format {:keywords? true})
                 :on-success [:credentials/verification-response user pass server]
-                :on-failure [:api/bad-response]}})
+                :on-failure [:credentials/verification-failure]}})
 
-(re-frame/reg-event-fx
- :credentials/verification-request credentials-verification-request)
+(re-frame/reg-event-fx :credentials/verification-request credentials-verification-request)
 
 (defn credentials-verification-response
   "Since we don't get real status codes, we have to look into the server's
   response and see whether we actually sent the correct credentials"
   [fx [_ user pass server response]]
   {:dispatch (if (api/is-error? response)
-               [:notification/show :error (api/error-msg (api/->exception response))]
+               [:credentials/verification-failure response]
                [:credentials/verified user pass server])})
 
-(re-frame/reg-event-fx
- :credentials/verification-response credentials-verification-response)
+(re-frame/reg-event-fx :credentials/verification-response credentials-verification-response)
+
+(defn credentials-verification-failure [fx [_ response]]
+  (-> (assoc-in fx [:db :credentials] :credentials/verification-failure)
+      (assoc :dispatch [:notification/show :error (api/error-msg (api/->exception response))])))
+
+(re-frame/reg-event-fx :credentials/verification-failure credentials-verification-failure)
 
 (defn credentials-verified
   "Gets called after the server indicates that the credentials entered by a user
@@ -92,8 +102,7 @@
      :db (assoc db :credentials credentials)
      :dispatch [::logged-in]}))
 
-(re-frame/reg-event-fx
- :credentials/verified credentials-verified)
+(re-frame/reg-event-fx :credentials/verified credentials-verified)
 
 ;; TODO: We have to find another solution for this once we have routes that
 ;; don't require a login but have the bottom controls
@@ -103,10 +112,10 @@
  (fn [_]
    (.. js/document -documentElement -classList (add "has-navbar-fixed-bottom"))))
 
+
 (defn logged-in
   [cofx _]
-  (let [redirect (or (get-in cofx [:routes/from-query-param :redirect])
-                     [::routes/main])]
+  (let [redirect (or (get-in cofx [:routes/from-query-param :redirect]) [::routes/main])]
     {:routes/navigate redirect
      :show-nav-bar nil}))
 
@@ -117,17 +126,16 @@
 
 (defn logout
   "Clears all credentials and redirects the user to the login page"
-  [_ [_ & args]]
+  [cofx [_ & args]]
   (let [args (apply hash-map args)]
     {:routes/navigate (if-let [redirect (:redirect-to args)]
                         [::routes/login {} {:redirect (routes/encode-route redirect)}]
                         [::routes/login])
      :routes/unset-credentials nil
      :store nil
-     :db db/default-db}))
+     :db (merge (:db cofx) db/default-db {:credentials :credentials/logged-out})}))
 
-(re-frame/reg-event-fx
- ::logout logout)
+(re-frame/reg-event-fx ::logout logout)
 
 ;; ---
 ;; api interaction
@@ -144,8 +152,7 @@
                 :on-success [:api/good-response]
                 :on-failure [:api/bad-response]}})
 
-(re-frame/reg-event-fx
- :api/request api-request)
+(re-frame/reg-event-fx :api/request api-request)
 
 (defn good-api-response [fx [_ response]]
   (try
@@ -153,15 +160,13 @@
     (catch ExceptionInfo e
       {:dispatch [:notification/show :error (api/error-msg e)]})))
 
-(re-frame/reg-event-fx
- :api/good-response good-api-response)
+(re-frame/reg-event-fx :api/good-response good-api-response)
 
 (defn bad-api-response [db event]
   {:log ["API call gone bad; are CORS headers missing? check for :status 0" event]
    :dispatch [:notification/show :error "Communication with server failed. Check browser logs for details."]})
 
-(re-frame/reg-event-fx
- :api/bad-response bad-api-response)
+(re-frame/reg-event-fx :api/bad-response bad-api-response)
 
 ;; ---
 ;; musique
@@ -256,12 +261,10 @@
                                                 :message message})
           (assoc :dispatch-later (hide-later level))))))
 
-(re-frame/reg-event-fx
- :notification/show show-notification)
+(re-frame/reg-event-fx :notification/show show-notification)
 
 (defn hide-notification
   [db [_ notification-id]]
   (update db :notifications dissoc notification-id))
 
-(re-frame/reg-event-db
- :notification/hide hide-notification)
+(re-frame/reg-event-db :notification/hide hide-notification)

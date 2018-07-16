@@ -1,5 +1,4 @@
-(ns airsonic-ui.db
-  (:require [airsonic-ui.routes :as routes]))
+(ns airsonic-ui.db)
 
 (def default-db
   {:notifications (sorted-map)})

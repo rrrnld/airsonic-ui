@@ -13,18 +13,17 @@
   (letfn [(no-previous-session []
             (events/restore-previous-session {} [:_]))
           (has-previous-session []
-            (events/restore-previous-session {:store {:u "test"
-                                                      :p "test"
-                                                      :server "https://demo.airsonic.io/"}} [:_]))]
+            (events/restore-previous-session {:store {:credentials {:u "test"
+                                                                    :p "test"
+                                                                    :server "https://demo.airsonic.io/"}}} [:_]))]
     (testing "Should initialize routing after checking for previous credentials"
       (is (contains? (no-previous-session) :routes/start-routing))
       (is (contains? (has-previous-session) :routes/start-routing)))
     (testing "Should indicate success or failure"
-      (is (dispatches? (no-previous-session)) :init-flow/credentials-missing)
-      (is (dispatches? (has-previous-session)) :init-flow/credentials-found))
+      (is (true? (dispatches? (no-previous-session) :init-flow/credentials-not-found)))
+      (is (true? (dispatches? (has-previous-session) :init-flow/credentials-found))))
     (testing "Should send an auth request on success"
-      (is (dispatches? (events/credentials-found {} [:_]) :credentials/verification-request)))
-    (testing "Should redirect to the login form when there's no previous session to be restored")))
+      (is (true? (dispatches? (events/credentials-found {} [:_]) :credentials/verification-request))))))
 
 (deftest authentication
   (testing "Server ping for verifications"
@@ -32,20 +31,23 @@
           fx (events/credentials-verification-request {} [:_ "user" "pass" server])
           request (:http-xhrio fx)]
       (testing "uses correct server url"
-        (is (str/starts-with? (:uri request) server))
-        (is (str/includes? (:uri request) "/ping"))
-        (is (str/includes? (:uri request) "p=pass"))
-        (is (str/includes? (:uri request) "u=user")))
+        (let [uri (:uri request)]
+          (is (true? (str/starts-with? uri server)))
+          (is (true? (str/includes? uri "/ping")))
+          (is (true? (str/includes? uri "p=pass")))
+          (is (true? (str/includes? uri "u=user")))))
       (testing "invokes correct success callback"
         (is (= :credentials/verification-response (first (:on-success request)))))))
-  (testing "Auth response verification"
-    (let [server "https://localhost"
-          fx (events/credentials-verification-response {} [:_ "user" "pass" server (:error responses)])]
-      (is (= (dispatches? fx :notification/show))
-          "shows an error when we have a bad response"))
+  (testing "Auth response"
+    (testing "verification for bad responses"
+      (let [ev [:_ "user" "pass" "https://localhost"]
+            invalid-credentials (events/credentials-verification-response {} (conj ev (:auth-failure responses)))
+            verification-failure (events/credentials-verification-failure {} [:_ (:auth-failure responses)])]
+        (is (true? (dispatches? invalid-credentials :credentials/verification-failure)) "fails for bad responses")
+        (is (true? (dispatches? verification-failure :notification/show)) "shows the failure the the user")))
     (let [server "https://localhost"
           fx (events/credentials-verification-response {} [:_ "username" "password" server (:auth-success responses)])]
-      (is (dispatches? fx [:credentials/verified "username" "password" server]))))
+      (is (true? (dispatches? fx [:credentials/verified "username" "password" server])))))
   (testing "On succesful response"
     (let [credentials {:u "user" :p "pass" :server "https://localhost"}
           fx (events/credentials-verified {} [:_ (:u credentials) (:p credentials) (:server credentials)])]
@@ -54,7 +56,7 @@
     (testing "credentials are saved in the global state"
       (is (= credentials (get-in fx [:db :credentials]))))
     (testing "the login process is finalized"
-      (is (dispatches? fx ::events/logged-in))))))
+      (is (true? (dispatches? fx ::events/logged-in)))))))
 
 (deftest logout
   (let [fx (events/logout {} [:_])]
@@ -65,7 +67,7 @@
     (testing "Should unset authentication in the router"
       (is (contains? fx :routes/unset-credentials)))
     (testing "Should reset the app-db"
-      (is (= db/default-db (:db fx)))))
+      (is (= (every? #(= (get db/default-db %) (get-in fx [:db %])) (keys db/default-db))))))
   (testing "Should be able to keep a redirection parameter"
     (let [redirect [:route {:with-data #{1 2 3 4 5}}]
           fx (events/logout {} [:_ :redirect-to redirect])]

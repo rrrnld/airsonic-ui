@@ -1,8 +1,8 @@
 (ns airsonic-ui.fixtures)
 
 (def responses {:error {:subsonic-response
-                        {:error {:code 40
-                                 :message "Wrong username or password"}
+                        {:error {:code 50
+                                 :message "Incompatible Airsonic REST protocol version. Server must upgrade."}
                          :status "failed"
                          :version "1.15.0"}}
                 :ok {:subsonic-response
@@ -11,7 +11,11 @@
                       :status "ok"
                       :version "1.15.0"}}
                 :auth-success {:subsonic-response {:status "ok"
-                                                   :version "1.15.0"}}})
+                                                   :version "1.15.0"}}
+                :auth-failure {:subsonic-response {:status "failed"
+                                                   :version "1.15.0"
+                                                   :error {:code 40
+                                                           :message "Wrong username or password."}}}})
 
 (def song
   {:artistId 42,

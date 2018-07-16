@@ -68,10 +68,11 @@
        [bottom-bar]])))
 
 (defn main-panel []
-  (let [[route params query] @(subscribe [::subs/current-route])
-        notifications @(subscribe [::subs/notifications])]
+  (let [notifications @(subscribe [::subs/notifications])
+        is-booting? @(subscribe [::subs/is-booting?])
+        [route params query] @(subscribe [::subs/current-route])]
     [:div
      [notification-list notifications]
-     (if route
-       [app route params query]
-       [:div.app-loading>div.loader])]))
+     (if is-booting?
+       [:div.app-loading>div.loader]
+       [app route params query] )]))

@@ -100,7 +100,7 @@
    ;; this allows us to encode a complete route in a url fragment; useful for
    ;; doing redirects
    (let [[_ _ query] (current-route)
-         from-param (decode-route (get query param))]
+         from-param (some-> (get query param) (decode-route))]
      (assoc-in coeffects [:routes/from-query-param param] from-param))))
 
 (defn start-routing!

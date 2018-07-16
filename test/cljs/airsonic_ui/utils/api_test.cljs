@@ -47,3 +47,11 @@
         (api/unwrap-response error-response)
         (catch ExceptionInfo e
           (= (:error error-response) (ex-data e)))))))
+
+(deftest error-recognition
+  (testing "Should detect error responses"
+    (is (true? (api/is-error? (:error responses))))
+    (is (true? (api/is-error? (:auth-failure responses)))))
+  (testing "Should pass on good responses"
+    (is (false? (api/is-error? (:ok responses))))
+    (is (false? (api/is-error? (:auth-success responses))))))
