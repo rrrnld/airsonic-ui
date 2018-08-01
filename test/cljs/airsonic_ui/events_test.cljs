@@ -93,7 +93,9 @@
     (testing "Should redirect to the login screen"
       (is (dispatches? fx [:routes/do-navigation [::routes/login]])))
     (testing "Should reset the app-db"
-      (is (= db/default-db (:db fx)))))
+      (is (= db/default-db (:db fx))))
+    (testing "Should stop currently playing songs"
+      (is (contains? fx :audio/stop))))
   (testing "Should be able to keep a redirection parameter"
     (let [redirect [:route {:with-data #{1 2 3 4 5}}]
           navigation-event (:dispatch (events/logout {} [:_ :redirect-to redirect]))]
@@ -102,13 +104,15 @@
         (is (= ::routes/login route-id))
         (is (contains? query :redirect))))))
 
-(defn- first-notification [fx]
-  (-> (get-in fx [:db :notifications]) vals first))
-
 (deftest api-interaction
   (testing "Should show an error notification when airsonic responds with an error"
-    (let [fx (events/good-api-response {} [:_ (:error fixtures/responses)])]
-      (is (= :error (-> fx :dispatch second))))))
+    (let [fx (events/good-api-response {} [:_ (:error fixtures/responses)])
+          ev (:dispatch fx)]
+      (is (= :notification/show (first ev)))
+      (is (= :error (second ev))))))
+
+(defn- first-notification [fx]
+  (-> (get-in fx [:db :notifications]) vals first))
 
 (deftest user-notifications
   (testing "Should be able to display a message with an assigned level"

@@ -130,8 +130,8 @@
                                         [::routes/login {} {:redirect (routes/encode-route redirect)}]
                                         [::routes/login])]
      :store nil
-     :db (-> (merge (:db cofx) db/default-db)
-             (dissoc :credentials))}))
+     :db db/default-db
+     :audio/stop nil}))
 
 (re-frame/reg-event-fx ::logout logout)
 
@@ -180,41 +180,40 @@
  ; sets up the db, starts to play a song and adds the rest to a playlist
  ::play-songs
  (fn [{:keys [db]} [_ songs song]]
-   {:play-song (song-url db song)
-    :db (-> db
-            (assoc-in [:currently-playing :item] song)
-            (assoc-in [:currently-playing :playlist] songs))}))
+   {:audio/play (song-url db song)
+    :db (-> (assoc-in db [:audio :current-song] song)
+            (assoc-in [:audio :playlist] songs))}))
 
 (re-frame/reg-event-fx
  ::next-song
  (fn [{:keys [db]} _]
-   (let [playlist (-> db :currently-playing :playlist)
-         current (-> db :currently-playing :item)
-         next (first (rest (drop-while #(not= % current) playlist)))]
+   (let [playlist (get-in db [:audio :playlist])
+         current-song (get-in db [:audio :current-song])
+         next (first (rest (drop-while #(not= % current-song) playlist)))]
      (when next
-       {:play-song (song-url db next)
-        :db (assoc-in db [:currently-playing :item] next)}))))
+       {:audio/play (song-url db next)
+        :db (assoc-in db [:audio :current-song] next)}))))
 
 (re-frame/reg-event-fx
  ::previous-song
  (fn [{:keys [db]} _]
-   (let [playlist (-> db :currently-playing :playlist)
-         current (-> db :currently-playing :item)
-         previous (last (take-while #(not= % current) playlist))]
+   (let [playlist (get-in db [:audio :playlist])
+         current-song (get-in db [:audio :current-song])
+         previous (last (take-while #(not= % current-song) playlist))]
      (when previous
-       {:play-song (song-url db previous)
-        :db (assoc-in db [:currently-playing :item] previous)}))))
+       {:audio/play (song-url db previous)
+        :db (assoc-in db [:audio :current-song] previous)}))))
 
 (re-frame/reg-event-fx
  ::toggle-play-pause
  (fn [_ _]
-   {:toggle-play-pause nil}))
+   {:audio/toggle-play-pause nil}))
 
 (re-frame/reg-event-db
  :audio/update
  (fn [db [_ status]]
-   ; we receive this from the player once it's playing
-   (assoc-in db [:currently-playing :status] status)))
+   ; this is coming from HTML5 Audio events
+   (assoc-in db [:audio :playback-status] status)))
 
 ;; ---
 ;; routing
