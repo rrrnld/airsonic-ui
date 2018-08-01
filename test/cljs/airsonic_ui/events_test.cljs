@@ -2,83 +2,112 @@
   (:require [cljs.test :refer [deftest testing is]]
             [clojure.string :as str]
             [airsonic-ui.test-helpers :refer [dispatches?]]
-            [airsonic-ui.fixtures :refer [responses]]
+            [airsonic-ui.fixtures :as fixtures]
             [airsonic-ui.db :as db]
             [airsonic-ui.routes :as routes]
-            [airsonic-ui.events :as events]))
+            [airsonic-ui.events :as events]
+            [airsonic-ui.subs :as subs]))
 
 (enable-console-print!)
 
-(deftest session-restoration
-  (letfn [(no-previous-session []
-            (events/restore-previous-session {} [:_]))
-          (has-previous-session []
-            (events/restore-previous-session {:store {:credentials {:u "test"
-                                                                    :p "test"
-                                                                    :server "https://demo.airsonic.io/"}}} [:_]))]
-    (testing "Should initialize routing after checking for previous credentials"
-      (is (contains? (no-previous-session) :routes/start-routing))
-      (is (contains? (has-previous-session) :routes/start-routing)))
-    (testing "Should indicate success or failure"
-      (is (true? (dispatches? (no-previous-session) :init-flow/credentials-not-found)))
-      (is (true? (dispatches? (has-previous-session) :init-flow/credentials-found))))
-    (testing "Should send an auth request on success"
-      (is (true? (dispatches? (events/credentials-found {} [:_]) :credentials/verification-request))))))
+;; the event tests are actually quite nice to write:
+;; because everything in re-frame is described as data, we pass on coeffects
+;; to event handler after event handler and check if the final coeffect map
+;; looks as expected.
 
-(deftest authentication
-  (testing "Server ping for verifications"
-    (let [server "https://localhost"
-          fx (events/credentials-verification-request {} [:_ "user" "pass" server])
-          request (:http-xhrio fx)]
-      (testing "uses correct server url"
-        (let [uri (:uri request)]
-          (is (true? (str/starts-with? uri server)))
-          (is (true? (str/includes? uri "/ping")))
-          (is (true? (str/includes? uri "p=pass")))
-          (is (true? (str/includes? uri "u=user")))))
-      (testing "invokes correct success callback"
-        (is (= :credentials/verification-response (first (:on-success request)))))))
-  (testing "Auth response"
-    (testing "verification for bad responses"
-      (let [ev [:_ "user" "pass" "https://localhost"]
-            invalid-credentials (events/credentials-verification-response {} (conj ev (:auth-failure responses)))
-            verification-failure (events/credentials-verification-failure {} [:_ (:auth-failure responses)])]
-        (is (true? (dispatches? invalid-credentials :credentials/verification-failure)) "fails for bad responses")
-        (is (true? (dispatches? verification-failure :notification/show)) "shows the failure the the user")))
-    (let [server "https://localhost"
-          fx (events/credentials-verification-response {} [:_ "username" "password" server (:auth-success responses)])]
-      (is (true? (dispatches? fx [:credentials/verified "username" "password" server])))))
-  (testing "On succesful response"
-    (let [credentials {:u "user" :p "pass" :server "https://localhost"}
-          fx (events/credentials-verified {} [:_ (:u credentials) (:p credentials) (:server credentials)])]
-    (testing "credentials are sent to the router for access rights"
-      (is (= credentials (:routes/set-credentials fx))))
-    (testing "credentials are saved in the global state"
-      (is (= credentials (get-in fx [:db :credentials]))))
-    (testing "the login process is finalized"
-      (is (true? (dispatches? fx ::events/logged-in)))))))
+(defn no-previous-session [] (events/initialize-app {} [::events/initialize-app]))
+(defn has-previous-session [] (-> {:store {:credentials fixtures/credentials}}
+                                  (events/initialize-app [::events/initialize-app])))
+
+(deftest app-initialization
+  (testing "Should set up notifications"
+    (is (map? (subs/notifications (:db (no-previous-session))
+                                  [::subs/notifications])))
+    (is (map? (subs/notifications (:db (has-previous-session))
+                                  [::subs/notifications]))))
+  (testing "Should set up the default database")
+  (testing "Should initialize credential verification"
+    (is (false? (dispatches? (no-previous-session) :credentials/verify)))
+    (is (true? (dispatches? (has-previous-session) [:credentials/verify fixtures/credentials]))))
+  (testing "Should initialize the router"
+    (is (contains? (no-previous-session) :routes/start-routing))
+    (is (contains? (has-previous-session) :routes/start-routing))))
+
+(deftest credential-verification
+  (testing "Should fail when there are no credentials"
+    (is (false? (dispatches? (-> (no-previous-session)
+                                 (events/verify-credentials [:credentials/verify nil])) [::subs/is-booting?]))))
+  (testing "Should happen server-side when we have credentials"
+    (let [cofx (-> (has-previous-session)
+                   (events/verify-credentials [:credentials/verify fixtures/credentials]))]
+      (is (true? (dispatches? cofx :credentials/send-authentication-request)))))
+  (testing "Should verify the structure of credentials"
+    (let [empty-creds  {:store {:credentials {}}}]
+      (is (false? (boolean (dispatches? empty-creds :credentials/send-authentication-request)))))
+    (let [malformed {:store {:credentials {:xyz #{12 34 56}}}}]
+      (is (false? (boolean (dispatches? malformed :credentials/send-authentication-request)))))))
+
+(deftest authentication-request
+  (let [event [:credentials/send-authentication-request fixtures/credentials]
+        fx (events/authentication-request {} event)
+        request (:http-xhrio fx)]
+    (testing "uses correct server url"
+      (let [uri (:uri request)]
+        (is (true? (str/starts-with? uri (:server fixtures/credentials))))
+        (is (true? (str/includes? uri "/ping")))
+        (is (true? (str/includes? uri (str "p=" (:p fixtures/credentials)))))
+        (is (true? (str/includes? uri (str "u=" (:u fixtures/credentials)))))))
+    (testing "invokes correct callback on server response"
+      (is (= [:credentials/authentication-response fixtures/credentials] (:on-success request))))
+    (testing "invokes correct callback when server is not reachable"
+      (is (= [:api/bad-response] (:on-failure request))))))
+
+(deftest authentication-response
+  (testing "On success"
+    (let [cofx (-> (has-previous-session)
+                   (events/authentication-response [:credentials/authentication-response (:auth-success fixtures/responses)])
+                   (events/authentication-success [:credentials/authentication-success]))]
+      (testing "should mark the credentials as verified"
+        (is (true? (get-in cofx [:db :credentials :verified?]))))))
+  (testing "On failure"
+    (let [cofx (-> (has-previous-session)
+                   (events/authentication-response [:credentials/authentication-response (:auth-failure fixtures/responses)])
+                   (events/authentication-failure [:credentials/authentication-failure (:auth-failure fixtures/responses)]))]
+      (testing "should display a notification to the user"
+        (is (true? (dispatches? cofx :notification/show)))))))
+
+(deftest manual-login
+  (let [{:keys [u p server]} fixtures/credentials
+        credentials (assoc fixtures/credentials :verified? false)
+        effect (events/user-login {} [:credentials/user-login u p server])]
+    (testing "Should save the credentials as unverified"
+
+      (is (= credentials (get-in effect [:db :credentials]))))
+    (testing "Should start the authentication request"
+      (is (true? (dispatches? effect [:credentials/send-authentication-request credentials]))))))
 
 (deftest logout
   (let [fx (events/logout {} [:_])]
     (testing "Should clear all stored data"
       (is (nil? (:store fx))))
     (testing "Should redirect to the login screen"
-      (is (= [::routes/login] (:routes/navigate fx))))
-    (testing "Should unset authentication in the router"
-      (is (contains? fx :routes/unset-credentials)))
+      (is (dispatches? fx [:routes/do-navigation [::routes/login]])))
     (testing "Should reset the app-db"
-      (is (= (every? #(= (get db/default-db %) (get-in fx [:db %])) (keys db/default-db))))))
+      (is (= db/default-db (:db fx)))))
   (testing "Should be able to keep a redirection parameter"
     (let [redirect [:route {:with-data #{1 2 3 4 5}}]
-          fx (events/logout {} [:_ :redirect-to redirect])]
-      (is (= [::routes/login {:redirect redirect}])))))
+          navigation-event (:dispatch (events/logout {} [:_ :redirect-to redirect]))]
+      (is (= :routes/do-navigation (first navigation-event)))
+      (let [[route-id _ query] (second navigation-event)]
+        (is (= ::routes/login route-id))
+        (is (contains? query :redirect))))))
 
 (defn- first-notification [fx]
   (-> (get-in fx [:db :notifications]) vals first))
 
 (deftest api-interaction
   (testing "Should show an error notification when airsonic responds with an error"
-    (let [fx (events/good-api-response {} [:_ (:error responses)])]
+    (let [fx (events/good-api-response {} [:_ (:error fixtures/responses)])]
       (is (= :error (-> fx :dispatch second))))))
 
 (deftest user-notifications

@@ -1,12 +1,10 @@
 (ns airsonic-ui.views
   (:require [re-frame.core :refer [dispatch subscribe]]
-            [airsonic-ui.config :as config]
             [airsonic-ui.routes :as routes :refer [url-for]]
             [airsonic-ui.events :as events]
             [airsonic-ui.subs :as subs]
 
             [airsonic-ui.views.notifications :refer [notification-list]]
-            [airsonic-ui.views.loading-spinner :refer [loading-spinner]]
             [airsonic-ui.views.breadcrumbs :refer [breadcrumbs]]
             [airsonic-ui.views.bottom-bar :refer [bottom-bar]]
             [airsonic-ui.views.login :refer [login-form]]
@@ -49,30 +47,33 @@
 
 ;; putting everything together
 
-(defn app [route params query]
+(defn app [route-id params query]
   (let [user @(subscribe [::subs/user])
         content @(subscribe [::subs/current-content])]
-    (if (= route ::routes/login)
-      [login-form]
-      [:div
-       [:main.columns
-        [:div.column.is-2.sidebar
-         [sidebar user]]
-        [:div.column
-         [:section.section
-          [breadcrumbs content]
-          (case route
-            ::routes/main [most-recent content]
-            ::routes/artist-view [artist-detail content]
-            ::routes/album-view [album-detail content])]]]
-       [bottom-bar]])))
+    [:div
+     [:main.columns
+      [:div.column.is-2.sidebar
+       [sidebar user]]
+      [:div.column
+       [:section.section
+        [breadcrumbs content]
+        (case route-id
+          ::routes/main [most-recent content]
+          ::routes/artist-view [artist-detail content]
+          ::routes/album-view [album-detail content])]]]
+     [bottom-bar]]))
 
 (defn main-panel []
   (let [notifications @(subscribe [::subs/notifications])
         is-booting? @(subscribe [::subs/is-booting?])
-        [route params query] @(subscribe [::subs/current-route])]
+        [route-id params query] @(subscribe [::subs/current-route])]
+    (println "route-id" route-id (case route-id
+                                   ::routes/login "::routes/login"
+                                   "something else"))
     [:div
      [notification-list notifications]
      (if is-booting?
        [:div.app-loading>div.loader]
-       [app route params query] )]))
+       (case route-id
+         ::routes/login [login-form]
+         [app route-id params query]))]))

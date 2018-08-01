@@ -1,4 +1,5 @@
 (ns airsonic-ui.db)
 
 (def default-db
-  {:notifications (sorted-map)})
+  {:is-booting? true
+   :notifications (sorted-map)})

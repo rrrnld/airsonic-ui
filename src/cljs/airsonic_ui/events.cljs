@@ -24,85 +24,83 @@
 ;; * sending out the appropriate requests
 ;; ---
 
+(defn initialize-app
+  [{{:keys [credentials]} :store} _]
+  (let [effects {:db db/default-db
+                 :routes/start-routing nil}]
+    (if (not (empty? credentials))
+      (assoc effects :dispatch [:credentials/verify credentials])
+      effects)))
+
 (re-frame/reg-event-fx
  ::initialize-app
- (fn [_]
-   {:db db/default-db
-    :dispatch [:init-flow/restore-previous-session]}))
-
-(defn restore-previous-session
-  "See comment above for different steps; what's important here is that we check
-  for a previous session before anything else, otherwise we might run into auth
-  troubles with our router."
-  [{:keys [db store]} _]
-  (let [credentials (:credentials store)]
-    {:dispatch-n [(if credentials
-                    [:init-flow/credentials-found credentials]
-                    [:init-flow/credentials-not-found])]
-     :routes/start-routing nil}))
-
-(re-frame/reg-event-fx
- :init-flow/restore-previous-session
  [(re-frame/inject-cofx :store)]
- restore-previous-session)
+ initialize-app)
 
-(defn credentials-found [_ [_ {:keys [u p server]}]]
-  {:dispatch [:credentials/verification-request u p server]})
+(defn verify-credentials
+  "Initializes the whole authentication chain when we have locally stored
+  credentials that look plausible."
+  [_ [_ credentials]]
+  ;; TODO: spec this
+  (if (every? string? ((juxt :u :p :server) credentials))
+    {:dispatch [:credentials/send-authentication-request credentials]}))
 
-(re-frame/reg-event-fx :init-flow/credentials-found credentials-found)
-
-;; we don't do anything special here, it's just for the sake of clarity
-
-(defn credentials-not-found
-  [cofx _]
-  (assoc-in cofx [:db :credentials] :credentials/not-found))
-
-(re-frame/reg-event-fx :init-flow/credentials-not-found credentials-not-found)
+(re-frame/reg-event-fx :credentials/verify verify-credentials)
 
 ;; ---
 ;; auth logic
 ;; ---
 
-(defn credentials-verification-request
+(defn user-login
+  "Gets called after the user clicked on the login button"
+  [cofx [_ user pass server]]
+  (let [credentials {:u user, :p pass, :server server, :verified? false}]
+    (-> (assoc-in cofx [:db :credentials] credentials)
+        (assoc :dispatch [:credentials/send-authentication-request credentials]))))
+
+(re-frame/reg-event-fx :credentials/user-login user-login)
+
+(defn authentication-request
   "Tries to authenticate a user by pinging the server with credentials, saving
   them when the request was successful. Bypasses the request when a user saved
   their credentials."
-  [_ [_ user pass server]]
-  {:http-xhrio {:method :get
-                :uri (api/url server "ping" {:u user :p pass})
-                :response-format (ajax/json-response-format {:keywords? true})
-                :on-success [:credentials/verification-response user pass server]
-                :on-failure [:credentials/verification-failure]}})
+  [cofx [_ credentials]]
+  (assoc cofx :http-xhrio {:method :get
+                           :uri (api/url (:server credentials) "ping" (select-keys credentials [:u :p]))
+                           :response-format (ajax/json-response-format {:keywords? true})
+                           :on-success [:credentials/authentication-response credentials]
+                           :on-failure [:api/bad-response]}))
 
-(re-frame/reg-event-fx :credentials/verification-request credentials-verification-request)
+(re-frame/reg-event-fx :credentials/send-authentication-request authentication-request)
 
-(defn credentials-verification-response
+(defn authentication-response
   "Since we don't get real status codes, we have to look into the server's
   response and see whether we actually sent the correct credentials"
-  [fx [_ user pass server response]]
-  {:dispatch (if (api/is-error? response)
-               [:credentials/verification-failure response]
-               [:credentials/verified user pass server])})
+  [fx [_ credentials response]]
+  (assoc fx :dispatch (if (api/is-error? response)
+                        [:credentials/authentication-failure response]
+                        [:credentials/authentication-success (assoc credentials :verified? true)])))
 
-(re-frame/reg-event-fx :credentials/verification-response credentials-verification-response)
+(re-frame/reg-event-fx :credentials/authentication-response authentication-response)
 
-(defn credentials-verification-failure [fx [_ response]]
-  (-> (assoc-in fx [:db :credentials] :credentials/verification-failure)
-      (assoc :dispatch [:notification/show :error (api/error-msg (api/->exception response))])))
+(defn authentication-failure
+  "Removes all stored credentials and displays potential api errors to the user"
+  [fx [_ response]]
+  (-> (assoc fx :dispatch [:notification/show :error (api/error-msg (api/->exception response))])
+      (update :store dissoc :credentials)
+      (update :db dissoc :credentials)))
 
-(re-frame/reg-event-fx :credentials/verification-failure credentials-verification-failure)
+(re-frame/reg-event-fx :credentials/authentication-failure authentication-failure)
 
-(defn credentials-verified
+(defn authentication-success
   "Gets called after the server indicates that the credentials entered by a user
   are correct (see `credentials-verification-request`)"
-  [{:keys [db]} [_ user pass server]]
-  (let [credentials {:u user :p pass :server server}]
-    {:routes/set-credentials credentials
-     :store {:credentials credentials}
-     :db (assoc db :credentials credentials)
-     :dispatch [::logged-in]}))
+  [{:keys [db]} [_ credentials]]
+  {:store {:credentials credentials}
+   :db (assoc db :credentials (assoc credentials :verified? true))
+   :dispatch [::logged-in]})
 
-(re-frame/reg-event-fx :credentials/verified credentials-verified)
+(re-frame/reg-event-fx :credentials/authentication-success authentication-success)
 
 ;; TODO: We have to find another solution for this once we have routes that
 ;; don't require a login but have the bottom controls
@@ -112,11 +110,11 @@
  (fn [_]
    (.. js/document -documentElement -classList (add "has-navbar-fixed-bottom"))))
 
-
 (defn logged-in
   [cofx _]
-  (let [redirect (or (get-in cofx [:routes/from-query-param :redirect]) [::routes/main])]
-    {:routes/navigate redirect
+  (let [redirect (or (get-in cofx [:routes/from-query-param :redirect])
+                     [::routes/main])]
+    {:dispatch [:routes/do-navigation redirect]
      :show-nav-bar nil}))
 
 (re-frame/reg-event-fx
@@ -128,12 +126,12 @@
   "Clears all credentials and redirects the user to the login page"
   [cofx [_ & args]]
   (let [args (apply hash-map args)]
-    {:routes/navigate (if-let [redirect (:redirect-to args)]
-                        [::routes/login {} {:redirect (routes/encode-route redirect)}]
-                        [::routes/login])
-     :routes/unset-credentials nil
+    {:dispatch [:routes/do-navigation (if-let [redirect (:redirect-to args)]
+                                        [::routes/login {} {:redirect (routes/encode-route redirect)}]
+                                        [::routes/login])]
      :store nil
-     :db (merge (:db cofx) db/default-db {:credentials :credentials/logged-out})}))
+     :db (-> (merge (:db cofx) db/default-db)
+             (dissoc :credentials))}))
 
 (re-frame/reg-event-fx ::logout logout)
 
@@ -223,8 +221,9 @@
 ;; ---
 
 (re-frame/reg-event-fx
- :routes/navigation
+ :routes/did-navigate
  (fn [{:keys [db]} [_ route params query]]
+   ;; FIXME: This leads to an ugly "unregistered event handler `nil`" error
    ;; all the naviagation logic is in routes.cljs; all we need to do here
    ;; is say what actually happens once we've navigated succesfully
    {:db (assoc db :current-route [route params query])

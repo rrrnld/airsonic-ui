@@ -7,7 +7,7 @@
 
 (def router
   (r/router [["/" ::login]
-             ["/hello" ::main]
+             ["/main" ::main]
              ["/artist/:id" ::artist-view]
              ["/album/:id" ::album-view]]))
 
@@ -46,31 +46,39 @@
 ;; holding credentials, which is necessary to restrict certain routes, and the
 ;; last one is used for actual navigation
 
-(def credentials (atom nil))
+;; the event to initialize navigation is implemented so the coeffect map is
+;; returned unaltered, we just need access to the current app database for
+;; authentication, which we get with an interceptor
 
-(re-frame/reg-fx
- :routes/set-credentials
- (fn [credentials']
-   (reset! credentials credentials')))
+(def ^:private credentials (atom nil))
 
-(re-frame/reg-fx
- :routes/unset-credentials
- (fn []
-   (reset! credentials nil)))
+(def do-navigation
+  "An interceptor which performs the navigation after looking up current
+  credentials in the app database"
+  (re-frame.core/->interceptor
+   :id :routes/do-navigation
+   :after (fn do-navigation [context]
+            (let [[_ & [route]] (get-in context [:coeffects :event])
+                  ;; because :routes/do-navigation is both an event handler and
+                  ;; an interceptor, we know that when handling the event (see
+                  ;; below) the credentials aren't altered anymore
+                  credentials'(get-in context [:coeffects :db :credentials])]
+              (println "calling do-navigation with" route credentials')
+              (reset! credentials credentials')
+              (apply r/navigate! router route)
+              context))))
 
-(re-frame/reg-fx
- :routes/navigate
- (fn [[route-id params query]]
-   (println "calling ::navigate with" route-id params query)
-   (r/navigate! router route-id params query)))
+(re-frame/reg-event-fx :routes/do-navigation do-navigation (fn [& _] nil))
 
 (defn can-access? [route]
-  (or (not (protected-routes route)) @credentials))
+  (or (not (protected-routes route))
+      (:verified? @credentials)))
 
 (defn on-navigate
   [route-id params query]
+  (println "on-navigate is called" route-id params query credentials)
   (if (can-access? route-id)
-    (re-frame/dispatch [:routes/navigation route-id params query])
+    (re-frame/dispatch [:routes/did-navigate route-id params query])
     (re-frame/dispatch [:routes/unauthorized route-id params query])))
 
 (defn encode-route
@@ -89,11 +97,13 @@
   []
   (r/match router (subs (.. js/window -location -hash) 1)))
 
+;; add the current route to our coeffect map
 (re-frame/reg-cofx
  :routes/current-route
  (fn [coeffects _]
    (assoc coeffects :routes/current-route (current-route))))
 
+;; add route into from a URL parameter to our coeffect map
 (re-frame/reg-cofx
  :routes/from-query-param
  (fn [coeffects param]

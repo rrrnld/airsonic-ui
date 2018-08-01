@@ -4,14 +4,14 @@
 
 (deftest dispatch-helper
   (testing "single dispatch"
-    (is (not (dispatches? {} :foo)))
-    (is (dispatches? {:dispatch [:foo 1 2 3]} :foo))
-    (is (not (dispatches? {:dispatch [:foo 1 2 3]} :bar)))
-    (is (dispatches? {:dispatch [:foo 1 2 3]} [:foo 1 2 3]))
-    (is (not (dispatches? {:dispatch [:foo 1 2 3]} [:bar 2 3]))))
+    (is (false? (dispatches? {} :foo)))
+    (is (true? (dispatches? {:dispatch [:foo 1 2 3]} :foo)))
+    (is (false? (dispatches? {:dispatch [:foo 1 2 3]} :bar)))
+    (is (true? (dispatches? {:dispatch [:foo 1 2 3]} [:foo 1 2 3])))
+    (is (false? (dispatches? {:dispatch [:foo 1 2 3]} [:bar 2 3]))))
   (testing "multiple dispatch"
-    (is (not (dispatches? {:dispatch-n [[:bar]]} :foo)))
-    (is (dispatches? {:dispatch-n [[:foo 1 2 3]]} :foo))
-    (is (not (dispatches? {:dispatch-n [[:foo 1 2 3]]} :bar)))
+    (is (false? (dispatches? {:dispatch-n [[:bar]]} :foo)))
+    (is (true? (dispatches? {:dispatch-n [[:foo 1 2 3]]} :foo)))
+    (is (false? (dispatches? {:dispatch-n [[:foo 1 2 3]]} :bar)))
     (is (dispatches? {:dispatch-n [[:foo 1 2 3]]} [:foo 1 2 3]))
-    (is (not (dispatches? {:dispatch-n [[:foo 1 2 3]]} [:bar 2 3])))))
+    (is (false? (dispatches? {:dispatch-n [[:foo 1 2 3]]} [:bar 2 3])))))

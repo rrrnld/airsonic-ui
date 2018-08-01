@@ -1,5 +1,9 @@
 (ns airsonic-ui.fixtures)
 
+(def credentials {:u "username"
+                  :p "cleartext-password"
+                  :server "https://demo.airsonic.io"})
+
 (def responses {:error {:subsonic-response
                         {:error {:code 50
                                  :message "Incompatible Airsonic REST protocol version. Server must upgrade."}

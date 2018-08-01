@@ -5,4 +5,4 @@
   be a whole vector or a keyword which is interpreted as the event name."
   [cofx ev]
   (let [all-events (conj (get cofx :dispatch-n []) (:dispatch cofx))]
-    (some #(= ev (if (vector? ev) % (first %))) all-events)))
+    (boolean (some #(= ev (if (vector? ev) % (first %))) all-events))))
