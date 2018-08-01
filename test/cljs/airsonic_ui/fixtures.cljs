@@ -43,3 +43,11 @@
    :contentType "audio/mpeg",
    :album "Reincarnations, Pt. 2 - The Remix Chapter 2009 - 2014",
    :track 14})
+
+(def playback-status
+  {:ended? false
+   :loop? false
+   :muted? false
+   :paused? false
+   :current-src "https://londe.arnes.space/rest/stream?f=json&c=airsonic-ui-cljs&v=1.15.0&id=9574&u=arne&p=27h-%25bO%5B8-.ys%40SQ%7Bg%24-%5B5NZkX%7Dw%24NNwY%263DPATi%2CgaFoH%40e"
+   :current-time 3.477029})

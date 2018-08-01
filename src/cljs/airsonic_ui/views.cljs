@@ -67,9 +67,6 @@
   (let [notifications @(subscribe [::subs/notifications])
         is-booting? @(subscribe [::subs/is-booting?])
         [route-id params query] @(subscribe [::subs/current-route])]
-    (println "route-id" route-id (case route-id
-                                   ::routes/login "::routes/login"
-                                   "something else"))
     [:div
      [notification-list notifications]
      (if is-booting?

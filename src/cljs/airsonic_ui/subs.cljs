@@ -47,21 +47,6 @@
  (fn [db _]
    (:response db)))
 
-(re-frame/reg-sub
- ; returns info on the current song as is (basically the metadata you can read from the file system)
- ::currently-playing
- (fn [db _]
-   (:currently-playing db)))
-
-(re-frame/reg-sub
- ::is-playing?
- (fn [query-v _]
-   [(re-frame/subscribe [::currently-playing])])
- (fn [[currently-playing] _]
-   (let [status (:status currently-playing)]
-     (and (not (:paused? status))
-          (not (:ended? status))))))
-
 ;; user notifications
 
 (defn notifications [db _] (:notifications db))
