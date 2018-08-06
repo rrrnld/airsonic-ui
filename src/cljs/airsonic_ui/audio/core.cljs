@@ -1,4 +1,7 @@
-(ns airsonic-ui.audio
+(ns airsonic-ui.audio.core
+  "This namespace contains some JS interop code to interact with an audio player
+  and receive information about the current playback status so we can use it in
+  our re-frame app."
   (:require [re-frame.core :as re-frame]))
 
 ;; TODO: Manage buffering
