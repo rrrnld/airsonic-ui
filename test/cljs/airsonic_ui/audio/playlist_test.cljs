@@ -30,7 +30,7 @@
     (testing "should give us the correct current song"
       (let [queue (playing-queue 10)
             start-idx (rand-int 10)]
-        (doseq [playback-mode [:playback-mode/linear, :playback-mode/shuffle]
+        (doseq [playback-mode [:playback-mode/linear, :playback-mode/shuffled]
                 repeat-mode [:repeat-mode/none, :repeat-mode/single, :repeat-mode/all]]
           (is (same-song? (nth queue start-idx)
                           (-> (playlist/->playlist queue start-idx playback-mode repeat-mode)
@@ -39,7 +39,7 @@
     (testing "should give us a playlist with the correct number of tracks"
       (let [queue (playing-queue 100)
             start-idx (rand-int 100)]
-        (doseq [playback-mode [:playback-mode/linear, :playback-mode/shuffle]
+        (doseq [playback-mode [:playback-mode/linear, :playback-mode/shuffled]
                 repeat-mode [:repeat-mode/none, :repeat-mode/single, :repeat-mode/all]]
           (is (= (count queue)
                  (count (playlist/->playlist queue start-idx playback-mode repeat-mode)))
@@ -51,7 +51,7 @@
       (let [queue (playing-queue 10)
             start-idx (rand-int 10)
             linear (playlist/->playlist queue start-idx :playback-mode/linear :repeat-mode/node)
-            shuffled (playlist/set-playback-mode linear :playback-mode/shuffle)]
+            shuffled (playlist/set-playback-mode linear :playback-mode/shuffled)]
         (testing "should re-order the tracks"
           (is (not= (map :order (:queue shuffled)) (map :order (:queue linear)))))
         (testing "should not change the currently playing track"
@@ -61,7 +61,8 @@
       (testing "from shuffled to linear"
         (let [queue (playing-queue 10)
               start-idx (rand-int 10)
-              shuffled (playlist/->playlist queue start-idx :playback-mode/shuffle :repeat-mode/none)
+              shuffled (playlist/->playlist queue start-idx
+                                            :playback-mode/shuffled :repeat-mode/none)
               linear (playlist/set-playback-mode shuffled :playback-mode/linear)]
           (testing "should set the correct order for tracks"
             (is (every? #(apply same-song? %)
@@ -81,10 +82,11 @@
 (deftest chaging-repeat-mode
   (testing "Changing the repeat mode"
     (testing "should not change the playback mode"
-      (doseq [playback-mode [:playback-mode/linear, :playback-mode/shuffle]
+      (doseq [playback-mode [:playback-mode/linear, :playback-mode/shuffled]
               repeat-mode [:repeat-mode/none, :repeat-mode/single, :repeat-mode/all]
               next-repeat-mode [:repeat-mode/none, :repeat-mode/single, :repeat-mode/all]]
-        (let [playlist (-> (playlist/->playlist (playing-queue 1) 0 playback-mode repeat-mode)
+        (let [playlist (-> (playlist/->playlist (playing-queue 1) 0
+                                                playback-mode repeat-mode)
                            (playlist/set-repeat-mode next-repeat-mode))]
           (is (= playback-mode (:playback-mode playlist)))
           (is (= next-repeat-mode (:repeat-mode playlist))
@@ -106,32 +108,51 @@
   (testing "Should always give the same track when repeat-mode is single"
     (let [queue (playing-queue 3)
           playing-idx (rand-int 3)
-          playlist (playlist/->playlist queue playing-idx :playback-mode/linear :repeat-mode/single)]
-      (is (same-song? (nth queue playing-idx) (playlist/peek playlist)))
-      (is (same-song? (nth queue playing-idx)
-                      (-> (playlist/next-song playlist)
-                          (playlist/peek))))
-      (is (same-song? (nth queue playing-idx)
-                      (-> (playlist/next-song playlist)
-                          (playlist/next-song)
-                          (playlist/peek))))
-      (is (same-song? (nth queue playing-idx)
-                      (-> (playlist/next-song playlist)
-                          (playlist/next-song)
-                          (playlist/next-song)
-                          (playlist/peek)))
-          "wrapping around")))
+          playlist (playlist/->playlist queue playing-idx
+                                        :playback-mode/linear :repeat-mode/single)
+          played-back (map playlist/peek (iterate playlist/next-song playlist))]
+      (is (same-song? (nth queue playing-idx) (nth played-back 0)))
+      (is (same-song? (nth queue playing-idx) (nth played-back 1)))
+      (is (same-song? (nth queue playing-idx) (nth played-back 2)))
+      (is (same-song? (nth queue playing-idx) (nth played-back 3)) "wrapping around")))
   (testing "Should stop playing at the end of the queue when repeat-mode is none"
     (is (nil? (-> (playing-queue 1)
                   (playlist/->playlist 0 :playback-mode/linear :repeat-mode/none)
                   (playlist/next-song)
                   (playlist/peek))))))
 
-#_(deftest shuffled-next-song
-  (testing "Should play every track once when called for the entire queue")
-  (testing "Should re-shuffle the playlist when wrapping around and repeat-mode is all")
-  (testing "Should always give the same track when repeat-mode is single")
-  (testing "Should stop playing at the end of the queue when repeat-mode is none"))
+(deftest shuffled-next-song
+  (testing "Should play every track once when called for the entire queue"
+    (doseq [repeat-mode '(:repeat-mode/none :repeat-mode/all)]
+      (let [length 10
+            playlist (playlist/->playlist (playing-queue length) 0
+                                          :playback-mode/shuffled repeat-mode)
+            played-tracks (->> (iterate playlist/next-song playlist)
+                               (map playlist/peek)
+                               (take length))]
+        (is (= (count played-tracks) (count (set played-tracks)))
+            (str repeat-mode)))))
+  (testing "Should re-shuffle the playlist when wrapping around and repeat-mode is all"
+    (let [length 100
+          playlist (playlist/->playlist (playing-queue length) (dec length)
+                                        :playback-mode/shuffled :repeat-mode/all)]
+      (is (not= (map :order (:queue playlist))
+                (map :order (:queue (playlist/next-song playlist)))))))
+  (testing "Should always give the same track when repeat-mode is single"
+    (let [queue (playing-queue 3)
+          playing-idx (rand-int 3)
+          playlist (playlist/->playlist queue playing-idx
+                                        :playback-mode/shuffled :repeat-mode/single)
+          played-back (map playlist/peek (iterate playlist/next-song playlist))]
+      (is (same-song? (nth queue playing-idx) (nth played-back 0)))
+      (is (same-song? (nth queue playing-idx) (nth played-back 1)))
+      (is (same-song? (nth queue playing-idx) (nth played-back 2)))
+      (is (same-song? (nth queue playing-idx) (nth played-back 3)) "wrapping around")))
+  (testing "Should stop playing at the end of the queue when repeat-mode is none"
+    (is (nil? (-> (playing-queue 1)
+                  (playlist/->playlist 0 :playback-mode/linear :repeat-mode/none)
+                  (playlist/next-song)
+                  (playlist/peek))))))
 
 #_(deftest linear-previous-song)
 #_(deftest shuffled-previous-song)

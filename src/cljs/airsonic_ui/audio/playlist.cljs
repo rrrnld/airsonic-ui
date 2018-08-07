@@ -26,23 +26,25 @@
                          (range (count queue))))]
     (->Playlist queue playback-mode repeat-mode)))
 
-(defmethod ->playlist :playback-mode/shuffle
+(defn- -shuffle-songs [queue]
+  (mapv (fn [song order] (assoc song :order order)) queue (shuffle (range (count queue)))))
+
+(defmethod ->playlist :playback-mode/shuffled
   [queue playing-idx playback-mode repeat-mode]
   (let [queue (->> (playlist-queue queue playing-idx)
-                   (mapv (fn [order song] (assoc song :order order))
-                         (shuffle (range (count queue)))))]
+                   (-shuffle-songs))]
     (->Playlist queue playback-mode repeat-mode)))
 
-(defn- current-idx [playlist]
-  (first (keep-indexed (fn [idx item]
-                         (when (:currently-playing? item)
-                           idx))
+(defn- -current-song [playlist]
+  (first (keep-indexed (fn [idx song]
+                         (when (:currently-playing? song)
+                           [idx song]))
                        (:queue playlist))))
 
 (defn set-playback-mode
   "Changes the playback mode of a playlist and re-shuffles it if necessary"
   [playlist playback-mode]
-  (->playlist (:queue playlist) (current-idx playlist)
+  (->playlist (:queue playlist) (first (-current-song playlist))
               playback-mode (:repeat-mode playlist)))
 
 (defn set-repeat-mode
@@ -57,38 +59,45 @@
        (filter :currently-playing?)
        (first)))
 
-(defn- ?assoc
-  "Like assoc, but returns coll unchanged if (pref coll) is false"
-  [coll pred & assog-args]
-  (if (pred coll) (apply assoc coll assog-args) coll))
+(defmulti next-song :repeat-mode)
 
-(defmulti next-song (juxt :playback-mode :repeat-mode))
-
-(defmethod next-song [:playback-mode/linear :repeat-mode/none]
+(defmethod next-song :repeat-mode/none
   [playlist]
-  (let [current-idx (current-idx playlist)
+  ;; this is pretty easy; get the next song and stop playing at the at
+  (let [[current-idx _] (-current-song playlist)
         next-idx (inc current-idx)]
-    (println "next-idx" next-idx "current-idx" current-idx "(< next-idx (count playlist))" (< next-idx (count playlist)))
     (update playlist :queue
-            (fn [queue] (-> (update queue current-idx dissoc :currently-playing?)
-                            (?assoc #(< next-idx (count playlist))
-                                    next-idx (assoc (get queue next-idx)
-                                                    :currently-playing? true)))))))
+            (fn [queue] (cond-> queue
+                          :always (update current-idx dissoc :currently-playing?)
+                          (< next-idx (count playlist)) (assoc-in [next-idx :currently-playing?] true))))))
 
-(defmethod next-song [:playback-mode/linear :repeat-mode/single]
+(defmethod next-song :repeat-mode/single [playlist] playlist)
+
+(defmethod next-song :repeat-mode/all
   [playlist]
-  playlist)
+  (let [[current-idx _] (-current-song playlist)]
+    (-> (update-in playlist [:queue current-idx] dissoc :currently-playing?)
+        (update :queue
+                (fn [queue]
+                  ;; we need special treatment here if we're playing the last song and
+                  ;; have a shuffled playlist because we need to re-shuffle
+                  (if (and (= current-idx (dec (count playlist)))
+                           (= :playback-mode/shuffled (:playback-mode playlist)))
+                    (->> (-shuffle-songs queue)
+                         (mapv #(if (= (:order %) 0) (assoc % :currently-playing? true) %)))
+                    (let [next-idx (mod (inc current-idx) (count playlist))]
+                      (assoc-in queue [next-idx :currently-playing?] true))))))))
 
-(defmethod next-song [:playback-mode/linear :repeat-mode/all]
-  [playlist]
-  (let [current-idx (current-idx playlist)
-        next-idx (mod (inc current-idx) (count playlist))]
-    (update playlist :queue
-            (fn [queue] (-> (update queue current-idx dissoc :currently-playing?)
-                            (assoc-in [next-idx :currently-playing?] true))))))
+(defmulti previous-song :repeat-mode)
 
-(defmethod next-song [:playback-mode/shuffle :repeat-mode/single]
-  [playlist]
-  playlist)
+(defn set-current-song [playlist playing-idx]
+  ;; TODO: Implementation
+  )
 
-(defmulti previous-song (juxt :playback-mode :repeat-mode))
+(defn add-song-to-end [playlist]
+  ;; TODO: Implementation
+  )
+
+(defn add-next-song [playlist]
+  ;; TODO: Implementation
+  )
