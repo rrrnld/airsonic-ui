@@ -180,7 +180,6 @@
  ; sets up the db, starts to play a song and adds the rest to a playlist
  ::play-songs
  (fn [{:keys [db]} [_ songs start-idx]]
-   (println "play-songs called with" start-idx songs)
    (let [playlist (-> (playlist/->playlist songs :playback-mode :linear :repeat-mode :repeat-all)
                       (playlist/set-current-song start-idx))]
      {:audio/play (song-url db (playlist/peek playlist))
@@ -229,11 +228,14 @@
  (fn [_ _]
    {:audio/toggle-play-pause nil}))
 
-(re-frame/reg-event-db
- :audio/update
- (fn [db [_ status]]
-   ; this is coming from HTML5 Audio events
-   (assoc-in db [:audio :playback-status] status)))
+(defn audio-update
+  "Reacts to audio events fired by the HTML5 audio player and plays the next
+  track if necessary."
+  [{:keys [db]} [_ status]]
+  (cond-> {:db (assoc-in db [:audio :playback-status] status)}
+    (:ended? status) (assoc :dispatch [::next-song])))
+
+(re-frame/reg-event-fx :audio/update audio-update)
 
 ;; ---
 ;; routing

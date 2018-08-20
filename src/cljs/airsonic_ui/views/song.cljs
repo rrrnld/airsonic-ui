@@ -28,4 +28,4 @@
                   [:td>a {:title "Play last"
                           :href "#"
                           :on-click (dispatch [::events/enqueue-last song])}
-                   [icon :arrow-thick-right]]])])
+                   [icon :caret-right]]])])

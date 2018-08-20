@@ -6,7 +6,7 @@
 
             [airsonic-ui.views.notifications :refer [notification-list]]
             [airsonic-ui.views.breadcrumbs :refer [breadcrumbs]]
-            [airsonic-ui.views.bottom-bar :refer [bottom-bar]]
+            [airsonic-ui.views.audio-player :refer [audio-player]]
             [airsonic-ui.views.login :refer [login-form]]
             [airsonic-ui.views.album :as album]
             [airsonic-ui.views.song :as song]))
@@ -61,7 +61,7 @@
           ::routes/main [most-recent content]
           ::routes/artist-view [artist-detail content]
           ::routes/album-view [album-detail content])]]]
-     [bottom-bar]]))
+     [audio-player]]))
 
 (defn main-panel []
   (let [notifications @(subscribe [::subs/notifications])
