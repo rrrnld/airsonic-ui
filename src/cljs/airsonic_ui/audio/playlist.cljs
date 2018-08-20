@@ -13,16 +13,16 @@
 (defmulti ->playlist
   "Creates a new playlist that behaves according to the given playback- and
   repeat-mode parameters."
-  (fn [queue playing-idx playback-mode repeat-mode] playback-mode))
+  (fn [queue playback-mode repeat-mode] playback-mode))
 
-(defn- playlist-queue
-  [queue playing-idx]
-  (assoc-in (vec queue) [playing-idx :currently-playing?] true))
+(defn- mark-first-song [queue]
+  (let [[first-idx _] (find-where #(= 0 (:order %)) queue)]
+    (assoc-in queue [first-idx :currently-playing?] true)))
 
 (defmethod ->playlist :playback-mode/linear
-  [queue playing-idx playback-mode repeat-mode]
-  (let [queue (->> (playlist-queue queue playing-idx)
-                   (mapv (fn [order song] (assoc song :order order)) (range)))]
+  [queue playback-mode repeat-mode]
+  (let [queue (-> (mapv (fn [order song] (assoc song :order order)) (range) queue)
+                  (mark-first-song))]
     (->Playlist queue playback-mode repeat-mode)))
 
 (defn- -shuffle-songs [queue]
@@ -30,16 +30,35 @@
        (mapv (fn [song order] (assoc song :order order)) queue)))
 
 (defmethod ->playlist :playback-mode/shuffled
-  [queue playing-idx playback-mode repeat-mode]
-  (let [queue (->> (playlist-queue queue playing-idx)
-                   (-shuffle-songs))]
+  [queue playback-mode repeat-mode]
+  (let [queue (conj (mapv #(update % :order inc) (-shuffle-songs (rest queue)))
+                    (assoc (first queue) :order 0 :currently-playing? true))]
     (->Playlist queue playback-mode repeat-mode)))
+
+(defn set-current-song
+  "Marks a song in the queue as currently playing, given its ID"
+  [playlist next-idx]
+  (let [[current-idx _] (find-where :currently-playing? (:queue playlist))]
+    (-> (if current-idx
+          (update-in playlist [:queue current-idx] dissoc :currently-playing?)
+          playlist)
+        (assoc-in [:queue next-idx :currently-playing?] true))))
 
 (defn set-playback-mode
   "Changes the playback mode of a playlist and re-shuffles it if necessary"
   [playlist playback-mode]
-  (let [[current-idx _] (find-where :currently-playing? (:queue playlist))]
-    (->playlist (:queue playlist) current-idx playback-mode (:repeat-mode playlist))))
+  (if (= playback-mode :playback-mode/shuffled)
+    ;; for shuffled playlists we reorder the songs make sure that the currently
+    ;; playing song has order 0
+    (let [playlist (->playlist (:queue playlist) playback-mode (:repeat-mode playlist))
+          [current-idx current-song] (find-where :currently-playing? (:queue playlist))
+          [swap-idx _] (find-where #(= 0 (:order %)) (:queue playlist))]
+      (-> (assoc-in playlist [:queue current-idx :order] 0)
+          (assoc-in [:queue swap-idx :order] (:order current-song))))
+    ;; for linear songs we just make sure that the current does not change
+    (let [[current-idx _] (find-where :currently-playing? (:queue playlist))]
+      (-> (->playlist (:queue playlist) playback-mode (:repeat-mode playlist))
+          (set-current-song current-idx)))))
 
 (defn set-repeat-mode
   "Allows to change the way the next and previous song of a playlist is selected"
@@ -52,15 +71,6 @@
   (->> (:queue playlist)
        (filter :currently-playing?)
        (first)))
-
-(defn set-current-song
-  "Marks a song in the queue as currently playing, given its ID"
-  [playlist next-idx]
-  (let [[current-idx _] (find-where :currently-playing? (:queue playlist))]
-    (-> (if current-idx
-          (update-in playlist [:queue current-idx] dissoc :currently-playing?)
-          playlist)
-        (assoc-in [:queue next-idx :currently-playing?] true))))
 
 (defmulti next-song "Advances the currently playing song" :repeat-mode)
 
@@ -111,7 +121,10 @@
     (if next-idx
       (set-current-song playlist next-idx)
       (if (= :playback-mode/shuffled (:playback-mode playlist))
-        (set-current-song (update playlist :queue -shuffle-songs) 0)
+        (let [highest-order (dec (count playlist))
+              playlist (update playlist :queue -shuffle-songs)
+              [last-idx _] (find-where #(= (:order %) highest-order) (:queue playlist))]
+          (set-current-song playlist last-idx))
         (set-current-song playlist (mod (dec (:order current-song)) (count playlist)))))))
 
 (defn enqueue-last [playlist song]
