@@ -1,5 +1,5 @@
 (ns airsonic-ui.views.song
-  (:require [re-frame.core :refer [dispatch]]
+  (:require [airsonic-ui.utils.helpers :refer [dispatch]]
             [airsonic-ui.events :as events]
             [airsonic-ui.routes :as routes :refer [url-for]]
             [airsonic-ui.views.icon :refer [icon]]))
@@ -12,9 +12,7 @@
       (:artist song)]
      " - "
      [:a
-      {:href "#" :on-click (fn [e]
-                             (.preventDefault e)
-                             (dispatch [::events/play-songs songs idx]))}
+      {:href "#" :on-click (dispatch [::events/play-songs songs idx])}
       (:title song)]]))
 
 (defn listing [songs]
@@ -23,5 +21,11 @@
      ^{:key idx} [:tr
                      [:td.grow [item songs song idx]]
                      ;; FIXME: Not implemented yet
-                     [:td>a {:title "Play next"} [icon :plus]]
-                     [:td>a {:title "Play last"} [icon :arrow-thick-right]]])])
+                  [:td>a {:title "Play next"
+                          :href "#"
+                          :on-click (dispatch [::events/enqueue-next song])}
+                   [icon :plus]]
+                  [:td>a {:title "Play last"
+                          :href "#"
+                          :on-click (dispatch [::events/enqueue-last song])}
+                   [icon :arrow-thick-right]]])])

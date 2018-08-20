@@ -214,6 +214,16 @@
      {:db db
       :audio/play (song-url db prev)})))
 
+(re-frame/reg-event-db
+ ::enqueue-next
+ (fn [db [_ song]]
+   (update-in db [:audio :playlist] #(playlist/enqueue-next % song))))
+
+(re-frame/reg-event-db
+ ::enqueue-last
+ (fn [db [_ song]]
+   (update-in db [:audio :playlist] #(playlist/enqueue-last % song))))
+
 (re-frame/reg-event-fx
  ::toggle-play-pause
  (fn [_ _]
