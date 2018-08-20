@@ -8,16 +8,21 @@
 
 (enable-console-print!)
 
+(defn- song []
+  (hash-map :id (rand-int 9999)
+            :coverArt (rand-int 9999)
+            :year (+ 1900 (rand-int 118))
+            :artist (helpers/rand-str)
+            :artistId (rand-int 100000)
+            :title (helpers/rand-str)
+            :album (helpers/rand-str)))
+
 (defn- song-queue
   "Generates a seq of n different songs"
   [n]
-  (repeatedly n #(hash-map :id (rand-int 9999)
-                           :coverArt (rand-int 9999)
-                           :year (+ 1900 (rand-int 118))
-                           :artist (helpers/rand-str)
-                           :artistId (rand-int 100000)
-                           :title (helpers/rand-str)
-                           :album (helpers/rand-str))))
+  (let [r-int (atom 0)]
+    (with-redefs [rand-int #(mod (swap! r-int inc) %1)]
+      (repeatedly n song))))
 
 (def fixture
   {:audio {:current-song fixtures/song
@@ -233,3 +238,50 @@
                          (playlist/peek))]
       (is (not (nil? next-track)))
       (is (not (same-song? current-track next-track))))))
+
+(deftest enqueue-last
+  (testing "Should make sure the song is played last"
+    (doseq [playback-mode '(:playback-mode/linear :playback-mode/shuffled)
+            repeat-mode '(:repeat-mode/none :repeat-mode/all)]
+      (let [length 5, queue (song-queue length)
+            playlist (with-redefs [shuffle identity]
+                       (playlist/->playlist queue 0 playback-mode repeat-mode))
+            played-back (->> (iterate playlist/next-song playlist)
+                             (take (dec length))
+                             (map #(:id (playlist/peek %)))
+                             (set))
+            to-enqueue (song)
+            playlist' (playlist/enqueue-last playlist to-enqueue)]
+        (is (nil? (played-back (-> (->> (iterate playlist/next-song playlist')
+                                        (map playlist/peek))
+                                   (nth length)
+                                   (:id))))
+            (str "for " playback-mode ", " repeat-mode)))))
+  (testing "Should not change the order of the songs already in queue"
+    (doseq [playback-mode '(:playback-mode/linear :playback-mode/shuffled)
+            repeat-mode '(:repeat-mode/none :repeat-mode/all)]
+      (let [length 5, queue (song-queue length)
+            playlist (playlist/->playlist queue 0 playback-mode repeat-mode)
+            ;; FIXME: Playlists should just start with order 0, basta
+            [first-song-idx _] (find-where #(= 0 (:order %)) (:queue playlist))
+            playlist (playlist/set-current-song playlist first-song-idx)
+            played-back-songs (fn played-back-songs [playlist]
+                                (->> (iterate playlist/next-song playlist)
+                                     (take length)
+                                     (map playlist/peek)
+                                     (map :order)))
+            played-back (played-back-songs playlist)
+            played-back' (played-back-songs (playlist/enqueue-last playlist (song)))]
+        (is (= played-back played-back')
+            (str "for " playback-mode ", " repeat-mode))))))
+
+(deftest enqueue-next
+  (testing "Should play the song after the currently playing song"
+    (doseq [playback-mode '(:playback-mode/linear :playback-mode/shuffled)
+            repeat-mode '(:repeat-mode/none :repeat-mode/all)]
+      (let [length 5, queue (song-queue length)
+            playlist (playlist/->playlist queue 0 playback-mode repeat-mode)
+            next-song (song)]
+        (is (same-song? next-song (-> (playlist/enqueue-next playlist next-song)
+                                      (playlist/next-song)
+                                    (playlist/peek))))))))

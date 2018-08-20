@@ -2,7 +2,8 @@
   "Implements playlist queues that support different kinds of repetition and
   song ordering."
   (:refer-clojure :exclude [peek])
-  (:require [airsonic-ui.utils.helpers :refer [find-where]]))
+  (:require [airsonic-ui.utils.helpers :refer [find-where]]
+            [debux.cs.core :refer-macros [dbg]]))
 
 (defrecord Playlist [queue playback-mode repeat-mode]
   cljs.core/ICounted
@@ -114,9 +115,12 @@
         (set-current-song playlist (mod (dec (:order current-song)) (count playlist)))))))
 
 (defn enqueue-last [playlist song]
-  ;; TODO: Implementation
-  )
+  (let [highest-order (last (sort (map :order (:queue playlist))))]
+    (update playlist :queue conj (assoc song :order (inc highest-order)))))
 
 (defn enqueue-next [playlist song]
-  ;; TODO: Implementation
-  )
+  (let [[_ current-song] (find-where :currently-playing? (:queue playlist))]
+    (update playlist :queue
+            (fn [queue]
+              (-> (mapv #(if (> (:order %) (:order current-song)) (update % :order inc) %) queue)
+                  (conj (assoc song :order (inc (:order current-song)))))))))
