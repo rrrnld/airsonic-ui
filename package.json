@@ -5,13 +5,12 @@
   "main": "index.js",
   "scripts": {
     "build:cljs": "shadow-cljs release app",
-    "build:html": "sed 's/\"\\/app\\//\".\\/app\\//g' src/html/index.html > public/index.html",
     "build:sass": "node-sass --output-style compressed src/sass/app.sass public/app/style.css",
     "build": "rm -r public/*; run-p copy:* build:*",
+    "copy:html": "cp src/html/index.html public/index.html",
     "copy:icons": "cp -R node_modules/open-iconic/font/fonts public",
     "deploy": "npm run build && gh-pages -d public -m \"Deploying $(git rev-parse --short HEAD)\"",
     "dev:cljs": "shadow-cljs watch app test",
-    "dev:html": "sed 's/\"\\.\\/app\\//\"\\/app\\//g' src/html/index.html > public/index.html",
     "dev:sass": "npm run build:sass; node-sass -w src/sass/app.sass public/app/style.css",
     "dev:test": "karma start --reporters growl,progress --auto-watch",
     "dev": "npm-run-all copy:* test:compile -p dev:*",
@@ -35,7 +34,7 @@
   },
   "devDependencies": {
     "gh-pages": "^1.2.0",
-    "karma": "^2.0.4",
+    "karma": "^2.0.5",
     "karma-chrome-launcher": "^2.2.0",
     "karma-cljs-test": "^0.1.0",
     "karma-growl-reporter": "^1.0.0",
@@ -44,6 +43,6 @@
     "react-flip-move": "^3.0.1",
     "react-highlight.js": "^1.0.7",
     "sass": "^1.3.2",
-    "shadow-cljs": "^2.4.17"
+    "shadow-cljs": "^2.6.1"
   }
 }
