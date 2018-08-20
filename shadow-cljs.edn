@@ -21,12 +21,12 @@
  {:app {:target :browser
         :output-dir "public/app/js"
         :asset-path "/app/js"
-        :closure-defines {"re_frame.trace.trace_enabled_QMARK_" true}
         :modules {:main {:entries [airsonic-ui.core]}}
         :devtools {:http-root "public"
                    :http-port 8080
                    :after-load airsonic-ui.core/mount-root
-                   :preloads [day8.re-frame-10x.preload]}}
+                   :preloads [day8.re-frame-10x.preload]}
+        :dev {:closure-defines {"re_frame.trace.trace_enabled_QMARK_" true}}}
   :test {:target :karma
          :output-to "public/test/ci.js"
          :ns-regexp "-test$"}}}
