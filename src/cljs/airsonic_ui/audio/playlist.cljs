@@ -2,8 +2,7 @@
   "Implements playlist queues that support different kinds of repetition and
   song ordering."
   (:refer-clojure :exclude [peek])
-  (:require [airsonic-ui.utils.helpers :refer [find-where]]
-            [debux.cs.core :refer-macros [dbg]]))
+  (:require [airsonic-ui.utils.helpers :refer [find-where]]))
 
 (defrecord Playlist [queue playback-mode repeat-mode]
   cljs.core/ICounted
