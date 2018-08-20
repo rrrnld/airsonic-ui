@@ -5,7 +5,7 @@
             [day8.re-frame.http-fx]
             [akiroz.re-frame.storage :as storage]
             ;; our app
-            [airsonic-ui.audio] ; <- just registers effects here
+            [airsonic-ui.audio.core] ; <- just registers effects here
             [airsonic-ui.events :as events]
             [airsonic-ui.views :as views]
             [airsonic-ui.config :as config]))

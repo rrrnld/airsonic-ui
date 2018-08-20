@@ -3,8 +3,7 @@
             [ajax.core :as ajax]
             [airsonic-ui.routes :as routes]
             [airsonic-ui.db :as db]
-            [airsonic-ui.utils.api :as api]
-            [day8.re-frame.tracing :refer-macros [fn-traced defn-traced]])) ; <- useful to debug handlers
+            [airsonic-ui.utils.api :as api]))
 
 (re-frame/reg-fx
  ;; a simple effect to keep println statements out of our event handlers

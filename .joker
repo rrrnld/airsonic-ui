@@ -1,1 +1,2 @@
-{:known-macros [cljs.test/deftest]}
+{:known-macros [cljs.test/deftest]
+ :known-namespaces [cljs.core]}
