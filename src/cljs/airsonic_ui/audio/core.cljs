@@ -2,7 +2,8 @@
   "This namespace contains some JS interop code to interact with an audio player
   and receive information about the current playback status so we can use it in
   our re-frame app."
-  (:require [re-frame.core :as re-frame]))
+  (:require [re-frame.core :as re-frame]
+            [airsonic-ui.audio.playlist :as playlist]))
 
 ;; TODO: Manage buffering
 
@@ -64,15 +65,25 @@
 
 (re-frame/reg-sub :audio/summary summary)
 
+(defn playlist
+  "Lists the complete playlist"
+  [summary _]
+  (:playlist summary))
+
+(re-frame/reg-sub
+ :audio/playlist
+ (fn [_ _] (re-frame/subscribe [:audio/summary]))
+ playlist)
+
 (defn current-song
   "Gives us information about the currently played song as presented by
   the airsonic api"
-  [summary _]
-  (:current-song summary))
+  [playlist _]
+  (playlist/peek playlist))
 
 (re-frame/reg-sub
  :audio/current-song
- (fn [_ _] (re-frame/subscribe [:audio/summary]))
+ (fn [_ _] (re-frame/subscribe [:audio/playlist]))
  current-song)
 
 (defn playback-status
@@ -93,17 +104,5 @@
 
 (re-frame/reg-sub
  :audio/is-playing?
- (fn [_ _] (re-frame/subscribe [:audio/current-playback-status]))
+ (fn [_ _] (re-frame/subscribe [:audio/playback-status]))
  is-playing?)
-
-(comment
-  ;; NOTE: Not in use currently
-  (defn current-playlist
-    "Lists the complete playlist"
-    [summary _]
-    (:playlist summary))
-
-  (re-frame/reg-sub
-   :audio/current-playlist
-   (fn [_ _] (re-frame/subscribe [:audio/summary]))
-   current-playlist))

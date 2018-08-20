@@ -4,7 +4,7 @@
             [airsonic-ui.routes :as routes :refer [url-for]]
             [airsonic-ui.views.icon :refer [icon]]))
 
-(defn item [songs song]
+(defn item [songs song idx]
   (let [artist-id (:artistId song)]
     [:div
      [:a
@@ -14,14 +14,14 @@
      [:a
       {:href "#" :on-click (fn [e]
                              (.preventDefault e)
-                             (dispatch [::events/play-songs songs song]))}
+                             (dispatch [::events/play-songs songs idx]))}
       (:title song)]]))
 
 (defn listing [songs]
   [:table.table.is-striped.is-hoverable.is-fullwidth>tbody
    (for [[idx song] (map-indexed vector songs)]
      ^{:key idx} [:tr
-                     [:td.grow [item songs song]]
+                     [:td.grow [item songs song idx]]
                      ;; FIXME: Not implemented yet
                      [:td>a {:title "Play next"} [icon :plus]]
                      [:td>a {:title "Play last"} [icon :arrow-thick-right]]])])

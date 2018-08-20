@@ -3,7 +3,8 @@
             [ajax.core :as ajax]
             [airsonic-ui.routes :as routes]
             [airsonic-ui.db :as db]
-            [airsonic-ui.utils.api :as api]))
+            [airsonic-ui.utils.api :as api]
+            [airsonic-ui.audio.playlist :as playlist]))
 
 (re-frame/reg-fx
  ;; a simple effect to keep println statements out of our event handlers
@@ -178,30 +179,40 @@
 (re-frame/reg-event-fx
  ; sets up the db, starts to play a song and adds the rest to a playlist
  ::play-songs
- (fn [{:keys [db]} [_ songs song]]
-   {:audio/play (song-url db song)
-    :db (-> (assoc-in db [:audio :current-song] song)
-            (assoc-in [:audio :playlist] songs))}))
+ (fn [{:keys [db]} [_ songs start-idx]]
+   (println "play-songs called with" start-idx songs)
+   (let [playlist (-> (playlist/->playlist songs :playback-mode :linear :repeat-mode :repeat-all)
+                      (playlist/set-current-song start-idx))]
+     {:audio/play (song-url db (playlist/peek playlist))
+      :db (assoc-in db [:audio :playlist] playlist)})))
+
+;; FIXME: :audio/play might not get the right argument here
+
+(re-frame/reg-event-db
+ ::set-playback-mode
+ (fn [db [_ playback-mode]]
+   (update-in db [:audio :playlist] #(playlist/set-playback-mode % playback-mode))))
+
+(re-frame/reg-event-db
+ ::set-repeat-mode
+ (fn [db [_ repeat-mode]]
+   (update-in db [:audio :playlist] #(playlist/set-repeat-mode % repeat-mode))))
 
 (re-frame/reg-event-fx
  ::next-song
  (fn [{:keys [db]} _]
-   (let [playlist (get-in db [:audio :playlist])
-         current-song (get-in db [:audio :current-song])
-         next (first (rest (drop-while #(not= % current-song) playlist)))]
-     (when next
-       {:audio/play (song-url db next)
-        :db (assoc-in db [:audio :current-song] next)}))))
+   (let [db (update-in db [:audio :playlist] playlist/next-song)
+         next (playlist/peek (get-in db [:audio :playlist]))]
+     {:db db
+      :audio/play (song-url db next)})))
 
 (re-frame/reg-event-fx
  ::previous-song
  (fn [{:keys [db]} _]
-   (let [playlist (get-in db [:audio :playlist])
-         current-song (get-in db [:audio :current-song])
-         previous (last (take-while #(not= % current-song) playlist))]
-     (when previous
-       {:audio/play (song-url db previous)
-        :db (assoc-in db [:audio :current-song] previous)}))))
+   (let [db (update-in db [:audio :playlist] playlist/previous-song)
+         prev (playlist/peek (get-in db [:audio :playlist]))]
+     {:db db
+      :audio/play (song-url db prev)})))
 
 (re-frame/reg-event-fx
  ::toggle-play-pause

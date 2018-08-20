@@ -1,5 +1,6 @@
 (ns airsonic-ui.subs
   (:require [re-frame.core :as re-frame :refer [subscribe]]
+            [airsonic-ui.audio.playlist :as playlist]
             [airsonic-ui.utils.api :as api]))
 
 (defn is-booting?
