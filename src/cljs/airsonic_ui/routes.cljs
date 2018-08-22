@@ -11,36 +11,60 @@
              ["/artist/:id" ::artist-view]
              ["/album/:id" ::album-view]]))
 
-; use this in views to construct a url
+;; use this in views to construct a url
 (defn url-for
   ([k] (url-for k {}))
   ([k params] (str "#" (r/resolve router k params))))
 
-; which routes need valid login credentials?
+;; which routes need valid login credentials?
 (def protected-routes #{::main ::artist-view ::album-view})
 
-; which data should be requested for which route? can either be a vector or a function returning a vector
+;; which data should be requested for which route? can either be a vector or a function returning a vector
 
-(defmulti route-data
+(defmulti -route-events
   "Returns the events that take care of correct data being fetched."
   (fn [route-id & _] route-id))
 
-(defmethod route-data :default [route-id params query] []) ; no data
+(defmethod -route-events :default [route-id params query] nil)
 
-(defmethod route-data ::main
+(defmethod -route-events ::main
   [route-id params query]
   [:api/request "getAlbumList2" {:type "recent"
                                  :size 18}])
 
-(defmethod route-data ::artist-view
+(defmethod -route-events ::artist-view
   [route-id params query]
   [:api/request "getArtist" (select-keys params [:id])])
 
-(defmethod route-data ::album-view
+(defmethod -route-events ::album-view
   [route-id params query]
   [:api/request "getAlbum" (select-keys params [:id])])
 
 ;; shouldn't need to change anything below
+
+(defn- n-events?
+  "Predicate that tells us whether a vector is suitable for :dispatch-n"
+  [ev-vec]
+  (or (vector? (first ev-vec))))
+
+(defn route-events
+  "Returns a normalized list of event vectors for a given route."
+  [route-id params query]
+  (let [ev-vec (-route-events route-id params query)]
+    (if (n-events? ev-vec) ev-vec [ev-vec])))
+
+;; subscription returning the matched route for the current hashbang
+
+(re-frame/reg-sub :routes/current-route (fn [db _] (:routes/current-route db)))
+
+;; NOTE: There is some duplication here. The route events are provided as a
+;; subscription but they are also invoked directly in events.cljs. It didn't
+;; seem to justify pulling in a whole library and we need it in our top most view
+
+(re-frame/reg-sub
+ :routes/events-for-current-route
+ (fn [db _] (re-frame/subscribe [:routes/current-route]))
+ (fn [current-route _] (apply route-events current-route)))
 
 ;; these are helper effects we can use to navigate; the first two manage an atom
 ;; holding credentials, which is necessary to restrict certain routes, and the
@@ -50,7 +74,7 @@
 ;; returned unaltered, we just need access to the current app database for
 ;; authentication, which we get with an interceptor
 
-(def ^:private credentials (atom nil))
+(defonce ^:private credentials (atom nil))
 
 (def do-navigation
   "An interceptor which performs the navigation after looking up current

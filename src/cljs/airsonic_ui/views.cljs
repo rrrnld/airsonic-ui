@@ -26,7 +26,7 @@
 (defn most-recent [content]
   [:div
    [:h2.title "Recently played"]
-   [album/listing (:album content)]])
+   [album/listing (get-in content [:album-list :album])]])
 
 (defn sidebar [user]
   [:aside.menu.section
@@ -49,7 +49,8 @@
 
 (defn app [route-id params query]
   (let [user @(subscribe [::subs/user])
-        content @(subscribe [::subs/current-content])]
+        route-events @(subscribe [:routes/events-for-current-route])
+        content @(subscribe [:api/route-data route-events])]
     [:div
      [:main.columns
       [:div.column.is-2.sidebar
@@ -66,7 +67,7 @@
 (defn main-panel []
   (let [notifications @(subscribe [::subs/notifications])
         is-booting? @(subscribe [::subs/is-booting?])
-        [route-id params query] @(subscribe [::subs/current-route])]
+        [route-id params query] @(subscribe [:routes/current-route])]
     [:div
      [notification-list notifications]
      (if is-booting?

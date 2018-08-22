@@ -4,8 +4,12 @@
             ;; 3rd party effects / coeffects
             [day8.re-frame.http-fx]
             [akiroz.re-frame.storage :as storage]
-            ;; our app
-            [airsonic-ui.audio.core] ; <- just registers effects here
+
+            ;; our app; namespaces that are just required but not used register
+            ;; event handlers, effect handlers or subscriptions
+            [airsonic-ui.audio.core]
+            [airsonic-ui.api.events]
+            [airsonic-ui.api.subs]
             [airsonic-ui.events :as events]
             [airsonic-ui.views :as views]
             [airsonic-ui.config :as config]))

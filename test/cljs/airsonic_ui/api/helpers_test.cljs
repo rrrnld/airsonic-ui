@@ -1,8 +1,8 @@
-(ns airsonic-ui.utils.api-test
+(ns airsonic-ui.api.helpers-test
   (:require [cljs.test :refer [deftest testing is]]
             [clojure.string :as str]
             [airsonic-ui.fixtures :refer [responses]]
-            [airsonic-ui.utils.api :as api]))
+            [airsonic-ui.api.helpers :as api]))
 
 (defn- url
   "Construct a url with no params"

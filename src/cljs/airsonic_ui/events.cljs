@@ -3,7 +3,7 @@
             [ajax.core :as ajax]
             [airsonic-ui.routes :as routes]
             [airsonic-ui.db :as db]
-            [airsonic-ui.utils.api :as api]
+            [airsonic-ui.api.helpers :as api]
             [airsonic-ui.audio.playlist :as playlist]))
 
 (re-frame/reg-fx
@@ -69,7 +69,7 @@
                            :uri (api/url (:server credentials) "ping" (select-keys credentials [:u :p]))
                            :response-format (ajax/json-response-format {:keywords? true})
                            :on-success [:credentials/authentication-response credentials]
-                           :on-failure [:api/bad-response]}))
+                           :on-failure [:api/failed-response]})) ; <- we don't need endpoint and params here because the response is not cached
 
 (re-frame/reg-event-fx :credentials/send-authentication-request authentication-request)
 
@@ -134,37 +134,6 @@
      :audio/stop nil}))
 
 (re-frame/reg-event-fx ::logout logout)
-
-;; ---
-;; api interaction
-;; ---
-
-(defn- api-url [db endpoint params]
-  (let [creds (:credentials db)]
-    (api/url (:server creds) endpoint (merge params (select-keys creds [:u :p])))))
-
-(defn api-request [{:keys [db]} [_ endpoint params]]
-  {:http-xhrio {:method :get
-                :uri (api-url db endpoint params)
-                :response-format (ajax/json-response-format {:keywords? true})
-                :on-success [:api/good-response]
-                :on-failure [:api/bad-response]}})
-
-(re-frame/reg-event-fx :api/request api-request)
-
-(defn good-api-response [fx [_ response]]
-  (try
-    (assoc-in fx [:db :response] (api/unwrap-response response))
-    (catch ExceptionInfo e
-      {:dispatch [:notification/show :error (api/error-msg e)]})))
-
-(re-frame/reg-event-fx :api/good-response good-api-response)
-
-(defn bad-api-response [db event]
-  {:log ["API call gone bad; are CORS headers missing? check for :status 0" event]
-   :dispatch [:notification/show :error "Communication with server failed. Check browser logs for details."]})
-
-(re-frame/reg-event-fx :api/bad-response bad-api-response)
 
 ;; ---
 ;; musique
@@ -244,11 +213,8 @@
 (re-frame/reg-event-fx
  :routes/did-navigate
  (fn [{:keys [db]} [_ route params query]]
-   ;; FIXME: This leads to an ugly "unregistered event handler `nil`" error
-   ;; all the naviagation logic is in routes.cljs; all we need to do here
-   ;; is say what actually happens once we've navigated succesfully
-   {:db (assoc db :current-route [route params query])
-    :dispatch (routes/route-data route params query)}))
+   {:db (assoc db :routes/current-route [route params query])
+    :dispatch-n (routes/route-events route params query)}))
 
 (re-frame/reg-event-fx
  :routes/unauthorized

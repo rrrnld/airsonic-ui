@@ -1,7 +1,7 @@
 (ns airsonic-ui.subs-test
   (:require [cljs.test :refer [deftest testing is]]
             [airsonic-ui.fixtures :as fixtures]
-            [airsonic-ui.utils.api :as api]
+            [airsonic-ui.api.helpers :as api]
             [airsonic-ui.subs :as subs]))
 
 (deftest booting
@@ -10,17 +10,17 @@
         is-booting? (fn is-booting? [db]
                       (subs/is-booting? db [:subs/is-booting?]))]
     (testing "Should be false when we don't have previous credentials"
-      (is (not (is-booting? {:current-route route})))
-      (is (not (is-booting? {:current-route route
+      (is (not (is-booting? {:routes/current-route route})))
+      (is (not (is-booting? {:routes/current-route route
                              :credentials {}}))) )
     (testing "Should be true when we have unverified credentials"
-      (is (true? (is-booting? {:current-route route
+      (is (true? (is-booting? {:routes/current-route route
                                :credentials fixtures/credentials}))))
     (testing "Should be false when we have verified credentials"
-      (is (not (is-booting? {:current-route route
+      (is (not (is-booting? {:routes/current-route route
                              :credentials verified-credentials}))))
     (testing "Should be true when routing is not yet set up"
-      (is (true? (is-booting? {:current-route nil
+      (is (true? (is-booting? {:routes/current-route nil
                                :credentials verified-credentials}))))))
 
 (deftest cover-images

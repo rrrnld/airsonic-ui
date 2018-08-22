@@ -1,6 +1,5 @@
-(ns airsonic-ui.utils.api
-  (:require [clojure.string :as str]
-            [airsonic-ui.config :as config]))
+(ns airsonic-ui.api.helpers
+  (:require [clojure.string :as str]))
 
 (def default-params {:f "json"
                      :c "airsonic-ui-cljs"

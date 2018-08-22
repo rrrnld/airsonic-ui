@@ -60,7 +60,7 @@
     (testing "invokes correct callback on server response"
       (is (= [:credentials/authentication-response fixtures/credentials] (:on-success request))))
     (testing "invokes correct callback when server is not reachable"
-      (is (= [:api/bad-response] (:on-failure request))))))
+      (is (= [:api/failed-response] (:on-failure request))))))
 
 (deftest authentication-response
   (testing "On success"
@@ -103,13 +103,6 @@
       (let [[route-id _ query] (second navigation-event)]
         (is (= ::routes/login route-id))
         (is (contains? query :redirect))))))
-
-(deftest api-interaction
-  (testing "Should show an error notification when airsonic responds with an error"
-    (let [fx (events/good-api-response {} [:_ (:error fixtures/responses)])
-          ev (:dispatch fx)]
-      (is (= :notification/show (first ev)))
-      (is (= :error (second ev))))))
 
 (defn- first-notification [fx]
   (-> (get-in fx [:db :notifications]) vals first))
