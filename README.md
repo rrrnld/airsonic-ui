@@ -27,7 +27,17 @@ $ npm install
 $ npm run dev
 ```
 
-**Note:** In dev mode this project comes with re-frame-10x. You can hit `Ctrl + h` to display the overlay and have a time traveling debugger.
+### Editor integration
+
+Integrating shadow-cljs with your editor helps tremendously with development. After having run `npm run dev` as described above you can connect to the REPL and get features like in-editor code execution and code completion / documentation lookup. For further information see [this part of the shadow-cljs user guide](https://shadow-cljs.github.io/docs/UsersGuide.html#_editor_integration), which contains instructions for Emacs, Atom, VSCode and other editors. Make sure to open `localhost:8080` in the browser to execute ClojureScript code.
+
+### re-frame-10x
+
+re-frame-10x is a debugger that is bundled with the app in development mode. Once you have the build running, hit `Ctrl + h` and the re-frame-10x window will show up:
+
+![re-frame-10x in action](./docs/re-frame-10x.png)
+
+It provides you with tools to inspect the state of the application, undo and replay events, debug performance issues and more.
 
 ## Tests
 

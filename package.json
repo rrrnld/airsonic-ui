@@ -13,7 +13,7 @@
     "dev:cljs": "shadow-cljs watch app test",
     "dev:sass": "npm run build:sass; node-sass -w src/sass/app.sass public/app/style.css",
     "dev:test": "karma start --reporters growl,progress --auto-watch",
-    "dev": "npm-run-all copy:* test:compile -p dev:*",
+    "dev": "npm-run-all copy:* -p dev:*",
     "test": "run-s test:compile test:run",
     "test:compile": "shadow-cljs compile test",
     "test:run": "karma start --single-run"
