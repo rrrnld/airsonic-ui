@@ -53,7 +53,7 @@
      ^{:key :shuffle-button} [shuffle-button {:on-click (toggle-shuffle playback-mode)} [icon :random]]
      ^{:key :repeat-button} [repeat-button {:on-click (advance-repeat-mode repeat-mode)} [icon :loop]]]))
 
-(def logo-url "https://airsonic.github.io/airsonic-ui/assets/images/logo/airsonic-light-350x100.png")
+(def logo-url "./img/airsonic-light-350x100.png")
 
 (defn audio-player []
   (let [current-song @(subscribe [:audio/current-song])
