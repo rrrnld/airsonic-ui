@@ -34,7 +34,9 @@
 
 (defmethod -route-events ::artist-view
   [route-id params query]
-  [:api/request "getArtist" (select-keys params [:id])])
+  (let [params (select-keys params [:id])]
+    [[:api/request "getArtist" params]
+     [:api/request "getArtistInfo2" params]]))
 
 (defmethod -route-events ::album-view
   [route-id params query]

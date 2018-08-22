@@ -13,20 +13,21 @@
 
 ;; TODO: Find better names and places for these.
 
-(defn album-detail [content]
+(defn album-detail [{:keys [album]}]
   [:div
-   [:h2.title (str (:artist content) " - " (:name content))]
-   [song/listing (:song content)]])
+   [:h2.title (str (:artist album) " - " (:name album))]
+   [song/listing (:song album)]])
 
-(defn artist-detail [content]
+(defn artist-detail [{:keys [artist artist-info]}]
   [:div
-   [:h2.title (:name content)]
-   [album/listing (:album content)]])
+   [:h2.title (:name artist)]
+   [:div.content>p {:dangerouslySetInnerHTML {:__html (:biography artist-info)}}]
+   [album/listing (:album artist)]])
 
-(defn most-recent [content]
+(defn most-recent [{:keys [album-list]}]
   [:div
    [:h2.title "Recently played"]
-   [album/listing (get-in content [:album-list :album])]])
+   [album/listing (:album album-list)]])
 
 (defn sidebar [user]
   [:aside.menu.section
