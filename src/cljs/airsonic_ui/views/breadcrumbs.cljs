@@ -6,12 +6,12 @@
 ;; navigation upwards that hierarchy (e.g. album -> artist)
 
 (defn content-type
-  "Helper to see what kind of server response"
+  "Helper to see what kind of view we're currently dealing with"
   [content]
-  (cond
-    (and (vector? (:album content)) (:id content)) :artist
-    (vector? (:song content)) :album
-    :else :unknown-content))
+  (case (set (keys content))
+    #{:artist :artist-info} :artist
+    #{:album} :album
+    :other-content))
 
 (defn- bulma-breadcrumbs [& items]
   [:nav.breadcrumb {:aria-label "breadcrumbs"}
@@ -25,13 +25,13 @@
 (defmethod breadcrumbs :default [content]
   [bulma-breadcrumbs "Start"])
 
-(defmethod breadcrumbs :artist [content]
+(defmethod breadcrumbs :artist [{:keys [artist]}]
   [bulma-breadcrumbs
    [(url-for ::routes/main) "Start"]
-   (:name content)])
+   (:name artist)])
 
-(defmethod breadcrumbs :album [content]
+(defmethod breadcrumbs :album [{:keys [album]}]
   [bulma-breadcrumbs
    [(url-for ::routes/main) "Start"]
-   [(url-for ::routes/artist-view {:id (:artistId content)}) (:artist content)]
-   (:name content)])
+   [(url-for ::routes/artist-view {:id (:artistId album)}) (:artist album)]
+   (:name album)])
