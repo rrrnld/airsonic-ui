@@ -33,7 +33,8 @@
 (defmethod -route-events ::library
   [route-id {:keys [criteria]} query]
   (if criteria
-    [:api/request "getAlbumList2" {:type criteria, :size 18}]
+    [[:api/request "getScanStatus"]
+     [:api/request "getAlbumList2" {:type criteria, :size 20}]]
     [:routes/do-navigation [route-id {:criteria "recent"} query]]))
 
 (defmethod -route-events ::artist-view

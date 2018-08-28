@@ -11,9 +11,14 @@
                                {:class-name "is-active"})
                          [:a {:href (apply url-for route)} label]]))]])
 
-(defn main [route {:keys [album-list]}]
+(defn main [route {:keys [scan-status album-list]}]
+  (println scan-status "status")
   [:div
    [:h2.title "Your library"]
+   (if (:count scan-status)
+     [:p.subtitle.is-5.has-text-grey "Containing " [:strong (:count scan-status)] " items"]
+     (when (:scanning scan-status)
+       [:p.subtitle.is-5.has-text-grey "Scanning…"]))
    (let [items [[[::routes/library {:criteria "recent"} nil] "Recently played"]
                 [[::routes/library {:criteria "newest"} nil] "Newest additions"]
                 [[::routes/library {:criteria "starred"} nil] "Starred"]]]
