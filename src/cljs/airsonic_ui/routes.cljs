@@ -31,11 +31,11 @@
 (defmethod -route-events :default [route-id params query] nil)
 
 (defmethod -route-events ::library
-  [route-id {:keys [criteria]} query]
+  [route-id {:keys [criteria]} {:keys [page]}]
   (if criteria
     [[:api/request "getScanStatus"]
-     [:api/request "getAlbumList2" {:type criteria, :size 20}]]
-    [:routes/do-navigation [route-id {:criteria "recent"} query]]))
+     [:api/request "getAlbumList2" {:type criteria, :size 20, :offset (* 20 (dec page))}]]
+    [:routes/do-navigation [route-id {:criteria "recent"} {:page 1}]]))
 
 (defmethod -route-events ::artist-view
   [route-id params query]

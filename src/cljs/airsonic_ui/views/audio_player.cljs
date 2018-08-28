@@ -29,7 +29,7 @@
   (dispatch [::events/set-playback-mode (if (= playback-mode :shuffled)
                                           :linear :shuffled)]))
 
-(defn- advance-repeat-mode [current-mode]
+(defn- toggle-repeat-mode [current-mode]
   (let [modes (cycle '(:repeat-none :repeat-all :repeat-single))
         next-mode (->> (drop-while (partial not= current-mode) modes)
                        (second))]
@@ -45,7 +45,7 @@
                                             nil))]
     [:div.field.has-addons
      ^{:key :shuffle-button} [shuffle-button {:on-click (toggle-shuffle playback-mode)} [icon :random]]
-     ^{:key :repeat-button} [repeat-button {:on-click (advance-repeat-mode repeat-mode)} [icon :loop]]]))
+     ^{:key :repeat-button} [repeat-button {:on-click (toggle-repeat-mode repeat-mode)} [icon :loop]]]))
 
 (def logo-url "./img/airsonic-light-350x100.png")
 
@@ -54,7 +54,7 @@
         playlist @(subscribe [:audio/playlist])
         playback-status @(subscribe [:audio/playback-status])
         is-playing? @(subscribe [:audio/is-playing?])]
-    [:nav.navbar.is-fixed-bottom.playback-area
+    [:nav.navbar.is-fixed-bottom.audio-player
      [:div.navbar-brand
       [:div.navbar-item
        [:img {:src logo-url}]]]

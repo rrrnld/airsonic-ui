@@ -1,26 +1,59 @@
 (ns airsonic-ui.components.library.views
   (:require [airsonic-ui.routes :as routes :refer [url-for]]
-            [airsonic-ui.views.album :as album]))
+            [airsonic-ui.views.album :as album]
+            [airsonic-ui.helpers :refer [add-classes]]))
 
-(defn tabs [items active-item]
+(defn tabs [{:keys [items active-item]}]
   [:div.tabs
    [:ul (for [[idx [route label]] (map-indexed vector items)]
-          (do
-            (println route label active-item)
-            ^{:key idx} [:li (when (= route active-item)
+          (let [[_ params _] route]
+            ^{:key idx} [:li (when (= params active-item)
                                {:class-name "is-active"})
                          [:a {:href (apply url-for route)} label]]))]])
 
+(defn pagination
+  "Builds a pagination, calling `url-fn` for every rendered page link with the
+  page as its argument. When `max-pages` is `nil` an infinite pagination
+  will be rendered."
+  [{:keys [url-fn max-pages current-page]}]
+  [:nav.pagination.is-centered {:role "pagination", :aria-label "pagination"}
+   [:a.pagination-previous (if (> current-page 1)
+                             {:href (url-fn (dec current-page))}
+                             {:disabled true}) "Previous page"]
+   [:a.pagination-next (if (= max-pages current-page)
+                         {:disabled true}
+                         {:href (url-fn (inc current-page))}) "Next page"]
+   [:ul.pagination-list
+    (when (> current-page 3)
+      ^{:key "ellipsis-before"} [:li>span.pagination-ellipsis "…"])
+    (for [page (range (max 1 (- current-page 2))
+                      (if max-pages
+                        (min (+ current-page 3) (inc max-pages))
+                        (+ current-page 3)))]
+      (let [current-page? (= page current-page)]
+        ^{:key page} [(cond-> :li>a.pagination-link
+                        current-page? (add-classes :is-current))
+                      (cond-> {:href (url-fn page), :aria-label (str "Page " page)}
+                        (= page current-page) (assoc :aria-current "page")) page]))
+    (when (or (not max-pages) (< max-pages (- max-pages 3)))
+      ^{:key "ellipsis-after"} [:li>span.pagination-ellipsis "…"])]])
+
 (defn main [route {:keys [scan-status album-list]}]
-  (println scan-status "status")
-  [:div
-   [:h2.title "Your library"]
-   (if (:count scan-status)
-     [:p.subtitle.is-5.has-text-grey "Containing " [:strong (:count scan-status)] " items"]
-     (when (:scanning scan-status)
-       [:p.subtitle.is-5.has-text-grey "Scanning…"]))
-   (let [items [[[::routes/library {:criteria "recent"} nil] "Recently played"]
-                [[::routes/library {:criteria "newest"} nil] "Newest additions"]
-                [[::routes/library {:criteria "starred"} nil] "Starred"]]]
-     [tabs items route])
-   [album/listing (:album album-list)]])
+  (let [[_ {:keys [criteria]} {:keys [page] :or {page 1}}] route
+        pagination [pagination {:current-page (int page)
+                                :max-pages 5
+                                :url-fn #(url-for ::routes/library {:criteria criteria} {:page %})}]]
+    [:div
+     [:h2.title "Your library"]
+     (if (:count scan-status)
+       [:p.subtitle.is-5.has-text-grey "Containing " [:strong (:count scan-status)] " items"]
+       (when (:scanning scan-status)
+         [:p.subtitle.is-5.has-text-grey "Scanning…"]))
+     (let [items [[[::routes/library {:criteria "recent"} nil] "Recently played"]
+                  [[::routes/library {:criteria "newest"} nil] "Newest additions"]
+                  [[::routes/library {:criteria "starred"} nil] "Starred"]]]
+       [tabs {:items items :active-item {:criteria criteria}}])
+     pagination
+     [:section.section
+      [album/listing (:album album-list)]]
+     pagination]))
