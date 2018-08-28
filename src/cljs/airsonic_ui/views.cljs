@@ -11,7 +11,8 @@
             [airsonic-ui.views.login :refer [login-form]]
             [airsonic-ui.views.album :as album]
             [airsonic-ui.views.song :as song]
-            [airsonic-ui.components.search.views :as search]))
+            [airsonic-ui.components.search.views :as search]
+            [airsonic-ui.components.library.views :as library]))
 
 ;; TODO: Find better names and places for these.
 
@@ -25,11 +26,6 @@
    [:h2.title (:name artist)]
    [:div.content>p {:dangerouslySetInnerHTML {:__html (:biography artist-info)}}]
    [album/listing (:album artist)]])
-
-(defn most-recent [{:keys [album-list]}]
-  [:div
-   [:h2.title "Recently played"]
-   [album/listing (:album album-list)]])
 
 (defn sidebar [user]
   [:aside.menu.section
@@ -53,6 +49,7 @@
 
 (defn app [route-id params query]
   (let [user @(subscribe [::subs/user])
+        ;; TODO: Move this to a layer 3 subscription ↓
         route-events @(subscribe [:routes/events-for-current-route])
         content @(subscribe [:api/route-data route-events])]
     [:div
@@ -63,7 +60,7 @@
        [:section.section
         [breadcrumbs content]
         (case route-id
-          ::routes/main [most-recent content]
+          ::routes/library [library/main [route-id params query] content]
           ::routes/artist-view [artist-detail content]
           ::routes/album-view [album-detail content]
           ::routes/search [search/results content])]]]

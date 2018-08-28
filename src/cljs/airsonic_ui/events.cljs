@@ -113,7 +113,7 @@
 (defn logged-in
   [cofx _]
   (let [redirect (or (get-in cofx [:routes/from-query-param :redirect])
-                     [::routes/main])]
+                     [::routes/library])]
     {:dispatch [:routes/do-navigation redirect]
      :show-nav-bar nil}))
 

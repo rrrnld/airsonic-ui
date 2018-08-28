@@ -7,18 +7,20 @@
 
 (defonce router
   (r/router [["/" ::login]
-             ["/main" ::main]
+             ["/library" ::library]
+             ["/library/:criteria" ::library]
              ["/artist/:id" ::artist-view]
              ["/album/:id" ::album-view]
              ["/search" ::search]]))
 
 ;; use this in views to construct a url
 (defn url-for
-  ([k] (url-for k {}))
-  ([k params] (str "#" (r/resolve router k params))))
+  ([k] (url-for k {} nil))
+  ([k params] (url-for k params nil))
+  ([k params query] (str "#" (r/resolve router k params query))))
 
 ;; which routes need valid login credentials?
-(def protected-routes #{::main ::artist-view ::album-view ::search})
+(def protected-routes #{::library ::artist-view ::album-view ::search})
 
 ;; which data should be requested for which route? can either be a vector or a function returning a vector
 
@@ -28,10 +30,11 @@
 
 (defmethod -route-events :default [route-id params query] nil)
 
-(defmethod -route-events ::main
-  [route-id params query]
-  [:api/request "getAlbumList2" {:type "recent"
-                                 :size 18}])
+(defmethod -route-events ::library
+  [route-id {:keys [criteria]} query]
+  (if criteria
+    [:api/request "getAlbumList2" {:type criteria, :size 18}]
+    [:routes/do-navigation [route-id {:criteria "recent"} query]]))
 
 (defmethod -route-events ::artist-view
   [route-id params query]
@@ -97,7 +100,6 @@
                   credentials'(get-in context [:coeffects :db :credentials])]
               (println "calling do-navigation with" route credentials')
               (reset! credentials credentials')
-              (println "context" context)
               (apply r/navigate! router route)
               (dissoc context :event)))))
 

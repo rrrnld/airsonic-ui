@@ -28,16 +28,16 @@
 
 (defmethod breadcrumbs :artist [{:keys [artist]}]
   [bulma-breadcrumbs
-   [(url-for ::routes/main) "Start"]
+   [(url-for ::routes/library) "Start"]
    (:name artist)])
 
 (defmethod breadcrumbs :album [{:keys [album]}]
   [bulma-breadcrumbs
-   [(url-for ::routes/main) "Start"]
+   [(url-for ::routes/library) "Start"]
    [(url-for ::routes/artist-view {:id (:artistId album)}) (:artist album)]
    (:name album)])
 
 (defmethod breadcrumbs :search [_]
   [bulma-breadcrumbs
-   [(url-for ::routes/main) "Start"]
+   [(url-for ::routes/library) "Start"]
    "Search"])
