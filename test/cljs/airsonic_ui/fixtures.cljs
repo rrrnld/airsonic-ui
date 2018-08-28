@@ -21,6 +21,20 @@
                                                    :error {:code 40
                                                            :message "Wrong username or password."}}}})
 
+(def artist
+  {:id "499", :name "Tomemitsu", :coverArt "ar-497", :albumCount 1})
+
+(def album
+  {:artistId "258",
+   :name "Tocotronic",
+   :songCount 26,
+   :created "2017-12-31T08:18:45.000Z",
+   :duration 7383,
+   :artist "Tocotronic",
+   :year 2015,
+   :id "439",
+   :coverArt "al-439"})
+
 (def song
   {:artistId 42,
    :path "DJ Koze/DJ Koze - Reincarnations Part 2, The Remix Chapter 2009-2014/14. Apparat - Black Water (DJ Koze Remix).mp3",

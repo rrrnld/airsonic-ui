@@ -10,6 +10,8 @@
             [airsonic-ui.audio.core]
             [airsonic-ui.api.events]
             [airsonic-ui.api.subs]
+            [airsonic-ui.components.search.events]
+            [airsonic-ui.components.search.subs]
             [airsonic-ui.events :as events]
             [airsonic-ui.views :as views]
             [airsonic-ui.config :as config]))

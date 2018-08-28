@@ -1,4 +1,4 @@
-(ns airsonic-ui.utils.helpers
+(ns airsonic-ui.helpers
   "Assorted helper functions"
   (:require [re-frame.core :as rf]))
 
@@ -16,3 +16,9 @@
   (fn [e]
     (.preventDefault e)
     (rf/dispatch ev)))
+
+(defn add-classes
+  "Adds one or more classes to a hiccup keyword"
+  [elem & classes]
+  (keyword (apply str (name elem) (->> (filter identity classes)
+                                       (map #(str "." (name %)))))))

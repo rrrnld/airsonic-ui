@@ -4,6 +4,12 @@
 
 (enable-console-print!)
 
+(deftest single-response
+  (testing "Should return the response for a specified endpoint"
+    (let [db {:api/responses {["search2" {:query "query term"}] :result}}]
+      (is (= :result (sub/response-for db [:api/response-for "search2" {:query "query term"}])))
+      (is (nil? (sub/response-for db [:api/response-for "search2" {:query "another query term"}]))))))
+
 (deftest endpoint-keywordification
   (testing "Should strip prefixes"
     (is (= :artist-info (sub/endpoint->kw "getArtistInfo")))

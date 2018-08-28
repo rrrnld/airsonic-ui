@@ -1,5 +1,6 @@
 (ns airsonic-ui.api.helpers
-  (:require [clojure.string :as str]))
+  (:require [clojure.string :as str]
+            [clojure.set :as set]))
 
 (def default-params {:f "json"
                      :c "airsonic-ui-cljs"
@@ -41,11 +42,22 @@
   "Retrieves the actual response body"
   [response]
   (if (is-error? response)
-    (let [error (:error response)]
-      (throw (->exception response)))
+    (throw (->exception response))
     (unwrap-response* response)))
 
 (defn error-msg
   [exception-info]
   (let [{:keys [code message]} (ex-data exception-info)]
     (str "Error " code ": " message)))
+
+(defn content-type
+  "Given some piece of data returned by the api, returns a keyword that
+  describes what we look at"
+  [data]
+  (keyword :content-type
+           (condp set/subset? (set (keys data))
+             #{:path} :song
+             #{:artistId :name :songCount :artist} :album
+             #{:id :name :albumCount} :artist
+             :unknown)))
+

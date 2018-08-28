@@ -67,7 +67,9 @@
   .missing-cover
     display: block
 
-.album-preview
+// preview card for album or artist listings
+.preview-card
+  .card-content > div,
   .title,
   .subtitle
     overflow: hidden
@@ -79,6 +81,7 @@
     height: auto
     max-width: 256px
     max-height: 256px
+    margin: 0
 
 // occurs in album detail view
 .table
@@ -107,3 +110,12 @@
 .loading-spinner
   .icon
     animation: 1s infinite you-spin-my-head-right-round
+
+
+// route specific styling
+.search
+  .content .section
+    padding: 1.5rem 0
+
+  .preview-card .card-content
+    padding: 0.375rem 0.75rem 0.75rem

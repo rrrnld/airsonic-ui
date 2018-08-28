@@ -1,5 +1,5 @@
 (ns airsonic-ui.views.song
-  (:require [airsonic-ui.utils.helpers :refer [dispatch]]
+  (:require [airsonic-ui.helpers :refer [dispatch]]
             [airsonic-ui.events :as events]
             [airsonic-ui.routes :as routes :refer [url-for]]
             [airsonic-ui.views.icon :refer [icon]]))
@@ -7,9 +7,9 @@
 (defn item [songs song idx]
   (let [artist-id (:artistId song)]
     [:div
-     [:a
-      (when artist-id {:href (url-for ::routes/artist-view {:id artist-id})})
-      (:artist song)]
+     (if artist-id
+       [:a {:href (url-for ::routes/artist-view {:id artist-id})} (:artist song)]
+       (:artist song))
      " - "
      [:a
       {:href "#" :on-click (dispatch [::events/play-songs songs idx])}

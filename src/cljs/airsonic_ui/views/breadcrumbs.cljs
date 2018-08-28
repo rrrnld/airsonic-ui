@@ -5,12 +5,13 @@
 ;; hierarchy no matter how you came to the url. They should allow easy
 ;; navigation upwards that hierarchy (e.g. album -> artist)
 
-(defn content-type
+(defn page-type
   "Helper to see what kind of view we're currently dealing with"
   [content]
   (case (set (keys content))
     #{:artist :artist-info} :artist
     #{:album} :album
+    #{:search} :search
     :other-content))
 
 (defn- bulma-breadcrumbs [& items]
@@ -20,7 +21,7 @@
       [:li {:key idx} [:a {:href href} label]])
     [:li.is-active>a (last items)]]])
 
-(defmulti breadcrumbs content-type)
+(defmulti breadcrumbs page-type)
 
 (defmethod breadcrumbs :default [content]
   [bulma-breadcrumbs "Start"])
@@ -35,3 +36,8 @@
    [(url-for ::routes/main) "Start"]
    [(url-for ::routes/artist-view {:id (:artistId album)}) (:artist album)]
    (:name album)])
+
+(defmethod breadcrumbs :search [_]
+  [bulma-breadcrumbs
+   [(url-for ::routes/main) "Start"]
+   "Search"])

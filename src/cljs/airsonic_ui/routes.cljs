@@ -5,11 +5,12 @@
 
 (def default-route ::login)
 
-(def router
+(defonce router
   (r/router [["/" ::login]
              ["/main" ::main]
              ["/artist/:id" ::artist-view]
-             ["/album/:id" ::album-view]]))
+             ["/album/:id" ::album-view]
+             ["/search" ::search]]))
 
 ;; use this in views to construct a url
 (defn url-for
@@ -17,7 +18,7 @@
   ([k params] (str "#" (r/resolve router k params))))
 
 ;; which routes need valid login credentials?
-(def protected-routes #{::main ::artist-view ::album-view})
+(def protected-routes #{::main ::artist-view ::album-view ::search})
 
 ;; which data should be requested for which route? can either be a vector or a function returning a vector
 
@@ -41,6 +42,11 @@
 (defmethod -route-events ::album-view
   [route-id params query]
   [:api/request "getAlbum" (select-keys params [:id])])
+
+(defmethod -route-events ::search
+  [route-id params query]
+  [[:search/restore-term-from-param (:query query)]
+   [:api/request "search3" query]])
 
 ;; shouldn't need to change anything below
 
@@ -91,8 +97,9 @@
                   credentials'(get-in context [:coeffects :db :credentials])]
               (println "calling do-navigation with" route credentials')
               (reset! credentials credentials')
+              (println "context" context)
               (apply r/navigate! router route)
-              context))))
+              (dissoc context :event)))))
 
 (re-frame/reg-event-fx :routes/do-navigation do-navigation (fn [& _] nil))
 

@@ -1,7 +1,7 @@
 (ns airsonic-ui.api.helpers-test
   (:require [cljs.test :refer [deftest testing is]]
             [clojure.string :as str]
-            [airsonic-ui.fixtures :refer [responses]]
+            [airsonic-ui.fixtures :as fixtures :refer [responses]]
             [airsonic-ui.api.helpers :as api]))
 
 (defn- url
@@ -19,6 +19,12 @@
   (testing "Should set correct default parameters"
     (is (string? (re-find #"f=json" (fixtures :default-url))))
     (is (string? (re-find #"v=1\.15\.0" (fixtures :default-url))))))
+
+(deftest parameter-encoding
+  (testing "Should escape url parameters"
+    (let [query "äöüß"
+          encoded-str (js/encodeURIComponent query)]
+      (is (str/includes? (api/url "http://localhost" "search3" {:query query}) encoded-str)))))
 
 (deftest song-urls
   (testing "Should construct the url based on a song's id"
@@ -46,7 +52,7 @@
       (try
         (api/unwrap-response error-response)
         (catch ExceptionInfo e
-          (= (:error error-response) (ex-data e)))))))
+          (is (= (get-in error-response [:subsonic-response :error]) (ex-data e))))))))
 
 (deftest error-recognition
   (testing "Should detect error responses"
@@ -55,3 +61,13 @@
   (testing "Should pass on good responses"
     (is (false? (api/is-error? (:ok responses))))
     (is (false? (api/is-error? (:auth-success responses))))))
+
+(deftest content-type
+  (testing "Should detect whether the data we look at represents a song"
+    (is (= :content-type/song (api/content-type fixtures/song))))
+  (testing "Should detect whether the data we look at represents an artist"
+    (is (= :content-type/artist (api/content-type fixtures/artist)))
+    (is (= :content-type/artist (api/content-type (dissoc fixtures/artist :coverArt)))))
+  (testing "Should detect whether the data we look at represents an album"
+    (is (= :content-type/album (api/content-type fixtures/album)))
+    (is (= :content-type/album (api/content-type (dissoc fixtures/album :coverArt))))))

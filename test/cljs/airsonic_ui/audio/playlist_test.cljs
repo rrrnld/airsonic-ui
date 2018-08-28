@@ -1,7 +1,7 @@
 (ns airsonic-ui.audio.playlist-test
   (:require [cljs.test :refer [deftest testing is]]
             [airsonic-ui.audio.playlist :as playlist]
-            [airsonic-ui.utils.helpers :refer [find-where]]
+            [airsonic-ui.helpers :refer [find-where]]
             [airsonic-ui.fixtures :as fixtures]
             [airsonic-ui.test-helpers :as helpers]
             [debux.cs.core :refer-macros [dbg]]))

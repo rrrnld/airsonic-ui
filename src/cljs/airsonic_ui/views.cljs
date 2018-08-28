@@ -3,13 +3,15 @@
             [airsonic-ui.routes :as routes :refer [url-for]]
             [airsonic-ui.events :as events]
             [airsonic-ui.subs :as subs]
+            [airsonic-ui.helpers :refer [add-classes]]
 
             [airsonic-ui.views.notifications :refer [notification-list]]
             [airsonic-ui.views.breadcrumbs :refer [breadcrumbs]]
             [airsonic-ui.views.audio-player :refer [audio-player]]
             [airsonic-ui.views.login :refer [login-form]]
             [airsonic-ui.views.album :as album]
-            [airsonic-ui.views.song :as song]))
+            [airsonic-ui.views.song :as song]
+            [airsonic-ui.components.search.views :as search]))
 
 ;; TODO: Find better names and places for these.
 
@@ -31,6 +33,7 @@
 
 (defn sidebar [user]
   [:aside.menu.section
+   [search/form]
    [:p.menu-label "Music"]
    [:ul.menu-list
     [:li [:a "By artist"]]
@@ -56,20 +59,21 @@
      [:main.columns
       [:div.column.is-2.sidebar
        [sidebar user]]
-      [:div.column
+      [:div.column.is-10
        [:section.section
         [breadcrumbs content]
         (case route-id
           ::routes/main [most-recent content]
           ::routes/artist-view [artist-detail content]
-          ::routes/album-view [album-detail content])]]]
+          ::routes/album-view [album-detail content]
+          ::routes/search [search/results content])]]]
      [audio-player]]))
 
 (defn main-panel []
   (let [notifications @(subscribe [::subs/notifications])
         is-booting? @(subscribe [::subs/is-booting?])
         [route-id params query] @(subscribe [:routes/current-route])]
-    [:div
+    [(add-classes :div route-id)
      [notification-list notifications]
      (if is-booting?
        [:div.app-loading>div.loader]

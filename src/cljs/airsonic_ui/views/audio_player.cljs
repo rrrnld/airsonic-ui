@@ -1,6 +1,6 @@
 (ns airsonic-ui.views.audio-player
   (:require [re-frame.core :refer [subscribe]]
-            [airsonic-ui.utils.helpers :refer [dispatch]]
+            [airsonic-ui.helpers :refer [add-classes dispatch]]
             [airsonic-ui.events :as events]
             [airsonic-ui.views.cover :refer [cover]]
             [airsonic-ui.views.icon :refer [icon]]))
@@ -24,12 +24,6 @@
                                 {:on-click (dispatch [event])}
                                 [icon icon-glyph]])
           buttons))])
-
-(defn- add-classes
-  "Adds one or more classes to a hiccup keyword"
-  [elem & classes]
-  (keyword (apply str (name elem) (->> (filter identity classes)
-                                       (map #(str "." (name %)))))))
 
 (defn- toggle-shuffle [playback-mode]
   (dispatch [::events/set-playback-mode (if (= playback-mode :shuffled)

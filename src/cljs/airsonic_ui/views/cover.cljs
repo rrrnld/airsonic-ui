@@ -65,3 +65,8 @@
        [:img {:src original
               :srcSet (str original ", " retina " 2x")}]
        [missing-cover item size])]))
+
+(defn card [item & {:keys [url-fn content size] :or {size 256}}]
+  [:article.card.preview-card
+   [:div.card-image [:a {:href (url-fn item)} [cover item size]]]
+   [:div.card-content content]])
