@@ -30,10 +30,9 @@
 
 // bottom bar
 .audio-player
-  background: $dark
-  color: $light
-
   .navbar-menu
+    color: $light
+    background: $dark
     align-items: center
 
   .audio-interaction
@@ -42,12 +41,22 @@
     .level-left
       flex-grow: 1
       flex-shrink: 0
+
     .level-right
-      flex-grow: 0
-      flex-shrink: 1
-      padding-left: .5rem
-      padding-left: .5rem
-      padding-right: .5rem
+      display: flex
+
+      .buttons-start,
+      .buttons-end
+        margin: 0 .5rem
+
+      =tablet
+        flex-grow: 0
+        flex-shrink: 1
+        padding-left: .5rem
+        padding-right: .5rem
+
+        .buttons-start
+          margin-left: .75rem
 
   .media
     flex-grow: 1

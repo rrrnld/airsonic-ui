@@ -37,6 +37,7 @@
          [:a.navbar-item {:href (url-for ::routes/library {:criteria "newest"})} "Newest additions"]
          [:a.navbar-item {:href (url-for ::routes/library {:criteria "starred"})} "Starred"]]]
        [:a.navbar-item {} "Podcasts"]
+       [:a.navbar-item {} "Playlists"]
        [:a.navbar-item {} "Shares"]
        [:div.navbar-item.has-dropdown.is-hoverable
         [:div.navbar-link "More"]

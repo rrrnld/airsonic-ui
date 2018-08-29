@@ -59,7 +59,8 @@
          [:div.level-left>article.media
           [:div.media-left [cover current-song 48]]
           [:div.media-content [current-song-info current-song playback-status]]]
-         [:div.level-right [song-controls is-playing?]]
-         [:div.level-right [playback-mode-controls playlist]]]
+         [:div.level-right
+          [:div.buttons-start [song-controls is-playing?]]
+          [:div.buttons-end [playback-mode-controls playlist]]]]
         ;; not playing anything
         [:p.has-text-light.navbar-item.idle-notification "Select a song to start playing"])]]))
