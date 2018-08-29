@@ -15,7 +15,7 @@
       (:title song)]]))
 
 (defn listing [songs]
-  [:table.table.is-striped.is-hoverable.is-fullwidth>tbody
+  [:table.table.is-striped.is-hoverable.is-fullwidth.song-list>tbody
    (for [[idx song] (map-indexed vector songs)]
      ^{:key idx} [:tr
                      [:td.grow [item songs song idx]]
