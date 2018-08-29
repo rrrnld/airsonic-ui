@@ -63,4 +63,4 @@
           [:div.buttons-start [song-controls is-playing?]]
           [:div.buttons-end [playback-mode-controls playlist]]]]
         ;; not playing anything
-        [:p.has-text-light.navbar-item.idle-notification "Select a song to start playing"])]]))
+        [:p.navbar-item.idle-notification "No audio playing"])]]))
