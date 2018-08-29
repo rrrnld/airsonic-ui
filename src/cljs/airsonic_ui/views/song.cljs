@@ -1,6 +1,5 @@
 (ns airsonic-ui.views.song
   (:require [airsonic-ui.helpers :refer [dispatch]]
-            [airsonic-ui.events :as events]
             [airsonic-ui.routes :as routes :refer [url-for]]
             [airsonic-ui.views.icon :refer [icon]]))
 
@@ -12,7 +11,7 @@
        (:artist song))
      " - "
      [:a
-      {:href "#" :on-click (dispatch [::events/play-songs songs idx])}
+      {:href "#" :on-click (dispatch [:audio-player/play-all songs idx])}
       (:title song)]]))
 
 (defn listing [songs]
@@ -23,9 +22,9 @@
                      ;; FIXME: Not implemented yet
                   [:td>a {:title "Play next"
                           :href "#"
-                          :on-click (dispatch [::events/enqueue-next song])}
+                          :on-click (dispatch [:audio-player/enqueue-next song])}
                    [icon :plus]]
                   [:td>a {:title "Play last"
                           :href "#"
-                          :on-click (dispatch [::events/enqueue-last song])}
+                          :on-click (dispatch [:audio-player/enqueue-last song])}
                    [icon :caret-right]]])])

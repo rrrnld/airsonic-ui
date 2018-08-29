@@ -1,6 +1,5 @@
 (ns airsonic-ui.components.search.views
-  (:require [clojure.pprint :refer [pprint]]
-            [re-frame.core :refer [dispatch subscribe]]
+  (:require [re-frame.core :refer [dispatch subscribe]]
             [goog.functions :refer [debounce]]
             [airsonic-ui.routes :as routes :refer [url-for]]
             [airsonic-ui.views.song :as song]
@@ -47,7 +46,7 @@
 
 (defn results [{:keys [search]}]
   (let [term @(subscribe [:search/current-term])]
-    [:div
+    [:section.section>div.container
      [:h2.title (str "Search results for \"" term "\"")]
      (if (empty? search)
        [:p "The server returned no results."]
@@ -63,5 +62,4 @@
         (when-not (empty? (:song search))
           [:section.section.is-small
            [:h3.subtitle.is-5 "Songs"]
-           [song-results search]])])
-     [:pre (with-out-str (pprint search))]]))
+           [song-results search]])])]))

@@ -129,8 +129,3 @@
   (testing "Should automatically remove a message after a while"
     (let [fx (events/show-notification {} [:_ :info "This is a notification"])]
       (is (= :notification/hide (-> (:dispatch-later fx) first :dispatch first))))))
-
-(deftest song-has-ended
-  (testing "Should play the next song when current song has ended"
-    (is (not (dispatches? (events/audio-update {} [:audio/update {:ended? false}]) ::events/next-song)))
-    (is (dispatches? (events/audio-update {} [:audio/update {:ended? true}]) ::events/next-song))))

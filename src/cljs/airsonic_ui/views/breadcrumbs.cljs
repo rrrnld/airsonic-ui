@@ -15,7 +15,7 @@
     :other-content))
 
 (defn- bulma-breadcrumbs [& items]
-  [:nav.breadcrumb {:aria-label "breadcrumbs"}
+  [:div.container>nav.breadcrumb {:aria-label "breadcrumbs"}
    [:ul
     (for [[idx [href label]] (map-indexed vector (butlast items))]
       [:li {:key idx} [:a {:href href} label]])

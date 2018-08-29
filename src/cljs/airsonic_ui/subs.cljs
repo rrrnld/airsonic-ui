@@ -20,7 +20,7 @@
  ::user
  (fn [_ _] [(subscribe [::credentials])])
  (fn [[credentials] _]
-   {:name (:u credentials)}))
+   (when credentials {:name (:u credentials)})))
 
 (defn cover-url
   "Provides a convenient way for views to get cover images so they don't have

@@ -10,6 +10,7 @@
             [airsonic-ui.audio.core]
             [airsonic-ui.api.events]
             [airsonic-ui.api.subs]
+            [airsonic-ui.components.audio-player.events]
             [airsonic-ui.components.search.events]
             [airsonic-ui.components.search.subs]
             [airsonic-ui.events :as events]

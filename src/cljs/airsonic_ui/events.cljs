@@ -102,20 +102,11 @@
 
 (re-frame/reg-event-fx :credentials/authentication-success authentication-success)
 
-;; TODO: We have to find another solution for this once we have routes that
-;; don't require a login but have the bottom controls
-
-(re-frame/reg-fx
- :show-nav-bar
- (fn [_]
-   (.. js/document -documentElement -classList (add "has-navbar-fixed-bottom"))))
-
 (defn logged-in
   [cofx _]
   (let [redirect (or (get-in cofx [:routes/from-query-param :redirect])
                      [::routes/library])]
-    {:dispatch [:routes/do-navigation redirect]
-     :show-nav-bar nil}))
+    {:dispatch [:routes/do-navigation redirect]}))
 
 (re-frame/reg-event-fx
  ::logged-in
@@ -134,77 +125,6 @@
      :audio/stop nil}))
 
 (re-frame/reg-event-fx ::logout logout)
-
-;; ---
-;; musique
-;; ---
-
-; TODO: Make play, next and previous a bit prettier and more DRY
-
-(defn- song-url [db song]
-  (let [creds (:credentials db)]
-    (api/song-url (:server creds) (select-keys creds [:u :p]) song)))
-
-(re-frame/reg-event-fx
- ; sets up the db, starts to play a song and adds the rest to a playlist
- ::play-songs
- (fn [{:keys [db]} [_ songs start-idx]]
-   (let [playlist (-> (playlist/->playlist songs :playback-mode :linear :repeat-mode :repeat-all)
-                      (playlist/set-current-song start-idx))]
-     {:audio/play (song-url db (playlist/peek playlist))
-      :db (assoc-in db [:audio :playlist] playlist)})))
-
-;; FIXME: :audio/play might not get the right argument here
-
-(re-frame/reg-event-db
- ::set-playback-mode
- (fn [db [_ playback-mode]]
-   (update-in db [:audio :playlist] #(playlist/set-playback-mode % playback-mode))))
-
-(re-frame/reg-event-db
- ::set-repeat-mode
- (fn [db [_ repeat-mode]]
-   (update-in db [:audio :playlist] #(playlist/set-repeat-mode % repeat-mode))))
-
-(re-frame/reg-event-fx
- ::next-song
- (fn [{:keys [db]} _]
-   (let [db (update-in db [:audio :playlist] playlist/next-song)
-         next (playlist/peek (get-in db [:audio :playlist]))]
-     {:db db
-      :audio/play (song-url db next)})))
-
-(re-frame/reg-event-fx
- ::previous-song
- (fn [{:keys [db]} _]
-   (let [db (update-in db [:audio :playlist] playlist/previous-song)
-         prev (playlist/peek (get-in db [:audio :playlist]))]
-     {:db db
-      :audio/play (song-url db prev)})))
-
-(re-frame/reg-event-db
- ::enqueue-next
- (fn [db [_ song]]
-   (update-in db [:audio :playlist] #(playlist/enqueue-next % song))))
-
-(re-frame/reg-event-db
- ::enqueue-last
- (fn [db [_ song]]
-   (update-in db [:audio :playlist] #(playlist/enqueue-last % song))))
-
-(re-frame/reg-event-fx
- ::toggle-play-pause
- (fn [_ _]
-   {:audio/toggle-play-pause nil}))
-
-(defn audio-update
-  "Reacts to audio events fired by the HTML5 audio player and plays the next
-  track if necessary."
-  [{:keys [db]} [_ status]]
-  (cond-> {:db (assoc-in db [:audio :playback-status] status)}
-    (:ended? status) (assoc :dispatch [::next-song])))
-
-(re-frame/reg-event-fx :audio/update audio-update)
 
 ;; ---
 ;; routing

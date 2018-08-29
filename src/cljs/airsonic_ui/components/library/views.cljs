@@ -16,7 +16,7 @@
   page as its argument. When `max-pages` is `nil` an infinite pagination
   will be rendered."
   [{:keys [url-fn max-pages current-page]}]
-  [:nav.pagination.is-centered {:role "pagination", :aria-label "pagination"}
+  [:nav.pagination {:role "pagination", :aria-label "pagination"}
    [:a.pagination-previous (if (> current-page 1)
                              {:href (url-fn (dec current-page))}
                              {:disabled true}) "Previous page"]
@@ -35,25 +35,26 @@
                         current-page? (add-classes :is-current))
                       (cond-> {:href (url-fn page), :aria-label (str "Page " page)}
                         (= page current-page) (assoc :aria-current "page")) page]))
-    (when (or (not max-pages) (< max-pages (- max-pages 3)))
+    (when (or (not max-pages) (< current-page (- max-pages 2)))
       ^{:key "ellipsis-after"} [:li>span.pagination-ellipsis "…"])]])
 
 (defn main [route {:keys [scan-status album-list]}]
   (let [[_ {:keys [criteria]} {:keys [page] :or {page 1}}] route
+        tab-items [[[::routes/library {:criteria "recent"} nil] "Recently played"]
+                   [[::routes/library {:criteria "newest"} nil] "Newest additions"]
+                   [[::routes/library {:criteria "starred"} nil] "Starred"]]
         pagination [pagination {:current-page (int page)
                                 :max-pages 5
                                 :url-fn #(url-for ::routes/library {:criteria criteria} {:page %})}]]
     [:div
-     [:h2.title "Your library"]
-     (if (:count scan-status)
-       [:p.subtitle.is-5.has-text-grey "Containing " [:strong (:count scan-status)] " items"]
-       (when (:scanning scan-status)
-         [:p.subtitle.is-5.has-text-grey "Scanning…"]))
-     (let [items [[[::routes/library {:criteria "recent"} nil] "Recently played"]
-                  [[::routes/library {:criteria "newest"} nil] "Newest additions"]
-                  [[::routes/library {:criteria "starred"} nil] "Starred"]]]
-       [tabs {:items items :active-item {:criteria criteria}}])
-     pagination
-     [:section.section
-      [album/listing (:album album-list)]]
-     pagination]))
+     [:section.hero.is-small>div.hero-body>div.container
+      [:h2.title "Your library"]
+      (if (:count scan-status)
+        [:p.subtitle.is-5.has-text-grey "Containing " [:strong (:count scan-status)] " items"]
+        (when (:scanning scan-status)
+          [:p.subtitle.is-5.has-text-grey "Scanning…"]))]
+     [:section.section>div.container
+      [tabs {:items tab-items :active-item {:criteria criteria}}]
+      pagination
+      [:section.section [album/listing (:album album-list)]]
+      pagination]]))
