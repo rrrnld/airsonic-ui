@@ -1,6 +1,7 @@
 (ns airsonic-ui.helpers
   "Assorted helper functions"
-  (:require [re-frame.core :as rf]))
+  (:require [re-frame.core :as rf]
+            [clojure.string :as str]))
 
 (defn find-where
   "Returns the the first item in `coll` with its index for which `(p song)`
@@ -10,7 +11,7 @@
        (reduce (fn [_ [idx song]]
                  (when (p song) (reduced [idx song]))) nil)))
 
-(defn dispatch
+(defn muted-dispatch
   "Dispatches a re-frame event while canceling default DOM behavior"
   [ev]
   (fn [e]
@@ -22,3 +23,11 @@
   [elem & classes]
   (keyword (apply str (name elem) (->> (filter identity classes)
                                        (map #(str "." (name %)))))))
+
+(defn kebabify
+  "Turns camelCased strings and keywords into kebab-cased keywords"
+  [x]
+  (-> (if (keyword? x) (name x) x)
+      (str/replace #"([a-z])([A-Z])" (fn [[_ a b]] (str a "-" b)))
+      (str/lower-case)
+      (keyword)))

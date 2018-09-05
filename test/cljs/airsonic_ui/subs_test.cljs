@@ -2,6 +2,7 @@
   (:require [cljs.test :refer [deftest testing is]]
             [airsonic-ui.fixtures :as fixtures]
             [airsonic-ui.api.helpers :as api]
+            [airsonic-ui.events :as events]
             [airsonic-ui.subs :as subs]))
 
 (deftest booting
@@ -33,3 +34,34 @@
                             fixtures/song
                             48)
              (subs/cover-url [credentials] [:subs/cover-image fixtures/song 48]))))))
+
+(def successful-auth-db
+  "For the details see event_test.cljs"
+  (-> {:store {:credentials fixtures/credentials}}
+      (events/initialize-app [::events/initialize-app])
+      (events/authentication-response [:credentials/authentication-response (:auth-success fixtures/responses)])
+      (events/authentication-success [:credentials/authentication-success fixtures/credentials (:auth-success fixtures/responses)])
+      (:db)))
+
+(deftest user-roles
+  (testing "Should be available after a successful authentication"
+    (let [user-roles (-> (subs/user-info successful-auth-db [:user/info])
+                         (subs/user-roles [:user/roles]))]
+      (is (set? user-roles))
+      (is (every? keyword? user-roles))
+      (is (not (user-roles :username)) "and contain only roles")))
+  (testing "Should indicate whether a user has a given role"
+    (letfn [(role [role]
+              (-> (subs/user-info successful-auth-db [:user/info])
+                  (subs/user-roles [:user/roles])
+                  (disj :admin) ; <- makes sure we're not allowed everything
+                  (subs/user-role [:user/role role])))]
+      (is (some? (role :stream)))
+      (is (not (some? (role :video-conversion))))))
+  (testing "Should allow everything to an admin"
+    (letfn [(admin-role [role]
+              (-> (subs/user-info successful-auth-db [:user/info])
+                  (subs/user-roles [:user/roles])
+                  (subs/user-role [:user/role role])))]
+      (is (some? (admin-role :stream)))
+      (is (some? (admin-role :video-conversion))))))

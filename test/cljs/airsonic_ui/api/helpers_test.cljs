@@ -60,7 +60,7 @@
     (is (true? (api/is-error? (:auth-failure responses)))))
   (testing "Should pass on good responses"
     (is (false? (api/is-error? (:ok responses))))
-    (is (false? (api/is-error? (:auth-success responses))))))
+    (is (false? (api/is-error? (:ping-success responses))))))
 
 (deftest content-type
   (testing "Should detect whether the data we look at represents a song"

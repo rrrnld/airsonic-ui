@@ -14,8 +14,29 @@
                                    :scanning false}
                       :status "ok"
                       :version "1.15.0"}}
-                :auth-success {:subsonic-response {:status "ok"
+                :ping-success {:subsonic-response {:status "ok"
                                                    :version "1.15.0"}}
+                :auth-success {:subsonic-response
+                               {:status "ok",
+                                :version "1.15.0",
+                                :user
+                                {:videoConversionRole false,
+                                 :playlistRole true,
+                                 :shareRole true,
+                                 :podcastRole true,
+                                 :email "admin@example.com",
+                                 :streamRole true,
+                                 :folder [0],
+                                 :username "admin",
+                                 :scrobblingEnabled false,
+                                 :adminRole true,
+                                 :settingsRole true,
+                                 :commentRole true,
+                                 :jukeboxRole true,
+                                 :coverArtRole true,
+                                 :downloadRole true,
+                                 :maxBitRate 320,
+                                 :uploadRole true}}}
                 :auth-failure {:subsonic-response {:status "failed"
                                                    :version "1.15.0"
                                                    :error {:code 40

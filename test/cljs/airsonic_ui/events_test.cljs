@@ -6,7 +6,8 @@
             [airsonic-ui.db :as db]
             [airsonic-ui.routes :as routes]
             [airsonic-ui.events :as events]
-            [airsonic-ui.subs :as subs]))
+            [airsonic-ui.subs :as subs]
+            ))
 
 (enable-console-print!)
 
@@ -53,10 +54,11 @@
         request (:http-xhrio fx)]
     (testing "uses correct server url"
       (let [uri (:uri request)]
-        (is (true? (str/starts-with? uri (:server fixtures/credentials))))
-        (is (true? (str/includes? uri "/ping")))
-        (is (true? (str/includes? uri (str "p=" (:p fixtures/credentials)))))
-        (is (true? (str/includes? uri (str "u=" (:u fixtures/credentials)))))))
+        (is (str/starts-with? uri (:server fixtures/credentials)))
+        (is (str/includes? uri "/getUser"))
+        (is (str/includes? uri (str "p=" (:p fixtures/credentials))))
+        (is (str/includes? uri (str "u=" (:u fixtures/credentials))))
+        (is (str/includes? uri (str "username=" (:u fixtures/credentials))))))
     (testing "invokes correct callback on server response"
       (is (= [:credentials/authentication-response fixtures/credentials] (:on-success request))))
     (testing "invokes correct callback when server is not reachable"
@@ -66,9 +68,12 @@
   (testing "On success"
     (let [cofx (-> (has-previous-session)
                    (events/authentication-response [:credentials/authentication-response (:auth-success fixtures/responses)])
-                   (events/authentication-success [:credentials/authentication-success]))]
+                   (events/authentication-success [:credentials/authentication-success fixtures/credentials (:auth-success fixtures/responses)]))]
       (testing "should mark the credentials as verified"
-        (is (true? (get-in cofx [:db :credentials :verified?]))))))
+        (is (true? (get-in cofx [:db :credentials :verified?]))))
+      (testing "should store the credentials in localstorage"
+        (let [stored-credentials (get-in cofx [:store :credentials])]
+          (is (= fixtures/credentials stored-credentials))))))
   (testing "On failure"
     (let [cofx (-> (has-previous-session)
                    (events/authentication-response [:credentials/authentication-response (:auth-failure fixtures/responses)])

@@ -1,6 +1,7 @@
 (ns airsonic-ui.api.subs
   (:require [clojure.string :as str]
-            [re-frame.core :refer [reg-sub]]))
+            [re-frame.core :refer [reg-sub]]
+            [airsonic-ui.helpers :refer [kebabify]]))
 
 (defn response-for
   "Returns the cached response for a single endpoint"
@@ -18,9 +19,7 @@
   [endpoint-str]
   (-> (str/replace endpoint-str #"^(get|create|update|delete)" "")
       (str/replace #"\d+$" "")
-      (str/replace #"([a-z])([A-Z])" (fn [[_ a b]] (str a "-" b)))
-      (str/lower-case)
-      (keyword)))
+      (kebabify)))
 
 (defn route-data
   "Given a list of event vectors, returns that responses for all API requests."

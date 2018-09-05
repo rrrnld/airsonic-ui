@@ -37,6 +37,8 @@
  [(re-frame/inject-cofx :store)]
  initialize-app)
 
+(re-frame/dispatch [:api/request "getUser" {:username "arne"}])
+
 (defn verify-credentials
   "Initializes the whole authentication chain when we have locally stored
   credentials that look plausible."
@@ -61,12 +63,13 @@
 (re-frame/reg-event-fx :credentials/user-login user-login)
 
 (defn authentication-request
-  "Tries to authenticate a user by pinging the server with credentials, saving
-  them when the request was successful. Bypasses the request when a user saved
-  their credentials."
+  "Tries to authenticate a user by requesting info about the given user, saving
+  the credentials when the request was successful."
   [cofx [_ credentials]]
   (assoc cofx :http-xhrio {:method :get
-                           :uri (api/url (:server credentials) "ping" (select-keys credentials [:u :p]))
+                           :uri (api/url (:server credentials) "getUser"
+                                         (merge (select-keys credentials [:u :p])
+                                                {:username (:u credentials)}))
                            :response-format (ajax/json-response-format {:keywords? true})
                            :on-success [:credentials/authentication-response credentials]
                            :on-failure [:api/failed-response]})) ; <- we don't need endpoint and params here because the response is not cached
@@ -79,7 +82,7 @@
   [fx [_ credentials response]]
   (assoc fx :dispatch (if (api/is-error? response)
                         [:credentials/authentication-failure response]
-                        [:credentials/authentication-success (assoc credentials :verified? true)])))
+                        [:credentials/authentication-success credentials response])))
 
 (re-frame/reg-event-fx :credentials/authentication-response authentication-response)
 
@@ -95,9 +98,10 @@
 (defn authentication-success
   "Gets called after the server indicates that the credentials entered by a user
   are correct (see `credentials-verification-request`)"
-  [{:keys [db]} [_ credentials]]
+  [{:keys [db]} [_ credentials auth-response]]
   {:store {:credentials credentials}
-   :db (assoc db :credentials (assoc credentials :verified? true))
+   :db (-> (assoc db :credentials (assoc credentials :verified? true))
+           (assoc :user (api/unwrap-response auth-response)))
    :dispatch [::logged-in]})
 
 (re-frame/reg-event-fx :credentials/authentication-success authentication-success)

@@ -21,3 +21,13 @@
   (testing "Should add classes to the innermost child of a nested hiccup element"
     (is (= :p>input.input (helpers/add-classes :p>input :input)))
     (is (= :div.field>p>input.input.has-background-red (helpers/add-classes :div.field>p>input.input :has-background-red)))))
+
+(deftest kebabify
+  (testing "Should turn camelCased and PascalCased strings into kebab-cased keywords"
+    (is (= :hello-world (helpers/kebabify "HelloWorld")))
+    (is (= :how-are-you (helpers/kebabify "howAreYou")))
+    (is (= :foobar (helpers/kebabify "foobar"))))
+  (testing "Should kebab-case camelCased and PascalCased keywords"
+    (is (= :hello-world (helpers/kebabify :HelloWorld)))
+    (is (= :how-are-you (helpers/kebabify :howAreYou)))
+    (is (= :foobar (helpers/kebabify :foobar)))))

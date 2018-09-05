@@ -1,6 +1,9 @@
 (ns airsonic-ui.subs
   (:require [re-frame.core :refer [reg-sub subscribe]]
-            [airsonic-ui.api.helpers :as api]))
+            [airsonic-ui.api.helpers :as api]
+            [airsonic-ui.helpers :refer [kebabify]]
+            [debux.cs.core :refer-macros [dbg]]
+            [clojure.string :as str]))
 
 (defn is-booting?
   "The boot process starts with setting up routing and continues if we found
@@ -16,11 +19,46 @@
 (defn credentials [db _] (:credentials db))
 (reg-sub ::credentials credentials)
 
+;; ---
+;; user info and roles
+;; ---
+
+(defn user-info
+  "Returns the response to getUser?username=$name; this isn't cached like the
+  other responses because it's not retrieved via :api/request"
+  [db _]
+  (:user db))
+
+(reg-sub :user/info user-info)
+
+(defn user-roles
+  "Takes only the roles out of a getUser response to make it easier to work with"
+  [user-info _]
+  (->>
+   (filter (fn [[k _]] (re-find #"Role$" (name k))) user-info)
+   (keep (fn [[role has-role?]]
+           (when has-role? (str/replace (name role) #"Role$" ""))))
+   (map kebabify)
+   (set)))
+
 (reg-sub
- ::user
- (fn [_ _] [(subscribe [::credentials])])
- (fn [[credentials] _]
-   (when credentials {:name (:u credentials)})))
+ :user/roles
+ :<- [:user/info]
+ user-roles)
+
+(defn user-role
+  "Can be used to determine whether a user is allowed to do certain things"
+  [user-roles [_ role]]
+  (or (user-roles role) (user-roles :admin)))
+
+(reg-sub
+ :user/role
+ :<- [:user/roles]
+ user-role)
+
+;; ---
+;; misc
+;; ---
 
 (defn cover-url
   "Provides a convenient way for views to get cover images so they don't have

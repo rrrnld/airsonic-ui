@@ -21,12 +21,18 @@
 
 (defn navbar-top
   "Contains search, some navigational links and the logo"
-  [_]
+  []
   (let [active? (r/atom false)
         toggle-active #(swap! active? not)
         navbar-item (fn navbar-item [{:keys [href]} label]
-                      [:a.navbar-item {:href href :on-click toggle-active} label])]
-    (fn [{:keys [user]}]
+                      [:a.navbar-item {:href href :on-click toggle-active} label])
+        user @(subscribe [:user/info])
+        stream-role @(subscribe [:user/roles :stream])
+        podcast-role @(subscribe [:user/roles :podcast])
+        playlist-role @(subscribe [:user/roles :playlist])
+        share-role @(subscribe [:user/roles :share])
+        settings-role @(subscribe [:user/roles :settings])]
+    (fn []
       [:nav.navbar.is-fixed-top.is-dark {:role "navigation", :aria-label "search and navigation"}
        ;; user is `nil` when we're not logged in, we can hide the extended navigation
        [:div.navbar-brand
@@ -37,25 +43,30 @@
           [:div.navbar-start
            [:div.navbar-item [search/form]]]
           [:div.navbar-end
-           [:div.navbar-item.has-dropdown.is-hoverable
-            [:div.navbar-link "Library"]
-            [:div.navbar-dropdown
-             [navbar-item {:href (url-for ::routes/library {:criteria "recent"})} "Recently played"]
-             [navbar-item {:href (url-for ::routes/library {:criteria "newest"})} "Newest additions"]
-             [navbar-item {:href (url-for ::routes/library {:criteria "starred"})} "Starred"]]]
-           [navbar-item {} "Podcasts"]
-           [navbar-item {} "Playlists"]
-           [navbar-item {} "Shares"]
+           (when stream-role
+             [:div.navbar-item.has-dropdown.is-hoverable
+              [:div.navbar-link "Library"]
+              [:div.navbar-dropdown
+               [navbar-item {:href (url-for ::routes/library {:criteria "recent"})} "Recently played"]
+               [navbar-item {:href (url-for ::routes/library {:criteria "newest"})} "Newest additions"]
+               [navbar-item {:href (url-for ::routes/library {:criteria "starred"})} "Starred"]]])
+           (when podcast-role
+             [navbar-item {} "Podcasts"])
+           (when playlist-role
+             [navbar-item {} "Playlists"])
+           (when share-role
+             [navbar-item {} "Shares"])
            [:div.navbar-item.has-dropdown.is-hoverable
             [:div.navbar-link "More"]
             [:div.navbar-dropdown.is-right
-             [navbar-item "Settings"]
+             (when settings-role
+               [navbar-item "Settings"])
              [:a.navbar-item
               {:on-click (fn [_]
                            (toggle-active)
                            (dispatch [::events/logout]))
                :href "#"}
-              (str "Logout (" (:name user) ")")]]]]])])))
+              (str "Logout (" (:username user) ")")]]]]])])))
 
 (defn media-content
   "Provides the complete UI to browse the media library, interact with search
@@ -77,14 +88,13 @@
 (defn main-panel []
   (let [notifications @(subscribe [::subs/notifications])
         is-booting? @(subscribe [::subs/is-booting?])
-        [route-id params query] @(subscribe [:routes/current-route])
-        user @(subscribe [::subs/user])]
+        [route-id params query] @(subscribe [:routes/current-route])]
     [(add-classes :div route-id)
      [notification-list notifications]
      (if is-booting?
        [:div.app-loading>div.loader]
        [:div
-        [navbar-top {:user user}]
+        [navbar-top]
         (case route-id
           ::routes/login [login-form]
           [media-content route-id params query])])]))

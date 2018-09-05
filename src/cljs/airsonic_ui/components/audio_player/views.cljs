@@ -1,6 +1,6 @@
 (ns airsonic-ui.components.audio-player.views
   (:require [re-frame.core :refer [subscribe]]
-            [airsonic-ui.helpers :refer [add-classes dispatch]]
+            [airsonic-ui.helpers :refer [add-classes muted-dispatch]]
             [airsonic-ui.views.cover :refer [cover]]
             [airsonic-ui.views.icon :refer [icon]]))
 
@@ -20,19 +20,19 @@
                   [:media-step-forward :audio-player/next-song]]]
      (map (fn [[icon-glyph event]]
             ^{:key icon-glyph} [:p.control>button.button.is-light
-                                {:on-click (dispatch [event])}
+                                {:on-click (muted-dispatch [event])}
                                 [icon icon-glyph]])
           buttons))])
 
 (defn- toggle-shuffle [playback-mode]
-  (dispatch [:audio-player/set-playback-mode (if (= playback-mode :shuffled)
+  (muted-dispatch [:audio-player/set-playback-mode (if (= playback-mode :shuffled)
                                           :linear :shuffled)]))
 
 (defn- toggle-repeat-mode [current-mode]
   (let [modes (cycle '(:repeat-none :repeat-all :repeat-single))
         next-mode (->> (drop-while (partial not= current-mode) modes)
                        (second))]
-    (dispatch [:audio-player/set-repeat-mode next-mode])))
+    (muted-dispatch [:audio-player/set-repeat-mode next-mode])))
 
 (defn playback-mode-controls [playlist]
   (let [{:keys [repeat-mode playback-mode]} playlist
