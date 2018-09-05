@@ -1,6 +1,6 @@
 (ns airsonic-ui.components.library.views
   (:require [airsonic-ui.routes :as routes :refer [url-for]]
-            [airsonic-ui.views.album :as album]
+            [airsonic-ui.components.collection.views :as collection]
             [airsonic-ui.helpers :refer [add-classes]]))
 
 (defn tabs [{:keys [items active-item]}]
@@ -50,11 +50,11 @@
      [:section.hero.is-small>div.hero-body>div.container
       [:h2.title "Your library"]
       (if (:count scan-status)
-        [:p.subtitle.is-5.has-text-grey "Containing " [:strong (:count scan-status)] " items"]
+        [:p.subtitle.is-5.has-text-grey [:strong (:count scan-status)] " items"]
         (when (:scanning scan-status)
           [:p.subtitle.is-5.has-text-grey "Scanning…"]))]
      [:section.section>div.container
       [tabs {:items tab-items :active-item {:criteria criteria}}]
       pagination
-      [:section.section [album/listing (:album album-list)]]
+      [:section.section [collection/listing (:album album-list)]]
       pagination]]))

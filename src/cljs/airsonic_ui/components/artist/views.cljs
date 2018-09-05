@@ -1,5 +1,5 @@
 (ns airsonic-ui.components.artist.views
-  (:require [airsonic-ui.views.album :as album]
+  (:require [airsonic-ui.components.collection.views :as collection]
             [clojure.string :as str]))
 
 (defn link-button [attrs children]
@@ -35,4 +35,4 @@
            [lastfm-link artist-info])
          (when (:musicBrainzId artist-info)
            [musicbrainz-link artist-info])])]]]
-   [:section.section>div.container [album/listing (:album artist)]]])
+   [:section.section>div.container [collection/listing (:album artist)]]])
