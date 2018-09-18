@@ -2,17 +2,34 @@
   (:require [re-frame.core :refer [reg-sub subscribe]]
             [airsonic-ui.api.helpers :as api]
             [airsonic-ui.helpers :refer [kebabify]]
-            [debux.cs.core :refer-macros [dbg]]
             [clojure.string :as str]))
+
+;;
+;; app initialization
+;;
+
+;; TODO: Computation and extaction is mixed; this could be simpler
+
+(defn- error-notifications [notifications]
+  (filter (fn [[_ n]]
+            (= :error (:level n))) notifications))
+
+(defn- no-errors? [db]
+  (empty? (error-notifications (:notifications db))))
+
+(defn- no-route? [db]
+  (empty? (:routes/current-route db)))
+
+(defn- no-credentials? [db]
+  (and (not (empty? (:credentials db)))
+       (not (get-in db [:credentials :verified?]))))
 
 (defn is-booting?
   "The boot process starts with setting up routing and continues if we found
   previous credentials and ends when we receive a response from the server."
   [db _]
   ;; so either we don't have any credentials or they are not verified
-  (or (empty? (:routes/current-route db))
-      (and (not (empty? (:credentials db)))
-           (not (get-in db [:credentials :verified?])))))
+  (and (no-errors? db) (or (no-route? db) (no-credentials? db))))
 
 (reg-sub ::is-booting? is-booting?)
 

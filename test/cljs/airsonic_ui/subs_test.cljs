@@ -22,7 +22,9 @@
                              :credentials verified-credentials}))))
     (testing "Should be true when routing is not yet set up"
       (is (true? (is-booting? {:routes/current-route nil
-                               :credentials verified-credentials}))))))
+                               :credentials verified-credentials}))))
+    (testing "Should be false when an error occurred"
+      (is (false? (is-booting? (:db (events/show-notification {} [:_ :error "Something bad happened"]))))))))
 
 (deftest cover-images
   (let [credentials {:server "https://foo.bar"
