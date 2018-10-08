@@ -28,12 +28,12 @@
 
 (re-frame/reg-fx
  :audio/play
- (fn [song-url]
+ (fn [stream-url]
    (when-not @audio
      (reset! audio (js/Audio.))
      (attach-listeners! @audio))
    (.pause @audio)
-   (set! (.-src @audio) song-url)
+   (set! (.-src @audio) stream-url)
    (.play @audio)))
 
 (re-frame/reg-fx

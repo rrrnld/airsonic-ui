@@ -31,11 +31,8 @@
                      :u "test-user"
                      :p "some-random-password"}]
     (testing "Should give the correct path once the credentials are set"
-      (is (= (api/cover-url (:server credentials)
-                            (select-keys credentials [:u :p])
-                            fixtures/song
-                            48)
-             (subs/cover-url [credentials] [:subs/cover-image fixtures/song 48]))))))
+      (is (= (api/cover-url credentials fixtures/song 48)
+             (subs/cover-url credentials [:subs/cover-image fixtures/song 48]))))))
 
 (def successful-auth-db
   "For the details see event_test.cljs"

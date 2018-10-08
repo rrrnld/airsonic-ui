@@ -6,12 +6,6 @@
             [ajax.core :as ajax]
             [airsonic-ui.api.helpers :as api]))
 
-(defn- api-url
-  "Small helper function which makes constructing API URLs a bit easier"
-  [db endpoint params]
-  (let [creds (:credentials db)]
-    (api/url (:server creds) endpoint (merge params (select-keys creds [:u :p])))))
-
 (defn- cache-path [endpoint params] [:api/responses [endpoint params]])
 
 (defn api-request
@@ -19,7 +13,7 @@
   current app state."
   [{:keys [db]} [_ endpoint params]]
   {:http-xhrio {:method :get
-                :uri (api-url db endpoint params)
+                :uri (api/url (:credentials db) endpoint params)
                 :response-format (ajax/json-response-format {:keywords? true})
                 :on-success [:api/good-response endpoint params]
                 :on-failure [:api/failed-response endpoint params]}

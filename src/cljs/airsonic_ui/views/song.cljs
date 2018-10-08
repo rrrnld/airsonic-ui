@@ -7,7 +7,7 @@
   (let [artist-id (:artistId song)]
     [:div
      (if artist-id
-       [:a {:href (url-for ::routes/artist-view {:id artist-id})} (:artist song)]
+       [:a {:href (url-for ::routes/artist.detail {:id artist-id})} (:artist song)]
        (:artist song))
      " - "
      [:a

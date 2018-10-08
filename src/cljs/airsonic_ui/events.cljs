@@ -67,9 +67,7 @@
   the credentials when the request was successful."
   [cofx [_ credentials]]
   (assoc cofx :http-xhrio {:method :get
-                           :uri (api/url (:server credentials) "getUser"
-                                         (merge (select-keys credentials [:u :p])
-                                                {:username (:u credentials)}))
+                           :uri (api/url credentials "getUser" {:username (:u credentials)})
                            :response-format (ajax/json-response-format {:keywords? true})
                            :on-success [:credentials/authentication-response credentials]
                            :on-failure [:api/failed-response]})) ; <- we don't need endpoint and params here because the response is not cached

@@ -19,10 +19,11 @@
                        :default-value search-term
                        :placeholder "Search"}]]])))
 
+
 (defn artist-results [{:keys [artist]}]
   [:div.columns.is-multiline.is-mobile
    (for [[idx artist] (map-indexed vector artist)]
-     (let [url #(url-for ::routes/artist-view (select-keys % [:id]))]
+     (let [url #(url-for ::routes/artist.detail (select-keys % [:id]))]
        ^{:key idx} [:div.column.is-2
                     [card artist
                      :url-fn url
@@ -33,7 +34,7 @@
 (defn album-results [{:keys [album]}]
   [:div.columns.is-multiline.is-mobile
    (for [[idx album] (map-indexed vector album)]
-     (let [url #(url-for ::routes/album-view (select-keys % [:id]))
+     (let [url #(url-for ::routes/album.detail (select-keys % [:id]))
            title (str (:name album) " (" (:artist album) ")")]
        ^{:key idx} [:div.column.is-2 [card album
                                       :url-fn url

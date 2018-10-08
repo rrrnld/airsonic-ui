@@ -12,6 +12,7 @@
     #{:artist :artist-info} :artist
     #{:album} :album
     #{:search} :search
+    #{:podcasts} :podcast
     :other-content))
 
 (defn- bulma-breadcrumbs [& items]
@@ -26,18 +27,20 @@
 (defmethod breadcrumbs :default [content]
   [bulma-breadcrumbs "Start"])
 
+(def start [(url-for ::routes/library) "Start"])
+
 (defmethod breadcrumbs :artist [{:keys [artist]}]
-  [bulma-breadcrumbs
-   [(url-for ::routes/library) "Start"]
+  [bulma-breadcrumbs start
    (:name artist)])
 
 (defmethod breadcrumbs :album [{:keys [album]}]
-  [bulma-breadcrumbs
-   [(url-for ::routes/library) "Start"]
-   [(url-for ::routes/artist-view {:id (:artistId album)}) (:artist album)]
+  [bulma-breadcrumbs start
+   [(url-for ::routes/artist.detail {:id (:artistId album)}) (:artist album)]
    (:name album)])
 
 (defmethod breadcrumbs :search [_]
-  [bulma-breadcrumbs
-   [(url-for ::routes/library) "Start"]
-   "Search"])
+  [bulma-breadcrumbs start "Search"])
+
+(defmethod breadcrumbs :podcast [{:keys [channel]}]
+  ;; TODO: Detail view
+  [bulma-breadcrumbs start "Podcasts"])

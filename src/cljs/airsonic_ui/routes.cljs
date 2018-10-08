@@ -9,9 +9,11 @@
   (r/router [["/" ::login]
              ["/library" ::library]
              ["/library/:criteria" ::library]
-             ["/artist/:id" ::artist-view]
-             ["/album/:id" ::album-view]
-             ["/search" ::search]]))
+             ["/artist/:id" ::artist.detail]
+             ["/album/:id" ::album.detail]
+             ["/search" ::search]
+             ["/podcast" ::podcast.overview]
+             ["/podcast/:id" ::podcast.detail]]))
 
 ;; use this in views to construct a url
 (defn url-for
@@ -20,15 +22,20 @@
   ([k params query] (str "#" (r/resolve router k params query))))
 
 ;; which routes need valid login credentials?
-(def protected-routes #{::library ::artist-view ::album-view ::search})
+(def protected-routes #{::library ::artist.detail ::album.detail ::search
+                        ::podcast.overview ::podcast.detail})
 
 ;; which data should be requested for which route? can either be a vector or a function returning a vector
+
+;; TODO: It's not so nice to have this all so close to the routing logic;
+;; it would be nicer to abstract this away, so the components themselves
+;; could tell what kind of events they expect
 
 (defmulti -route-events
   "Returns the events that take care of correct data being fetched."
   (fn [route-id & _] route-id))
 
-(defmethod -route-events :default [route-id params query] nil)
+(defmethod -route-events :default [route-id params query])
 
 (defmethod -route-events ::library
   [route-id {:keys [criteria]} {:keys [page]}]
@@ -37,13 +44,13 @@
      [:api/request "getAlbumList2" {:type criteria, :size 20, :offset (* 20 (dec page))}]]
     [:routes/do-navigation [route-id {:criteria "recent"} {:page 1}]]))
 
-(defmethod -route-events ::artist-view
+(defmethod -route-events ::artist.detail
   [route-id params query]
   (let [params (select-keys params [:id])]
     [[:api/request "getArtist" params]
      [:api/request "getArtistInfo2" params]]))
 
-(defmethod -route-events ::album-view
+(defmethod -route-events ::album.detail
   [route-id params query]
   [:api/request "getAlbum" (select-keys params [:id])])
 
@@ -51,6 +58,15 @@
   [route-id params query]
   [[:search/restore-term-from-param (:query query)]
    [:api/request "search3" query]])
+
+(defmethod -route-events ::podcast.overview
+  [route-id params query]
+  [[:api/request "getPodcasts"]])
+
+(defmethod -route-events ::podcast.detail
+  [route-id params query]
+  ;; this is identical to ::podcast.overview on purpose
+  [[:api/request "getPodcasts"]])
 
 ;; shouldn't need to change anything below
 

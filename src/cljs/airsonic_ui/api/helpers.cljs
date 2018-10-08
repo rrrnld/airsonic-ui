@@ -6,22 +6,25 @@
                      :c "airsonic-ui-cljs"
                      :v "1.15.0"})
 
-(defn- encode [c]
-  (js/encodeURIComponent c))
+(def ^:private encode js/encodeURIComponent)
 
 (defn url
   "Returns an absolute url to an API endpoint"
-  [server endpoint params]
-  (let [query (->> (merge default-params params)
+  [credentials endpoint params]
+  (let [server (:server credentials)
+        query (->> (merge default-params (select-keys credentials [:u :p]) params)
                    (map (fn [[k v]] (str (encode (name k)) "=" (encode v))))
                    (str/join "&"))]
     (str server (when-not (str/ends-with? server "/") "/") "rest/" endpoint "?" query)))
 
-(defn song-url [server credentials song]
-  (url server "stream" (merge (select-keys song [:id]) credentials)))
+(defn stream-url [credentials song-or-episode]
+  ;; podcasts have a stream-id, normal songs just use their id
+  (let [params {:id (or (:streamId song-or-episode)
+                        (:id song-or-episode))}]
+    (url credentials "stream" params)))
 
-(defn cover-url [server credentials item size]
-  (url server "getCoverArt" (merge {:id (:coverArt item) :size size} credentials)))
+(defn cover-url [credentials item size]
+  (url credentials "getCoverArt" {:id (:coverArt item) :size size}))
 
 (defn is-error? [response]
   (= "failed" (get-in response [:subsonic-response :status])))

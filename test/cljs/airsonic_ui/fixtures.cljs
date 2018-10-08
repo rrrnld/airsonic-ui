@@ -86,3 +86,30 @@
    :paused? false
    :current-src "https://londe.arnes.space/rest/stream?f=json&c=airsonic-ui-cljs&v=1.15.0&id=9574&u=arne&p=27h-%25bO%5B8-.ys%40SQ%7Bg%24-%5B5NZkX%7Dw%24NNwY%263DPATi%2CgaFoH%40e"
    :current-time 3.477029})
+
+(def podcast-episode
+  {:genre "Vocal",
+   :description
+   "Themen der Sendung: Druck auf Maaßen nach Äußerungen zu Chemnitz wächst, Köthen: 22-Jähriger stirbt nach Streit an Herzversagen, Parlamentswahl in Schweden, Russland und Syrien setzen Luftangriffe auf syrische Provinz Idlib fort, Tote und Verletzte bei Ausschreitungen im irakischem Basra, Nordkorea feiert 70. Jubiläum seiner Staatsgründung, Zahl der Toten nach Erdbeben in Japan steigt auf 39, Pläne von CDU und CSU: Fluggesellschaften sollen Auskunft über Verspätungen  geben, Menschenkette in Dangast als Zeichen gegen Flüchtlingssterben im Mittelmeer, Das Wetter",
+   :suffix "mp3",
+   :isDir false,
+   :bitRate 64,
+   :parent "10409",
+   :channelId "4",
+   :type "podcast",
+   :created "2018-09-09T19:41:13.000Z",
+   :duration 965,
+   :artist "Tagesschau (Audio-Podcast)",
+   :isVideo false,
+   :publishDate "2018-09-09T18:00:00.000Z",
+   :size 7812758,
+   :title "09.09.2018 - tagesschau 20:00 Uhr",
+   :playCount 0,
+   :year 2018,
+   :streamId "11181",
+   :status "completed",
+   :id "507",
+   :coverArt "10409",
+   :contentType "audio/mpeg",
+   :album "tagesschau",
+   :track 1})

@@ -22,17 +22,17 @@
          year (conj [:li [icon :calendar] (str "Released in " year)]))))
 
 
-(defn preview [album]
+(defn album-card [album]
   (let [{:keys [artist artistId name id]} album]
     [card album
-     :url-fn #(url-for ::routes/album-view {:id id})
+     :url-fn #(url-for ::routes/album.detail {:id id})
      :content [:div
                ;; link to album
                [:div.title.is-5
-                [:a {:href (url-for ::routes/album-view {:id id})
+                [:a {:href (url-for ::routes/album.detail {:id id})
                      :title name} name]]
                ;; link to artist page
-               [:div.subtitle.is-6 [:a {:href (url-for ::routes/artist-view {:id artistId})
+               [:div.subtitle.is-6 [:a {:href (url-for ::routes/artist.detail {:id artistId})
                                         :title artist} artist]]]]))
 
 (defn listing [albums]
@@ -40,7 +40,7 @@
   [:div.columns.is-multiline.is-mobile
    (for [[idx album] (map-indexed vector albums)]
      ^{:key idx} [:div.column.is-one-fifth-desktop.is-one-quarter-tablet.is-half-mobile
-                  [preview album]])])
+                  [album-card album]])])
 
 (defn detail
   "Lists all songs in an album"

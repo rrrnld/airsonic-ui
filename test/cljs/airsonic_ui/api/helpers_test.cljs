@@ -10,12 +10,12 @@
   (api/url server endpoint {}))
 
 (def fixtures
-  {:default-url (url "http://localhost:8080" "ping")})
+  {:default-url (url {:server "http://localhost:8080"} "ping")})
 
 (deftest general-url-construction
   (testing "Handles missing slashes"
-    (is (true? (str/starts-with? (fixtures :default-url)  "http://localhost:8080/rest/ping")))
-    (is (true? (str/starts-with? (url "http://localhost:8080/" "ping") "http://localhost:8080/rest/ping"))))
+    (is (true? (str/starts-with? (url {:server "http://localhost:8080"} "ping") "http://localhost:8080/rest/ping")))
+    (is (true? (str/starts-with? (url {:server "http://localhost:8080/"} "ping") "http://localhost:8080/rest/ping"))))
   (testing "Should set correct default parameters"
     (is (string? (re-find #"f=json" (fixtures :default-url))))
     (is (string? (re-find #"v=1\.15\.0" (fixtures :default-url))))))
@@ -24,19 +24,22 @@
   (testing "Should escape url parameters"
     (let [query "äöüß"
           encoded-str (js/encodeURIComponent query)]
-      (is (str/includes? (api/url "http://localhost" "search3" {:query query}) encoded-str)))))
+      (is (str/includes? (api/url {:server "http://localhost"} "search3" {:query query}) encoded-str)))))
 
-(deftest song-urls
+(deftest stream-urls
   (testing "Should construct the url based on a song's id"
-    (let [song {:id 1234}]
-      (is (true? (str/includes? (api/song-url "http://localhost" {} song) (str "id=" (:id song))))))))
+    (let [stream-url (api/stream-url {:server "http://localhost"} fixtures/song)]
+      (is (str/includes? stream-url (str "id=" (:id fixtures/song))))))
+  (testing "Should also work for podcasts"
+    (let [stream-url (api/stream-url {:server "http://localhost"} fixtures/podcast-episode)]
+      (is (str/includes? stream-url (str "id=" (:streamId fixtures/podcast-episode)))))))
 
 (deftest cover-urls
   (let [album {:coverArt "cover-99999"}]
     (testing "Should construct the url based on an item's cover-id"
-      (is (true? (str/includes? (api/cover-url "http://server.tld" {} album -1) (str "id=" (:coverArt album))))))
+      (is (true? (str/includes? (api/cover-url {:server "http://server.tld"} album -1) (str "id=" (:coverArt album))))))
     (testing "Should scale an image to a given size"
-      (is (true? (str/includes? (api/cover-url "http://server.tld" {} album 48) "size=48"))))))
+      (is (true? (str/includes? (api/cover-url {:server "http://server.tld"} album 48) "size=48"))))))
 
 (deftest response-handling
   (testing "Should unwrap responses"

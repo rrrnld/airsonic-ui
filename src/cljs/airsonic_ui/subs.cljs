@@ -80,12 +80,12 @@
 (defn cover-url
   "Provides a convenient way for views to get cover images so they don't have
   to build them themselves and can live a simple and happy life."
-  [[{:keys [server u p]}] [_ song size]]
-  (api/cover-url server {:u u :p p} song size))
+  [credentials [_ song size]]
+  (api/cover-url credentials song size))
 
 (reg-sub
  ::cover-url
- (fn [_ _] [(subscribe [::credentials])])
+ :<- [::credentials]
  cover-url)
 
 ;; user notifications
