@@ -3,8 +3,7 @@
             [ajax.core :as ajax]
             [airsonic-ui.routes :as routes]
             [airsonic-ui.db :as db]
-            [airsonic-ui.api.helpers :as api]
-            [airsonic-ui.audio.playlist :as playlist]))
+            [airsonic-ui.api.helpers :as api]))
 
 (re-frame/reg-fx
  ;; a simple effect to keep println statements out of our event handlers

@@ -48,9 +48,11 @@
     .level-right
       display: flex
 
-      .buttons-start,
-      .buttons-end
+      .button-group
         margin: 0 .5rem
+
+        + .button-group
+          margin-left: 0
 
       =tablet
         flex-grow: 0
@@ -58,15 +60,13 @@
         padding-left: .5rem
         padding-right: .5rem
 
-        .buttons-start
-          margin-left: .75rem
-
   .media
     flex-grow: 1
     align-items: center
 
-  progress
-    width: 100%
+  .current-song-info
+    progress
+      width: 100%
 
 .progress.is-tiny
   height: .25rem
@@ -99,6 +99,11 @@
 .table
   .grow
     width: 100%
+
+// duh
+.song-list
+  .song.is-playing
+    background-color: $light !important
 
 // floating notifications
 .notifications:not(:empty)

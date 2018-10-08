@@ -13,7 +13,9 @@
              ["/album/:id" ::album.detail]
              ["/search" ::search]
              ["/podcast" ::podcast.overview]
-             ["/podcast/:id" ::podcast.detail]]))
+             ["/podcast/:id" ::podcast.detail]
+             ["/current-queue" ::current-queue]
+             ["/about" ::about]]))
 
 ;; use this in views to construct a url
 (defn url-for

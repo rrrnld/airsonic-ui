@@ -11,12 +11,17 @@
             [airsonic-ui.views.notifications :refer [notification-list]]
             [airsonic-ui.views.breadcrumbs :refer [breadcrumbs]]
             [airsonic-ui.views.login :refer [login-form]]
-            [airsonic-ui.components.audio-player.views :refer [audio-player]]
-            [airsonic-ui.components.search.views :as search]
-            [airsonic-ui.components.library.views :as library]
+            [airsonic-ui.views.icon :refer [icon]]
+
+            [airsonic-ui.components.about.views :refer [about]]
             [airsonic-ui.components.artist.views :as artist]
+            [airsonic-ui.components.audio-player.views :refer [audio-player]]
+            [airsonic-ui.components.bangpow.views :refer [not-found]]
             [airsonic-ui.components.collection.views :as collection]
-            [airsonic-ui.components.podcast.views :as podcast]))
+            [airsonic-ui.components.current-queue.views :refer [current-queue]]
+            [airsonic-ui.components.library.views :as library]
+            [airsonic-ui.components.podcast.views :as podcast]
+            [airsonic-ui.components.search.views :as search]))
 
 (def logo-url "./img/airsonic-light-350x100.png")
 
@@ -62,24 +67,27 @@
         [:div.navbar-start
          [:div.navbar-item [search/form]]]
         [:div.navbar-end
+         [:a.navbar-item {:href (url-for ::routes/current-queue)
+                          :title "Current queue"} [icon :audio]]
          (when stream-role
            [navbar-dropdown "Library"
             [[{:href (url-for ::routes/library {:criteria "recent"})} "Recently played"]
              [{:href (url-for ::routes/library {:criteria "newest"})} "Newest additions"]
              [{:href (url-for ::routes/library {:criteria "starred"})} "Starred"]]])
          (when podcast-role
-           (let [podcast-url (url-for ::routes/podcast.overview)]
+           #_(let [podcast-url (url-for ::routes/podcast.overview)]
              [navbar-dropdown "Podcast" {:href podcast-url}
               [[{:href podcast-url} "Overview"]]]))
          (when playlist-role
-           [navbar-item {} "Playlists"])
+           #_[navbar-item {} "Playlists"])
          (when share-role
-           [navbar-item {} "Shares"])
+           #_[navbar-item {} "Shares"])
          [:div.navbar-item.has-dropdown.is-hoverable
           [:div.navbar-link "More"]
           [:div.navbar-dropdown.is-right
            (when settings-role
-             [navbar-item {} "Settings"])
+             #_[navbar-item {} "Settings"])
+           [:a.navbar-item {:href (url-for ::routes/about)} "About"]
            [:a.navbar-item
             {:on-click (fn [_]
                          (toggle-navbar-active!)
@@ -107,7 +115,10 @@
         ::routes/album.detail [collection/detail content]
         ::routes/search [search/results content]
         ::routes/podcast.overview [podcast/overview content]
-        ::routes/podcast.detail [podcast/detail content])]
+        ::routes/podcast.detail [podcast/detail content]
+        ::routes/current-queue [current-queue]
+        ::routes/about [about]
+        [not-found])]
      [audio-player]]))
 
 (defn main-panel
