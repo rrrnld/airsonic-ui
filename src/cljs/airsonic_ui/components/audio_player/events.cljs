@@ -12,8 +12,6 @@
      {:audio/play (api/stream-url (:credentials db) (playlist/peek playlist))
       :db (assoc-in db [:audio :playlist] playlist)})))
 
-;; FIXME: :audio/play might not get the right argument here
-
 (re-frame/reg-event-db
  :audio-player/set-playback-mode
  (fn [db [_ playback-mode]]

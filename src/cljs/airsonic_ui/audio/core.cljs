@@ -3,7 +3,8 @@
   and receive information about the current playback status so we can use it in
   our re-frame app."
   (:require [re-frame.core :as re-frame]
-            [airsonic-ui.audio.playlist :as playlist]))
+            [airsonic-ui.audio.playlist :as playlist]
+            [goog.functions :refer [throttle]]))
 
 ;; TODO: Manage buffering
 
@@ -20,9 +21,12 @@
    :current-time (.-currentTime elem)})
 
 ; explanation of these events: https://developer.mozilla.org/en-US/Apps/Fundamentals/Audio_and_video_delivery/Cross-browser_audio_basics
+
+
 (defn attach-listeners! [el]
-  (doseq [event ["loadstart" "progress" "play" "timeupdate" "pause"]]
-    (.addEventListener el event #(re-frame/dispatch [:audio/update (->status el)]))))
+  (let [emit-audio-update (throttle #(re-frame/dispatch [:audio/update (->status el)]) 16)]
+    (doseq [event ["loadstart" "progress" "play" "timeupdate" "pause"]]
+      (.addEventListener el event emit-audio-update))))
 
 ;; effects to be fired from event handlers
 

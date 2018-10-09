@@ -68,7 +68,7 @@
          [:div.navbar-item [search/form]]]
         [:div.navbar-end
          [:a.navbar-item {:href (url-for ::routes/current-queue)
-                          :title "Current queue"} [icon :audio]]
+                          :title "Current queue"} [icon :audio-spectrum]]
          (when stream-role
            [navbar-dropdown "Library"
             [[{:href (url-for ::routes/library {:criteria "recent"})} "Recently played"]
