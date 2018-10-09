@@ -17,7 +17,8 @@
 
 (defn collection-info [{:keys [songCount duration year]}]
   (vec (cond-> [:ul.is-smaller.collection-info
-                [:li [icon :audio-spectrum] (str songCount " tracks")]
+                [:li [icon :audio-spectrum] (str songCount (if (= 1 songCount)
+                                                             " track" " tracks"))]
                 [:li [icon :clock] (format-duration duration)]]
          year (conj [:li [icon :calendar] (str "Released in " year)]))))
 
