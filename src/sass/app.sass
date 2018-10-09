@@ -110,6 +110,9 @@
   .media-content
     align-self: center
 
+  &.is-small + .section
+    padding-top: 0
+
 // floating notifications
 .notifications:not(:empty)
   @extend .container
@@ -142,31 +145,27 @@
   .preview-card .card-content
     padding: 0.375rem 0.75rem 0.75rem
 
-.album
-  &.detail
-    .collection-info
-      list-style: none
+.album.detail
+  .collection-info
+    list-style: none
 
-      li
-        display: inline-block
-        margin-left: 0.75rem
+    li
+      display: inline-block
+      margin-left: 0.75rem
 
-        &:first-child
-          margin-left: 0
+      &:first-child
+        margin-left: 0
 
-    .hero + .section
-      padding-top: 0
-      padding-bottom: 0
 
-    .song-list
-      counter-reset: track
+  .song-list
+    counter-reset: track
 
-      tbody
-        tr
-          counter-increment: track
+    tbody
+      tr
+        counter-increment: track
 
-        td:first-child > div::before
-          color: $grey-light
-          content: counter(track)
-          display: inline
-          padding-right: 0.375rem
+      td:first-child > div::before
+        color: $grey-light
+        content: counter(track)
+        display: inline
+        padding-right: 0.375rem

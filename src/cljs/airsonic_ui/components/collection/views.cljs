@@ -47,7 +47,7 @@
   "Lists all songs in an album"
   [{:keys [album]}]
   [:div
-   [:section.hero>div.hero-body
+   [:section.hero.is-small>div.hero-body
     [:div.container
      [:article.media
       [:div.media-left [cover album 128]]
