@@ -105,6 +105,11 @@
   .song.is-playing
     background-color: $light !important
 
+// occurs on many pages at the top to show details
+.hero
+  .media-content
+    align-self: center
+
 // floating notifications
 .notifications:not(:empty)
   @extend .container
@@ -165,5 +170,3 @@
           content: counter(track)
           display: inline
           padding-right: 0.375rem
-
-.no-wrap
