@@ -36,8 +36,6 @@
  [(re-frame/inject-cofx :store)]
  initialize-app)
 
-(re-frame/dispatch [:api/request "getUser" {:username "arne"}])
-
 (defn verify-credentials
   "Initializes the whole authentication chain when we have locally stored
   credentials that look plausible."
