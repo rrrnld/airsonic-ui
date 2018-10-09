@@ -102,15 +102,15 @@
 (defn media-content
   "Provides the complete UI to browse the media library, interact with search
   results etc"
-  [route-id params query]
+  [[route-id :as route]]
   (let [;; TODO: Move this to a layer 3 subscription ↓
         route-events @(subscribe [:routes/events-for-current-route])
         content @(subscribe [:api/route-data route-events])]
     [:div
      [:section.section
-      [breadcrumbs content]
+      [breadcrumbs route content]
       (case route-id
-        ::routes/library [library/main [route-id params query] content]
+        ::routes/library [library/main route content]
         ::routes/artist.detail [artist/detail content]
         ::routes/album.detail [collection/detail content]
         ::routes/search [search/results content]
@@ -127,7 +127,7 @@
   []
   (let [notifications @(subscribe [::subs/notifications])
         is-booting? @(subscribe [::subs/is-booting?])
-        [route-id params query] @(subscribe [:routes/current-route])]
+        [route-id :as route] @(subscribe [:routes/current-route])]
     [(add-classes :div route-id)
      [notification-list notifications]
      (if is-booting?
@@ -136,4 +136,4 @@
         [navbar-top]
         (case route-id
           ::routes/login [login-form]
-          [media-content route-id params query])])]))
+          [media-content route])])]))

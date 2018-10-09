@@ -5,16 +5,6 @@
 ;; hierarchy no matter how you came to the url. They should allow easy
 ;; navigation upwards that hierarchy (e.g. album -> artist)
 
-(defn page-type
-  "Helper to see what kind of view we're currently dealing with"
-  [content]
-  (case (set (keys content))
-    #{:artist :artist-info} :artist
-    #{:album} :album
-    #{:search} :search
-    #{:podcasts} :podcast
-    :other-content))
-
 (defn- bulma-breadcrumbs [& items]
   [:div.container>nav.breadcrumb {:aria-label "breadcrumbs"}
    [:ul
@@ -22,25 +12,32 @@
       [:li {:key idx} [:a {:href href} label]])
     [:li.is-active>a (last items)]]])
 
-(defmulti breadcrumbs page-type)
+(defmulti breadcrumbs
+  (fn dispatch-on [[route-id] content] route-id))
 
-(defmethod breadcrumbs :default [content]
+(defmethod breadcrumbs :default [_ _]
   [bulma-breadcrumbs "Start"])
 
 (def start [(url-for ::routes/library) "Start"])
 
-(defmethod breadcrumbs :artist [{:keys [artist]}]
+(defmethod breadcrumbs ::routes/artist.detail [_ {:keys [artist]}]
   [bulma-breadcrumbs start
    (:name artist)])
 
-(defmethod breadcrumbs :album [{:keys [album]}]
+(defmethod breadcrumbs ::routes/album.detail [_ {:keys [album]}]
   [bulma-breadcrumbs start
    [(url-for ::routes/artist.detail {:id (:artistId album)}) (:artist album)]
    (:name album)])
 
-(defmethod breadcrumbs :search [_]
+(defmethod breadcrumbs ::routes/search [_ _]
   [bulma-breadcrumbs start "Search"])
 
-(defmethod breadcrumbs :podcast [{:keys [channel]}]
+(defmethod breadcrumbs ::routes/podcast.overview [_ _]
   ;; TODO: Detail view
   [bulma-breadcrumbs start "Podcasts"])
+
+(defmethod breadcrumbs ::routes/current-queue [_ _]
+  [bulma-breadcrumbs start "Current Queue"])
+
+(defmethod breadcrumbs ::routes/about [_ _]
+  [bulma-breadcrumbs start "About"])
