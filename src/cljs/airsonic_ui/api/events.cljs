@@ -24,13 +24,13 @@
 (defn good-api-response
   "Handles when the server responded. There could still be an error while
   processing the request on the server side which we have to account for."
-  [fx [_ endpoint params response]]
-  (let [response-cache (cons :db (cache-path endpoint params))]
+  [{:keys [db]} [_ endpoint params response]]
+  (let [response-cache (cache-path endpoint params)]
     (try
-      (assoc-in fx response-cache (api/unwrap-response response))
+      {:db (assoc-in db response-cache (api/unwrap-response response))}
       (catch ExceptionInfo e
         {:dispatch [:notification/show :error (api/error-msg e)]
-         :db (update-in fx response-cache dissoc :api/is-loading?)}))))
+         :db (update-in db response-cache dissoc :api/is-loading?)}))))
 
 (reg-event-fx :api/good-response good-api-response)
 

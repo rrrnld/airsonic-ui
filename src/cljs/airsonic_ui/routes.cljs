@@ -116,8 +116,8 @@
                   ;; because :routes/do-navigation is both an event handler and
                   ;; an interceptor, we know that when handling the event (see
                   ;; below) the credentials aren't altered anymore
-                  credentials'(get-in context [:coeffects :db :credentials])]
-              (println "calling do-navigation with" route credentials')
+                  credentials' (get-in context [:coeffects :db :credentials])]
+              #_(println "calling do-navigation with" route credentials')
               (reset! credentials credentials')
               (apply r/navigate! router route)
               (dissoc context :event)))))
@@ -130,7 +130,7 @@
 
 (defn on-navigate
   [route-id params query]
-  (println "on-navigate is called" route-id params query credentials)
+  #_(println "calling on-navigate with" route credentials')
   (if (can-access? route-id)
     (re-frame/dispatch [:routes/did-navigate route-id params query])
     (re-frame/dispatch [:routes/unauthorized route-id params query])))

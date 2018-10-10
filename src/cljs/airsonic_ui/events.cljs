@@ -52,10 +52,10 @@
 
 (defn user-login
   "Gets called after the user clicked on the login button"
-  [cofx [_ user pass server]]
+  [{:keys [db]} [_ user pass server]]
   (let [credentials {:u user, :p pass, :server server, :verified? false}]
-    (-> (assoc-in cofx [:db :credentials] credentials)
-        (assoc :dispatch [:credentials/send-authentication-request credentials]))))
+    {:db (assoc db :credentials credentials)
+     :dispatch [:credentials/send-authentication-request credentials]}))
 
 (re-frame/reg-event-fx :credentials/user-login user-login)
 
@@ -63,30 +63,30 @@
   "Tries to authenticate a user by requesting info about the given user, saving
   the credentials when the request was successful."
   [cofx [_ credentials]]
-  (assoc cofx :http-xhrio {:method :get
-                           :uri (api/url credentials "getUser" {:username (:u credentials)})
-                           :response-format (ajax/json-response-format {:keywords? true})
-                           :on-success [:credentials/authentication-response credentials]
-                           :on-failure [:api/failed-response]})) ; <- we don't need endpoint and params here because the response is not cached
+  {:http-xhrio {:method :get
+                :uri (api/url credentials "getUser" {:username (:u credentials)})
+                :response-format (ajax/json-response-format {:keywords? true})
+                :on-success [:credentials/authentication-response credentials]
+                :on-failure [:api/failed-response]}}) ; <- we don't need endpoint and params here because the response is not cached
 
 (re-frame/reg-event-fx :credentials/send-authentication-request authentication-request)
 
 (defn authentication-response
   "Since we don't get real status codes, we have to look into the server's
   response and see whether we actually sent the correct credentials"
-  [fx [_ credentials response]]
-  (assoc fx :dispatch (if (api/is-error? response)
-                        [:credentials/authentication-failure response]
-                        [:credentials/authentication-success credentials response])))
+  [_ [_ credentials response]]
+  {:dispatch (if (api/is-error? response)
+               [:credentials/authentication-failure response]
+               [:credentials/authentication-success credentials response])})
 
 (re-frame/reg-event-fx :credentials/authentication-response authentication-response)
 
 (defn authentication-failure
   "Removes all stored credentials and displays potential api errors to the user"
-  [fx [_ response]]
-  (-> (assoc fx :dispatch [:notification/show :error (api/error-msg (api/->exception response))])
-      (update :store dissoc :credentials)
-      (update :db dissoc :credentials)))
+  [{:keys [db store]} [_ response]]
+  {:dispatch [:notification/show :error (api/error-msg (api/->exception response))]
+   :store (dissoc store :credentials)
+   :db (dissoc db :credentials)})
 
 (re-frame/reg-event-fx :credentials/authentication-failure authentication-failure)
 
@@ -151,20 +151,15 @@
 
 (defn show-notification
   "Displays an informative message to the user"
-  [fx [_ level message]]
+  [{:keys [db]} [_ level message]]
   (let [id (.now js/performance)
-        hide-later (fn [level]
-                     [{:ms (get notification-duration level)
-                       :dispatch [:notification/hide id]}])]
-    (if (nil? message)
-      (let [message level
-            level :info]
-        (-> (assoc-in fx [:db :notifications id] {:level level
-                                                  :message message})
-            (assoc :dispatch-later (hide-later level))))
-      (-> (assoc-in fx [:db :notifications id] {:level level
-                                                :message message})
-          (assoc :dispatch-later (hide-later level))))))
+        ;; the level argument is optional; if it's not given, it defaults to :info
+        level' (if (nil? message) :info level)
+        message' (if (nil? message) level message)]
+    {:db (assoc-in db [:notifications id] {:level level'
+                                           :message message'})
+     :dispatch-later [{:ms (get notification-duration level)
+                       :dispatch [:notification/hide id]}]}))
 
 (re-frame/reg-event-fx :notification/show show-notification)
 
