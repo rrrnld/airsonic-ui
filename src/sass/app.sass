@@ -78,6 +78,7 @@
 
   .missing-cover
     display: block
+    display: inline-block
 
 // preview card for album or artist listings
 .preview-card
@@ -142,8 +143,12 @@
   .content .section
     padding: 1.5rem 0
 
-  .preview-card .card-content
-    padding: 0.375rem 0.75rem 0.75rem
+  .preview-card
+    .card-content
+      padding: 0.375rem 0.75rem 0.75rem
+
+    .missing-cover
+      display: inline-block
 
 .album.detail
   .collection-info
