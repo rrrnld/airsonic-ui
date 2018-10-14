@@ -114,9 +114,9 @@
                                             :repeat-all :is-primary
                                             nil))
         repeat-title (case repeat-mode
-                       :repeat-all "Click to repeat current track"
-                       :repeat-single "Click to repeat all"
-                       "Click to repeat current track")]
+                       :repeat-all "Repeating current queue, click to repeat current track"
+                       :repeat-single "Repeating current track, click to repeat none"
+                       "Click to repeat current queue")]
     [:div.field.has-addons
      ^{:key :shuffle-button} [shuffle-button {:on-click (toggle-shuffle playback-mode)
                                               :title "Shuffle"} [icon :random]]
