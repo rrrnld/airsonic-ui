@@ -142,8 +142,9 @@
     .duration
       padding-left: .5rem
       color: $grey-light
+      font-weight: normal
 
-    .is-playing
+    &.is-playing
       background-color: $light !important
       font-weight: bold
 
@@ -213,5 +214,6 @@
       td:first-child > div::before
         color: $grey-light
         content: counter(track)
+        font-weight: normal
         display: inline
         padding-right: 0.375rem
