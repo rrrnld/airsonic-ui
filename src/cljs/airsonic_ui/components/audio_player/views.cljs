@@ -1,18 +1,80 @@
 (ns airsonic-ui.components.audio-player.views
-  (:require [re-frame.core :refer [subscribe]]
+  (:require [re-frame.core :refer [subscribe dispatch]]
             [airsonic-ui.routes :as routes]
+            [airsonic-ui.components.highres-canvas.views :refer [canvas]]
             [airsonic-ui.helpers :refer [add-classes muted-dispatch]]
             [airsonic-ui.views.cover :refer [cover]]
             [airsonic-ui.views.icon :refer [icon]]))
 
 ;; currently playing / coming next / audio controls...
+;; FIXME: Sometimes items don't have a duration
+
+(def progress-bar-color "rgb(93,93,93)")
+(def progress-bar-color-buffered "rgb(123,123,123)")
+(def progress-bar-color-active "whitesmoke")
+
+(defn draw-progress [ctx current-time seekable duration]
+  (let [width (.. ctx -canvas -clientWidth)
+        height (.. ctx -canvas -clientHeight)
+        padding 5
+        seekable-x (+ padding (* (- width (* 2 padding)) (min 1 (/ seekable duration))))
+        current-x (+ padding (* (- width (* 2 padding)) (min 1 (/ current-time duration))))]
+    ;; vertically center everything
+    (.translate ctx 0.5 (+ (Math/ceil (/ height 2)) 0.5))
+    ;; draw complete bar
+    (set! (.-strokeStyle ctx) progress-bar-color)
+    (doto ctx
+      (.beginPath)
+      (.moveTo padding 0)
+      (.lineTo (- width (* 2 padding)) 0)
+      (.stroke))
+    ;; draw the buffered part
+    (set! (.-strokeStyle ctx) progress-bar-color-buffered)
+    (doto ctx
+      (.beginPath)
+      (.moveTo padding 0)
+      (.lineTo seekable-x 0)
+      (.stroke))
+    ;; draw the part that's already played
+    (set! (.-strokeStyle ctx) progress-bar-color-active)
+    (doto ctx
+      (.beginPath)
+      (.moveTo padding 0)
+      (.lineTo current-x 0)
+      (.stroke))
+    ;; draw a dot marking the current time
+    (set! (.-fillStyle ctx) progress-bar-color-active)
+    (doto ctx
+      (.beginPath)
+      (.arc current-x 0 (/ padding 2) 0 (* Math/PI 2))
+      (.fill))))
+
+(defn current-progress [current-time seekable duration]
+  [canvas {:class-name "current-progress-canvas"
+           :draw draw-progress} current-time seekable duration])
+
+(defn seek
+  "Calculates the position of the click and sets current playback accordingly"
+  [ev]
+  (let [x (- (.. ev -nativeEvent -pageX)
+             (.. ev -target getBoundingClientRect -left))
+        width (.. ev -target -nextElementSibling -clientWidth)]
+    (dispatch [:audio-player/seek (/ x width)])))
+
+(defn buffered-part
+  [seekable duration]
+  [:div.buffered-part {:on-click seek
+                       :style {:width (str (min 100 (* (/ seekable duration) 100)) "%")}}])
 
 (defn current-song-info [song status]
-  [:article.current-song-info
-   [:span (:artist song) " - " (:title song)]
-   ;; FIXME: Sometimes items don't have a duration
-   [:progress.progress.is-tiny {:value (:current-time status)
-                                :max (:duration song)}]])
+  (let [current-time (:current-time status)
+        seekable (:seekable status)
+        duration (:duration song)]
+    [:article.current-song-info
+     [:div.current-name (:artist song) [:br] (:title song)]
+     [:div.current-progress
+      [buffered-part seekable duration]
+      [current-progress current-time seekable duration]]]))
 
 (defn song-controls [is-playing?]
   [:div.field.has-addons
@@ -25,14 +87,14 @@
                 :media-step-forward "Next"}]
      (map (fn [[icon-glyph event]]
             ^{:key icon-glyph} [:p.control>button.button.is-light
-                                {:on-click (muted-dispatch [event])
-                                 :title (title icon-glyph)}
-                                [icon icon-glyph]])
+                                      {:on-click (muted-dispatch [event])
+                                       :title (title icon-glyph)}
+                                      [icon icon-glyph]])
           buttons))])
 
 (defn- toggle-shuffle [playback-mode]
   (muted-dispatch [:audio-player/set-playback-mode (if (= playback-mode :shuffled)
-                                          :linear :shuffled)]))
+                                                     :linear :shuffled)]))
 
 (defn- toggle-repeat-mode [current-mode]
   (let [modes (cycle '(:repeat-none :repeat-all :repeat-single))

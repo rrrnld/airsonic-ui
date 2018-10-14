@@ -61,3 +61,9 @@
     (:ended? status) (assoc :dispatch [:audio-player/next-song])))
 
 (re-frame/reg-event-fx :audio/update audio-update)
+
+(re-frame/reg-event-fx
+ :audio-player/seek
+ (fn [{:keys [db]} [_ percentage]]
+   (let [duration (:duration (playlist/peek (get-in db [:audio :playlist])))]
+     {:audio/seek [percentage duration]})))

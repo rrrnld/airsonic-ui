@@ -14,11 +14,13 @@
   "Takes an audio object and returns a map describing its current status"
   [elem]
   {:ended? (.-ended elem)
-   :loop? (.-loop elem)
-   :muted? (.-muted elem)
    :paused? (.-paused elem)
    :current-src (.-currentSrc elem)
-   :current-time (.-currentTime elem)})
+   :current-time (.-currentTime elem)
+   :seekable (let [seekable (.-seekable elem)]
+               (if (> (.-length seekable) 0)
+                 (.end seekable (dec (.-length seekable)))
+                 0))})
 
 ; explanation of these events: https://developer.mozilla.org/en-US/Apps/Fundamentals/Audio_and_video_delivery/Cross-browser_audio_basics
 
@@ -59,6 +61,12 @@
      (if (.-paused a)
        (.play a)
        (.pause a)))))
+
+(re-frame/reg-fx
+ :audio/seek
+ (fn [[percentage duration]]
+   (set! (. @audio -currentTime)
+         (* percentage duration))))
 
 ;; subscriptions
 

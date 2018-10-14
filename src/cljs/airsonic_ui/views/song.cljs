@@ -1,11 +1,12 @@
 (ns airsonic-ui.views.song
   (:require [re-frame.core :refer [subscribe]]
-            [airsonic-ui.helpers :refer [muted-dispatch]]
+            [airsonic-ui.helpers :refer [muted-dispatch format-duration]]
             [airsonic-ui.routes :as routes :refer [url-for]]
             [airsonic-ui.views.icon :refer [icon]]))
 
 (defn item [songs song idx]
-  (let [artist-id (:artistId song)]
+  (let [artist-id (:artistId song)
+        duration (:duration song)]
     [:div
      (if artist-id
        [:a {:href (url-for ::routes/artist.detail {:id artist-id})} (:artist song)]
@@ -13,7 +14,8 @@
      " - "
      [:a
       {:href "#" :on-click (muted-dispatch [:audio-player/play-all songs idx])}
-      (:title song)]]))
+      (:title song)]
+     [:span.duration (format-duration duration)]]))
 
 (defn listing [songs]
   (let [current-song @(subscribe [:audio/current-song])]

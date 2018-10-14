@@ -1,55 +1,40 @@
 (ns airsonic-ui.views.cover
-  (:require [clojure.string :as str]
-            [re-frame.core :refer [subscribe]]
-            [reagent.core :as reagent]
+  (:require [re-frame.core :refer [subscribe]]
             [airsonic-ui.subs :as subs]
+            [airsonic-ui.components.highres-canvas.views :refer [canvas]]
             ["@hugojosefson/color-hash" :as ColorHash]))
 
 (def color-hash (ColorHash.))
+
+(defn hsl->css [h s l]
+  (str "hsl(" h "," (* 100 s) "%," (* 100 l) "%)"))
 
 (defn palette
   "Generate a hsl palette of two colors that's unique for a given item"
   [item]
   (let [identifier (str (:artistId item) "-" (or (:albumId item) (:id item)))
-        [h s l] (js->clj (.hsl color-hash identifier))
-        s (str (* 100 s) "%")
-        l (str (* 100 l) "%")]
-    (->>
-     [[h s l]
-      [(mod (+ h (* h 0.3) 10) 360) s l]]
-     (map #(str "hsl(" (str/join "," %) ")")))))
+        [h s l] (js->clj (.hsl color-hash identifier))]
+    [(hsl->css h s l)
+     (hsl->css (mod (+ h (* h 0.3) 10) 360) s l)]))
 
-(defn generate-cover [canvas item]
-  (let [ctx (.getContext canvas "2d")
-        size (.-clientWidth canvas)
-        [a b] (palette item)
+(defn generate-cover [ctx item]
+  (let [[a b] (palette item)
+        size (.. ctx -canvas -offsetWidth)
         pad (* 0.02 size)
         gradient (doto (.createLinearGradient ctx pad 0 (- size pad) size)
                    (.addColorStop 0 a)
                    (.addColorStop 1 b))]
+    (set! (.. ctx -canvas -height) (.. ctx -canvas -width))
+    (set! (.. ctx -canvas -style -height) (.. ctx -canvas -style -width))
+    ;; we have to re-scale everything because resizing messes with the content
+    (.scale ctx (.-devicePixelRatio js/window) (.-devicePixelRatio js/window))
     (set! (.-fillStyle ctx) gradient)
-    (.fillRect ctx 0 0 size size)))
+    (.fillRect ctx 0 0 (.. ctx -canvas -width) (.. ctx -canvas -height))))
 
 (defn missing-cover
   [item size]
-  (let [dom-node (reagent/atom nil)]
-    (reagent/create-class
-     {:component-did-update
-      (fn [this]
-        (let [canvas @dom-node]
-          (set! (.. canvas -style -width) "100%")
-          (set! (. canvas -width) (.-offsetWidth canvas))
-          (set! (. canvas -height) (.-offsetWidth canvas))
-          (generate-cover canvas item)))
-
-      :component-did-mount
-      (fn [this]
-        (reset! dom-node (reagent/dom-node this)))
-
-      :reagent-render
-      (fn []
-        @dom-node
-        [:canvas.missing-cover])})))
+  [canvas {:class-name "missing-cover"
+           :draw generate-cover} item])
 
 (defn has-cover? [item]
   (:coverArt item))

@@ -1,19 +1,11 @@
 (ns airsonic-ui.components.collection.views
   "A collection is a list of audio files that belong together (e.g. an album or
   a podcast's overview)"
-  (:require [airsonic-ui.routes :as routes :refer [url-for]]
+  (:require [airsonic-ui.helpers :refer [format-duration]]
+            [airsonic-ui.routes :as routes :refer [url-for]]
             [airsonic-ui.views.cover :refer [cover card]]
             [airsonic-ui.views.icon :refer [icon]]
             [airsonic-ui.views.song :as song]))
-
-(defn format-duration [seconds]
-  (let [hours (quot seconds 3600)
-        minutes (quot (rem seconds 3600) 60)
-        seconds (rem seconds 60)]
-    (-> (cond-> ""
-          (> hours 0) (str hours "h ")
-          (> minutes 0) (str minutes "m "))
-        (str seconds "s"))))
 
 (defn collection-info [{:keys [songCount duration year]}]
   (vec (cond-> [:ul.is-smaller.collection-info
@@ -21,7 +13,6 @@
                                                              " track" " tracks"))]
                 [:li [icon :clock] (format-duration duration)]]
          year (conj [:li [icon :calendar] (str "Released in " year)]))))
-
 
 (defn album-card [album]
   (let [{:keys [artist artistId name id]} album]

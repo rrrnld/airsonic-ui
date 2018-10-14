@@ -41,6 +41,9 @@
   .audio-interaction
     flex-grow: 1
 
+    .media-left
+      margin-right: 0
+
     .level-left
       flex-grow: 1
       flex-shrink: 0
@@ -64,21 +67,36 @@
     flex-grow: 1
     align-items: center
 
-  .current-song-info
-    progress
+.current-song-info
+  display: flex
+  align-items: center
+
+  .current-name,
+  .current-progress
+    padding: .5rem
+
+  .current-name
+    width: 30%
+    font-size: .8rem
+    white-space: nowrap
+    text-overflow: ellipsis
+    overflow: hidden
+
+  .current-progress
+    flex-grow: 1
+    position: relative
+
+    .buffered-part
+      position: absolute
+      top: .5rem
+      left: .5rem
+      height: 1rem
+      cursor: pointer
+
+    .current-progress-canvas
+      display: block
+      height: 1rem
       width: 100%
-
-.progress.is-tiny
-  height: .25rem
-
-// cover images
-.image.is-256x256
-  width: 256px
-  height: 256px
-
-  .missing-cover
-    display: block
-    display: inline-block
 
 // preview card for album or artist listings
 .preview-card
@@ -96,6 +114,23 @@
     max-height: 256px
     margin: 0
 
+.image
+  .missing-cover
+    display: block
+    max-width: 100%
+
+  &.is-48x48 .missing-cover
+    width: 48px
+    height: 48px
+
+  &.is-128x128 .missing-cover
+    width: 128px
+    height: 128px
+
+  &.is-256x256 .missing-cover
+    width: 256px
+    height: 256px
+
 // occurs in album detail view
 .table
   .grow
@@ -103,8 +138,14 @@
 
 // duh
 .song-list
-  .song.is-playing
-    background-color: $light !important
+  .song
+    .duration
+      padding-left: .5rem
+      color: $grey-light
+
+    .is-playing
+      background-color: $light !important
+      font-weight: bold
 
 // occurs on many pages at the top to show details
 .hero
