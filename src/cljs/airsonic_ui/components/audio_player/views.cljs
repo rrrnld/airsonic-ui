@@ -53,18 +53,21 @@
   [canvas {:class-name "current-progress-canvas"
            :draw draw-progress} current-time seekable duration])
 
+;; FIXME: It's ugly to have the canvas padding and styling scattered everywhere (sass, drawing code above, and here)
+
 (defn seek
   "Calculates the position of the click and sets current playback accordingly"
   [ev]
   (let [x (- (.. ev -nativeEvent -pageX)
              (.. ev -target getBoundingClientRect -left))
-        width (.. ev -target -nextElementSibling -clientWidth)]
+        width (- (.. ev -target -nextElementSibling -clientWidth) 10)] ;; <- 10 = 2 * canvas-padding
     (dispatch [:audio-player/seek (/ x width)])))
 
 (defn buffered-part
   [seekable duration]
-  [:div.buffered-part {:on-click seek
-                       :style {:width (str (min 100 (* (/ seekable duration) 100)) "%")}}])
+  (let [width (min 100 (* (/ seekable duration) 100))]
+    [:div.buffered-part {:on-click seek
+                         :style {:width (str "calc(" width "% - 1rem - 10px)")}}]))
 
 (defn current-song-info [song status]
   (let [current-time (:current-time status)
