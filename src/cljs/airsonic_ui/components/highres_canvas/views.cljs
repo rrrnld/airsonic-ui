@@ -5,7 +5,7 @@
   (:require [reagent.core :as reagent]))
 
 (defn redraw [this]
-  (let [[_ {draw :draw} & props] (reagent/argv this)
+  (let [draw (:draw (reagent/props this))
         canvas (reagent/dom-node this)
         width (.-clientWidth canvas)
         height (.-clientHeight canvas)
@@ -23,7 +23,7 @@
       (set! (.. canvas -style -height) (str height "px"))
       (.setTransform ctx 1 0 0 1 0 0)
       (.scale ctx pixel-ratio pixel-ratio))
-    (apply draw ctx props)))
+    (draw ctx)))
 
 (defn canvas [attrs & _]
   (reagent/create-class

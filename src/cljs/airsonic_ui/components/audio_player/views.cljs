@@ -51,7 +51,7 @@
 
 (defn current-progress [current-time seekable duration]
   [canvas {:class-name "current-progress-canvas"
-           :draw draw-progress} current-time seekable duration])
+           :draw #(draw-progress % current-time seekable duration)}])
 
 ;; FIXME: It's ugly to have the canvas padding and styling scattered everywhere (sass, drawing code above, and here)
 

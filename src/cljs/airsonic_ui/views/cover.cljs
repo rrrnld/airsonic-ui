@@ -34,7 +34,7 @@
 (defn missing-cover
   [item size]
   [canvas {:class-name "missing-cover"
-           :draw generate-cover} item])
+           :draw #(generate-cover % item)}])
 
 (defn has-cover? [item]
   (:coverArt item))
