@@ -20,12 +20,17 @@
 
 (def start [(url-for ::routes/library) "Start"])
 
+(defmethod breadcrumbs ::routes/artist.overview [_ _]
+  [bulma-breadcrumbs start "Artists"])
+
 (defmethod breadcrumbs ::routes/artist.detail [_ {:keys [artist]}]
   [bulma-breadcrumbs start
+   [(url-for ::routes/artist.overview) "Artists"]
    (:name artist)])
 
 (defmethod breadcrumbs ::routes/album.detail [_ {:keys [album]}]
   [bulma-breadcrumbs start
+   [(url-for ::routes/artist.overview) "Artists"]
    [(url-for ::routes/artist.detail {:id (:artistId album)}) (:artist album)]
    (:name album)])
 

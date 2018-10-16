@@ -192,6 +192,24 @@
     .missing-cover
       display: inline-block
 
+.artist.overview
+  .alphabetical-list
+    column-count: 2
+    column-gap: 1.2rem
+
+    ol
+      list-style: none
+    
+    +tablet
+      column-count: 3
+    +widescreen
+      column-count: 4
+
+    .group
+      margin-bottom: 1.5rem
+      .subtitle.is-4 
+        margin-bottom: 1rem
+
 .album.detail
   .collection-info
     list-style: none
