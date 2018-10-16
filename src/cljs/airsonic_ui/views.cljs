@@ -73,7 +73,8 @@
            [navbar-dropdown "Library"
             [[{:href (url-for ::routes/library {:criteria "recent"})} "Recently played"]
              [{:href (url-for ::routes/library {:criteria "newest"})} "Newest additions"]
-             [{:href (url-for ::routes/library {:criteria "starred"})} "Starred"]]])
+             [{:href (url-for ::routes/library {:criteria "starred"})} "Starred"]
+             [{:href (url-for ::routes/artist.overview)} "By artist"]]])
          (when podcast-role
            #_(let [podcast-url (url-for ::routes/podcast.overview)]
              [navbar-dropdown "Podcast" {:href podcast-url}
@@ -111,6 +112,7 @@
       [breadcrumbs route content]
       (case route-id
         ::routes/library [library/main route content]
+        ::routes/artist.overview [artist/overview content]
         ::routes/artist.detail [artist/detail content]
         ::routes/album.detail [collection/detail content]
         ::routes/search [search/results content]

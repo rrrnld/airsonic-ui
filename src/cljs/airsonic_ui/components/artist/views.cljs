@@ -1,5 +1,7 @@
 (ns airsonic-ui.components.artist.views
   (:require [airsonic-ui.components.collection.views :as collection]
+            [airsonic-ui.routes :as routes]
+            [airsonic-ui.components.debug.views :refer [debug]]
             [clojure.string :as str]))
 
 (defn link-button [attrs children]
@@ -19,6 +21,14 @@
   (let [href (str "https://musicbrainz.org/artist/" (:musicBrainzId artist-info))]
     [link-button {:href href} "See on musicbrainz"]))
 
+(defn artist-links [artist-info]
+  (when-not (empty? (select-keys artist-info [:lastFmUrl :musicBrainzId]))
+    [:div.field.is-grouped
+     (when (:lastFmUrl artist-info)
+       [lastfm-link artist-info])
+     (when (:musicBrainzId artist-info)
+       [musicbrainz-link artist-info])]))
+
 (defn detail
   "Creates a nice artist page displaying the artist's name, bio (if available and
   listing) their albums."
@@ -26,13 +36,37 @@
   [:div
    [:section.hero>div.hero-body
     [:div.container
-     [:h2.title (:name artist)]
+     [:h1.title (:name artist)]
      [:div.content
       [lastfm-bio artist-info]
-      (when-not (empty? (select-keys artist-info [:lastFmUrl :musicBrainzId]))
-        [:div.field.is-grouped
-         (when (:lastFmUrl artist-info)
-           [lastfm-link artist-info])
-         (when (:musicBrainzId artist-info)
-           [musicbrainz-link artist-info])])]]]
+      [artist-links artist-info]]]]
    [:section.section>div.container [collection/listing (:album artist)]]])
+
+(defn alphabetical-listing
+  [artists]
+  [:div.alphabetical-list
+   (for [group artists]
+     ^{:key (:name group)}
+     [:div.group
+      [:h1.subtitle.is-4 (:name group)]
+      [:ol.artist-links
+       (for [artist (:artist group)]
+         (let [href (routes/url-for ::routes/artist.detail (select-keys artist [:id]))]
+           ^{:key (:id artist)} [:li [:a {:href href} (:name artist)]]))]])])
+
+(defn overview
+  "Displays the alphabetical listing of all artists along with some additional
+  information about the collection"
+  [{:keys [artists]}]
+  (let [artists (:index artists)
+        ;; TODO: Calculations in views should be avoided
+        artists-count (count (mapcat :artist artists))
+        album-count (->> (mapcat :artist artists)
+                         (map :albumCount)
+                         (reduce +))]
+    [:div
+     [:section.hero.is-small>div.hero-body
+      [:div.container
+       [:h1.title "Artists"]
+       [:p.subtitle.is-5.has-text-grey [:strong artists-count] " artists in your collection with " [:strong album-count] " albums"]]]
+     [:section.section>div.container [alphabetical-listing artists]]]))

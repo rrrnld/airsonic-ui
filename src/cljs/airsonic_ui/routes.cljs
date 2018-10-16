@@ -9,7 +9,8 @@
   (r/router [["/" ::login]
              ["/library" ::library]
              ["/library/:criteria" ::library]
-             ["/artist/:id" ::artist.detail]
+             ["/artists" ::artist.overview]
+             ["/artists/:id" ::artist.detail]
              ["/album/:id" ::album.detail]
              ["/search" ::search]
              ["/podcast" ::podcast.overview]
@@ -24,8 +25,9 @@
   ([k params query] (str "#" (r/resolve router k params query))))
 
 ;; which routes need valid login credentials?
-(def protected-routes #{::library ::artist.detail ::album.detail ::search
-                        ::podcast.overview ::podcast.detail})
+(def protected-routes
+  #{::library ::artist.overview ::artist.detail ::album.detail ::search
+    ::podcast.overview ::podcast.detail})
 
 ;; which data should be requested for which route? can either be a vector or a function returning a vector
 
@@ -45,6 +47,10 @@
     [[:api/request "getScanStatus"]
      [:api/request "getAlbumList2" {:type criteria, :size 20, :offset (* 20 (dec page))}]]
     [:routes/do-navigation [route-id {:criteria "recent"} {:page 1}]]))
+
+(defmethod -route-events ::artist.overview
+  [route-id params query]
+  [:api/request "getArtists"])
 
 (defmethod -route-events ::artist.detail
   [route-id params query]
