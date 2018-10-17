@@ -3,12 +3,22 @@
             [re-frame.core :refer [reg-sub]]
             [airsonic-ui.helpers :refer [kebabify]]))
 
+(defn responses
+  "Returns the response cache"
+  [db _]
+  (:api/responses db))
+
+(reg-sub :api/responses responses)
+
 (defn response-for
   "Returns the cached response for a single endpoint"
-  [db [_ endpoint params]]
-  (get-in db [:api/responses [endpoint params]]))
+  [responses [_ endpoint params]]
+  (get responses [endpoint params]))
 
-(reg-sub :api/response-for response-for)
+(reg-sub
+ :api/response-for
+ :<- [:api/responses]
+ response-for)
 
 (defn endpoint->kw
   "Given an endpoint like `getAlbumList2`, returns a cleaned keyword like
@@ -21,12 +31,29 @@
       (str/replace #"\d+$" "")
       (kebabify)))
 
-(defn route-data
-  "Given a list of event vectors, returns that responses for all API requests."
-  [db [_ route-events]]
-  (->> (filter #(= :api/request (first %)) route-events)
+(defn current-route-data
+  "Returns all responses for the current route"
+  [[responses current-route-events] _]
+  (->> (filter #(= :api/request (first %)) current-route-events)
        (mapcat (fn [[_ endpoint params]]
-                 [(endpoint->kw endpoint) (get-in db [:api/responses [endpoint params]])]))
+                 [(endpoint->kw endpoint) (get responses [endpoint params])]))
        (apply hash-map)))
 
-(reg-sub :api/route-data route-data)
+(reg-sub
+ :api/current-route-data
+ :<- [:api/responses]
+ :<- [:routes/events-for-current-route]
+ current-route-data)
+
+(defn content-pending?
+  "Tells us if any of the requests fired for the current route are
+  awaiting responses."
+  [current-route-data _]
+  (->> (vals current-route-data)
+       (map :api/is-loading?)
+       (some true?)))
+
+(reg-sub
+ :api/content-pending?
+ :<- [:api/current-route-data]
+ content-pending?)
