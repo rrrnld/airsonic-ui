@@ -1,14 +1,15 @@
 (ns airsonic-ui.routes
   (:require [bide.core :as r]
             [cljs.reader :refer [read-string]]
-            [re-frame.core :as re-frame]))
+            [re-frame.core :as re-frame]
+            [airsonic-ui.config :as conf]))
 
 (def default-route ::login)
 
 (defonce router
   (r/router [["/" ::login]
              ["/library" ::library]
-             ["/library/:criteria" ::library]
+             ["/library/:kind" ::library]
              ["/artists" ::artist.overview]
              ["/artists/:id" ::artist.detail]
              ["/album/:id" ::album.detail]
@@ -42,11 +43,15 @@
 (defmethod -route-events :default [route-id params query])
 
 (defmethod -route-events ::library
-  [route-id {:keys [criteria]} {:keys [page]}]
-  (if criteria
+  [route-id {:keys [kind]} {:keys [page] :or {page 1}}]
+  (if kind
     [[:api/request "getScanStatus"]
-     [:api/request "getAlbumList2" {:type criteria, :size 20, :offset (* 20 (dec page))}]]
-    [:routes/do-navigation [route-id {:criteria "recent"} {:page 1}]]))
+     ;; we fetch more than just the albums needed for the current page so we can
+     ;; page through it faster
+     [:api/request "getAlbumList2" {:type kind
+                                    :size (* 3 conf/albums-per-page)
+                                    :offset (* page conf/albums-per-page)}]]
+    [:routes/do-navigation [route-id {:kind "recent"} {:page 1}]]))
 
 (defmethod -route-events ::artist.overview
   [route-id params query]

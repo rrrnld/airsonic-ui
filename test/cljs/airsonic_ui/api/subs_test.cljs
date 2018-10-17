@@ -10,6 +10,14 @@
       (is (= :result (sub/response-for responses [:api/response-for "search2" {:query "query term"}])))
       (is (nil? (sub/response-for responses [:api/response-for "search2" {:query "another query term"}]))))))
 
+(deftest responses-for-endpoint
+  (testing "Should concatenate all responses for an endpoint"
+    (let [responses {["search2" {:query "query term"}] :result1
+                     ["something-else" nil] :ignored-result
+                     ["search2" {:query "another query term"}] :result2}]
+      (is (= (dissoc responses ["something-else" nil])
+             (sub/responses-for-endpoint responses [:api/responses-for-endpoint "search2"]))))))
+
 (deftest endpoint-keywordification
   (testing "Should strip prefixes"
     (is (= :artist-info (sub/endpoint->kw "getArtistInfo")))
