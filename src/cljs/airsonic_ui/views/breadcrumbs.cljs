@@ -1,16 +1,21 @@
 (ns airsonic-ui.views.breadcrumbs
-  (:require [airsonic-ui.routes :as routes :refer [url-for]]))
+  (:require [re-frame.core :refer [subscribe]]
+            [airsonic-ui.routes :as routes :refer [url-for]]
+            [airsonic-ui.views.loading-spinner :refer [loading-spinner]]))
 
 ;; Breadcrumbs are implemented in such a way that they provide a stringent
 ;; hierarchy no matter how you came to the url. They should allow easy
 ;; navigation upwards that hierarchy (e.g. album -> artist)
 
 (defn- bulma-breadcrumbs [& items]
-  [:div.container>nav.breadcrumb {:aria-label "breadcrumbs"}
-   [:ul
-    (for [[idx [href label]] (map-indexed vector (butlast items))]
-      [:li {:key idx} [:a {:href href} label]])
-    [:li.is-active>a (last items)]]])
+  (let [content-pending? @(subscribe [:api/content-pending?])]
+    [:div.container
+     [:nav.breadcrumb {:aria-label "breadcrumbs"}
+      [:ul
+       (for [[idx [href label]] (map-indexed vector (butlast items))]
+         [:li {:key idx} [:a {:href href} label]])
+       [:li.is-active>a (last items)
+        (when content-pending? [loading-spinner])]]]]))
 
 (defmulti breadcrumbs
   (fn dispatch-on [[route-id] content] route-id))

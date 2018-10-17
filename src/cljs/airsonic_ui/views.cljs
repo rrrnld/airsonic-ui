@@ -104,9 +104,7 @@
   "Provides the complete UI to browse the media library, interact with search
   results etc"
   [[route-id :as route]]
-  (let [;; TODO: Move this to a layer 3 subscription ↓
-        route-events @(subscribe [:routes/events-for-current-route])
-        content @(subscribe [:api/route-data route-events])]
+  (let [content @(subscribe [:api/current-route-data])]
     [:div
      [:section.section
       [breadcrumbs route content]
