@@ -11,7 +11,8 @@
 (reg-sub :api/responses responses)
 
 (defn response-for
-  "Returns the cached response for a single endpoint"
+  "Returns the cached response for a single endpoint, respecting passed
+  url pramters."
   [responses [_ endpoint params]]
   (get responses [endpoint params]))
 
@@ -20,9 +21,20 @@
  :<- [:api/responses]
  response-for)
 
+(defn responses-for-endpoint
+  "Returns a seq of all responses for an endpoint, ignoring url parameters and
+  looking only at the path"
+  [responses [_ endpoint]]
+  (into {} (filter (fn [[[k _] _]] (= endpoint k)) responses)))
+
+(reg-sub
+ :api/responses-for-endpoint
+ :<- [:api/responses]
+ responses-for-endpoint)
+
 (defn endpoint->kw
   "Given an endpoint like `getAlbumList2`, returns a cleaned keyword like
-  `:album-list``.
+  `:album-list`.
 
   Rules: Kebab-case everything, remove prefixes like `get`, `create`, `delete`,
   `update` and strip trailing numbers."
