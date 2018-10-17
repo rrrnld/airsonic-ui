@@ -32,10 +32,6 @@
   (let [num-pages (num-pages items per-page max-pages)
         first-page? (= current-page 1)
         last-page? (= current-page num-pages)]
-    (println "range"
-             (count items)
-             "num-pages"
-             num-pages)
     [:nav.pagination {:role "pagination", :aria-label "pagination"}
      [:a.pagination-previous (if first-page?
                                {:disabled true}
@@ -69,7 +65,7 @@
    {:keys [scan-status]}]
   (let [library @(subscribe [:library/complete kind])
         ;; FIXME: vv Views shouldn't do calculations vv
-        visible (->> (drop (* (dec page) conf/albums-per-page) library)
+        visible (->> (drop (* (dec (int page)) conf/albums-per-page) library)
                      (take conf/albums-per-page))
         url-fn #(url-for ::routes/library {:kind kind} {:page %})
         pagination [pagination {:current-page (int page)
