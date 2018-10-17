@@ -1,7 +1,6 @@
 (ns airsonic-ui.components.artist.views
   (:require [airsonic-ui.components.collection.views :as collection]
             [airsonic-ui.routes :as routes]
-            [airsonic-ui.components.debug.views :refer [debug]]
             [clojure.string :as str]))
 
 (defn link-button [attrs children]
