@@ -1,15 +1,14 @@
 # Airsonic Web Client [![Build Status](https://travis-ci.org/heyarne/airsonic-ui.svg?branch=master)](https://travis-ci.org/heyarne/airsonic-ui)
 
-This is just meant for exploration. If you want to see something more serious, take a look at [airsonic-ui](https://github.com/airsonic/airsonic-ui).
+This repository contains an alternative web frontend for [airsonic](https://github.com/airsonic/airsonic). The goal is to eventually be able to fully replace the current web interface.
 
 ## Implemented so far
 
-* Login
-* Welcome screen (most recently played)
-* Artist detail
-* Album detail
-* Play Track w/ next and previous
-* Currently playing notification
+* Login with persisting credentials
+* Browse your library by newest / most recently played / starred
+* Browse artists alphabetically
+* A currently playing queue with next, previous, repeat and shuffle
+* Information about the current track with the ability to seek
 
 ## Development
 
@@ -60,4 +59,4 @@ $ npm run build
 $ npm run deploy
 ```
 
-All build artifacts will be output in `/public`. Don't change anything in there as changes will be overwritten.
+All build artifacts land in `/public`. Don't change anything in there as changes will be overwritten.
