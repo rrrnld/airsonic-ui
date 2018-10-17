@@ -18,9 +18,7 @@
 ;;              :max-pages nil
 ;;              :url-fn generate-url
 ;;              :current-page 0
-;;              :items [,,,]
-;;              :on-change (fn [current-page items]
-;;                           (reset! current-items items))}]
+;;              :items [,,,]}]
 
 (defn num-pages [items per-page max-pages]
   (min (Math/ceil (/ (count items) per-page)) max-pages))
@@ -29,7 +27,7 @@
   "Builds a pagination, calling `url-fn` for every rendered page link with the
   page as its argument. When `max-pages` is `nil` an infinite pagination
   will be rendered."
-  [{:keys [items per-page max-pages current-page url-fn on-change]
+  [{:keys [items per-page max-pages current-page url-fn]
     :or {max-pages (.-MAX_VALUE js/Number)}}]
   (let [num-pages (num-pages items per-page max-pages)
         first-page? (= current-page 1)
@@ -54,7 +52,7 @@
           ^{:key page} [(cond-> :li>a.pagination-link
                           current-page? (add-classes :is-current))
                         (cond-> {:href (url-fn page), :aria-label (str "Page " page)}
-                          (= page current-page) (assoc :aria-current "page")) page]))
+                          current-page? (assoc :aria-current "page")) page]))
       (when (< current-page (- num-pages 2))
         ^{:key "ellipsis-after"} [:li>span.pagination-ellipsis "…"])]]))
 
