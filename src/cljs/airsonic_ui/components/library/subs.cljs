@@ -2,21 +2,40 @@
   (:require [re-frame.core :as re-frame]
             [airsonic-ui.config :as conf]))
 
-(defn complete-library
-  "Concatenates all responses of one type of library to make paging through
-  it a bit easier."
+;; first some helper functions to make the structure a bit clearer
+
+(defn filter-response-kind
+  "Takes all library responses and returns only the ones matching a specific kind"
+  [kind responses]
+  (filter (fn [[[_ params] _]]
+            (= kind (:type params))) responses))
+
+(defn partition-responses
+  "Returns a map of responses, where each response is neatly mapped to the page
+  it show on."
+  [kind responses]
+  (->> (filter-response-kind kind responses)
+       (sort-by (fn [[[_ params] _]] (:offset params)))
+       (mapcat (fn [[[_ params] {albums :album}]]
+                 (let [start-page (/ (:offset params) conf/albums-per-page)]
+                   (zipmap (drop start-page (range))
+                           (partition-all conf/albums-per-page albums)))))
+       (into (sorted-map))))
+
+;; `complete-library` is the subscription that is actually exported
+
+(defn paginated-library
+  "Returns a sorted map that can be used to access the library content loaded
+  from the server. Each key represents a page and the associated value
+  represents the page's content."
   [responses [_ kind]]
-  (let [sorted-albums (->> (filter (fn [[[_ params] _]]
-                                     (= kind (:type params))) responses)
-                           (sort-by (fn [[[_ params] _]] (:offset params)))
-                           (map (comp :album val)))]
-    ;; NOTE: we concatenate this manually to avoid duplication; we have to do
-    ;; this because fetch more than conf/albums-per-page per page, otherwise we
-    ;; can't know whether to show a link to the next page
-    (concat (mapcat (partial take conf/albums-per-page) (butlast sorted-albums))
-            (last sorted-albums))))
+  ;; note that we "humanize" the keys, meaning page 1 is the page with offset 0
+  (->> (partition-responses kind responses)
+       (map (fn [[k v]] [(inc k) v]))
+       (into (sorted-map))))
 
 (re-frame/reg-sub
- :library/complete
+ :library/paginated
  :<- [:api/responses-for-endpoint "getAlbumList2"]
- complete-library)
+ paginated-library)
+

@@ -9,7 +9,7 @@ module.exports = function (config) {
     plugins: [
       'karma-cljs-test',
       'karma-chrome-launcher',
-      'karma-growl-reporter'
+      'karma-notify-reporter' // reporters are set in package.json
     ],
     colors: true,
     logLevel: config.LOG_INFO,

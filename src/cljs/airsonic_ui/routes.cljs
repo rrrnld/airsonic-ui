@@ -49,7 +49,7 @@
      ;; we fetch more than just the albums needed for the current page so we can
      ;; page through it faster
      [:api/request "getAlbumList2" {:type kind
-                                    :size (* 3 conf/albums-per-page)
+                                    :size (* conf/albums-prefetch-factor conf/albums-per-page)
                                     :offset (* (dec (int page)) conf/albums-per-page)}]]
     [:routes/do-navigation [route-id {:kind "recent"} {:page 1}]]))
 
