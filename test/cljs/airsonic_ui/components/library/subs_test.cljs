@@ -1,25 +1,33 @@
 (ns airsonic-ui.components.library.subs-test
   (:require [cljs.test :refer-macros [deftest testing is]]
             [airsonic-ui.config :as conf]
+            [airsonic-ui.components.library.fixtures :as fixtures]
             [airsonic-ui.components.library.subs :as sub]))
 
-(defn stub-albums [offset]
-  (let [start (* offset conf/albums-per-page)
-        end (inc (+ start (* conf/albums-per-page conf/albums-prefetch-factor)))]
-    (range start end)))
+(deftest partition-library
+  (testing "Should give us a map of page -> content"
+    (let [pages (sub/partition-responses "recent" fixtures/responses)]
+      (is (map? pages))
+      (is (every? int? (keys pages)))
+      (is (every? seq? (vals pages)))))
+  (testing "Should map each response correctly to a page"
+    (let [first-response (select-keys fixtures/responses [["getAlbumList2" {:type "recent", :size 100, :offset 0}]])]
+      (is (= (range 5) (keys (sub/partition-responses "recent" first-response)))))
+    (let [first-and-third (select-keys fixtures/responses [["getAlbumList2" {:type "recent", :size 100, :offset 0}]
+                                                           ["getAlbumList2" {:type "recent", :size 100, :offset 40}]])]
+      ;; there will be overlapping content for pages 2, 3 and 4 (with a zero-based index)
+      (is (= (range 7) (keys (sub/partition-responses "recent" first-and-third)))))))
 
-(def responses {["getAlbumList2" {:type "recent" :offset 1}] {:album (stub-albums 1)}
-                ["getAlbumList2" {:type "recent" :offset 2}] {:album (stub-albums 2)}
-                ["getAlbumList2" {:type "recent" :offset 0}] {:album (stub-albums 0)}
-                ;; vvv this one shouldn't show up in the test vvv
-                ["getAlbumList2" {:type "newest" :offset 1}] {:album (reverse (stub-albums 1))}
-                ["getAlbumList2" {:type "recent" :offset 3}] {:album (stub-albums 3)}})
-
-(deftest complete-library
-  (testing "Should concatenate and deduplicate all album list responses for a given type of list"
-    ;; we test from offset 0 to 3, which is where these numbers come from
-    (println "last number" (last (stub-albums 3)))
-
-    (is (= (range 0 (inc (+ (* 3 conf/albums-per-page)
-                            (* conf/albums-per-page conf/albums-prefetch-factor))))
-           (sub/complete-library responses [:library/complete "recent"])))))
+(deftest paginated-library
+  (testing "Should humanize page offsets"
+    (let [responses (select-keys fixtures/responses [["getAlbumList2" {:type "recent", :size 100, :offset 0}]])
+          paginated (sub/paginated-library responses [:sub/paginated-library "recent"])]
+      (is (= [1 2 3 4 5] (keys paginated)))))
+  (testing "Should concatenate and deduplicate all album list responses"
+    (let [responses (select-keys fixtures/responses [["getAlbumList2" {:type "recent", :size 100, :offset 0}]
+                                                     ["getAlbumList2" {:type "recent", :size 100, :offset 20}]
+                                                     ["getAlbumList2" {:type "recent", :size 100, :offset 40}]])
+          paginated (sub/paginated-library responses [:sub/paginated-library "recent"])]
+      (is (= [1 2 3 4 5 6 7] (keys paginated)))
+      (is (= 140 (count (mapcat val paginated))))
+      (is (= 140 (count (set (mapcat val paginated))))))))

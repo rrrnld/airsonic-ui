@@ -12,45 +12,43 @@
             ^{:key idx} [:li (when (= params active-item)
                                {:class-name "is-active"})
                          [:a {:href (apply url-for route)} label]]))]])
-
-;; the pagination should be used like this
-;; [pagination {:per-page 12
-;;              :max-pages nil
-;;              :url-fn generate-url
-;;              :current-page 0
-;;              :items [,,,]}]
-
-(defn num-pages [items per-page max-pages]
-  (min (Math/ceil (/ (count items) per-page)) max-pages))
+;; this variable determines how many pages before the first known page we should list 
+(def page-padding 2)
 
 (defn pagination
   "Builds a pagination, calling `url-fn` for every rendered page link with the
   page as its argument. When `max-pages` is `nil` an infinite pagination
   will be rendered."
-  [{:keys [items per-page max-pages current-page url-fn]
-    :or {max-pages (.-MAX_VALUE js/Number)}}]
-  (let [num-pages (num-pages items per-page max-pages)
+  [{:keys [items current-page url-fn]}]
+  ;; NOTE: This is currently slightly flawed. We don't have any good way to
+  ;; know whether we're on the last possible page so we take the last loaded
+  ;; page instead 
+  (let [num-pages (last (keys items))
         first-page? (= current-page 1)
-        last-page? (= current-page num-pages)]
-    [:nav.pagination {:role "pagination", :aria-label "pagination"}
+        pages (range (max 1 (- current-page page-padding))
+                     (min (inc (+ current-page page-padding)) (inc num-pages))) ]
+    [:nav.pagination.is-centered {:role "pagination", :aria-label "pagination"}
+     ;; now we add buttons to progress one page in each direction
      [:a.pagination-previous (if first-page?
                                {:disabled true}
                                {:href (url-fn (dec current-page))}) "Previous page"]
-     [:a.pagination-next (if last-page?
-                           {:disabled true}
-                           {:href (url-fn (inc current-page))}) "Next page"]
+     [:a.pagination-next {:href (url-fn (inc current-page))} "Next page"]
+     ;; and here we modify the links around our current page
      [:ul.pagination-list
-      (when (> current-page 3)
-        ^{:key "ellipsis-before"} [:li>span.pagination-ellipsis "…"])
-      (for [page (range (max 1 (- current-page 2))
-                        (min (+ current-page 3) (inc num-pages)))]
+      ;; some indication that there are previous pages
+      (when (> current-page (inc page-padding))
+        [:li>span.pagination-ellipsis "…"])
+      ;; all pagination links around our current page
+      (for [page pages]
         (let [current-page? (= page current-page)]
           ^{:key page} [(cond-> :li>a.pagination-link
                           current-page? (add-classes :is-current))
                         (cond-> {:href (url-fn page), :aria-label (str "Page " page)}
                           current-page? (assoc :aria-current "page")) page]))
-      (when (< current-page (- num-pages 2))
-        ^{:key "ellipsis-after"} [:li>span.pagination-ellipsis "…"])]]))
+      ;; some indication that there are more pages after
+      (when (< current-page (- num-pages page-padding))
+        [:li>span.pagination-ellipsis "…"])]]))
+      
 
 (def tab-items [[[::routes/library {:kind "recent"} nil] "Recently played"]
                 [[::routes/library {:kind "newest"} nil] "Newest additions"]
@@ -63,13 +61,11 @@
   [[_ {:keys [kind]} {:keys [page]
                       :or {page 1}}]
    {:keys [scan-status]}]
-  (let [library @(subscribe [:library/complete kind])
-        ;; FIXME: vv Views shouldn't do calculations vv
-        visible (->> (drop (* (dec (int page)) conf/albums-per-page) library)
-                     (take conf/albums-per-page))
+  (let [page (int page)
+        library @(subscribe [:library/paginated kind])
+        current-items (get library page)
         url-fn #(url-for ::routes/library {:kind kind} {:page %})
-        pagination [pagination {:current-page (int page)
-                                :per-page conf/albums-per-page
+        pagination [pagination {:current-page page
                                 :items library
                                 :url-fn url-fn}]]
     [:div
@@ -82,5 +78,5 @@
      [:section.section>div.container
       [tabs {:items tab-items :active-item {:kind kind}}]
       pagination
-      [:section.section [collection/listing visible]]
-      pagination]]))
+      [:section.section [collection/listing current-items]
+      pagination]]]))
