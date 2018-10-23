@@ -40,7 +40,7 @@ It provides you with tools to inspect the state of the application, undo and rep
 
 ## Tests
 
-This project uses [karma](https://karma-runner.github.io/) for tests. Make sure to have Google Chrome installed, otherwise the watcher will time out. If you want to run tests continuously in the background, you may want to have Growl installed to show notifications ([see setup instructions](https://www.npmjs.com/package/karma-growl-reporter#installation)).
+This project uses [karma](https://karma-runner.github.io/) for tests. Make sure to have Google Chrome installed, otherwise the watcher will time out.
 
 ```
 # run tests once
