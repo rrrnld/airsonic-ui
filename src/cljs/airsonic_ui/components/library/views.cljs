@@ -36,7 +36,9 @@
      ;; and here we modify the links around our current page
      [:ul.pagination-list
       ;; some indication that there are previous pages
-      (when (> current-page (inc page-padding))
+      (when (> current-page (+ page-padding 2))
+        [:li>a.pagination-link {:href (url-fn 1), :aria-label "Page 1"} "1"])
+      (when (> current-page (+ page-padding 1))
         [:li>span.pagination-ellipsis "…"])
       ;; all pagination links around our current page
       (for [page pages]
@@ -47,7 +49,9 @@
                           current-page? (assoc :aria-current "page")) page]))
       ;; some indication that there are more pages after
       (when (< current-page (- num-pages page-padding))
-        [:li>span.pagination-ellipsis "…"])]]))
+        [:li>span.pagination-ellipsis "…"])
+      (when (< current-page (- num-pages page-padding))
+        [:li>a.pagination-link {:href (url-fn num-pages), :aria-label (str "Page " num-pages)} num-pages])]]))
       
 
 (def tab-items [[[::routes/library {:kind "recent"} nil] "Recently played"]
