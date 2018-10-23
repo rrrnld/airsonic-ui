@@ -78,5 +78,5 @@
      [:section.section>div.container
       [tabs {:items tab-items :active-item {:kind kind}}]
       pagination
-      [:section.section [collection/listing current-items]
-      pagination]]]))
+      [:section.section [collection/listing current-items]]
+      pagination]]))
