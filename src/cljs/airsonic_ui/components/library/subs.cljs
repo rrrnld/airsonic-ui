@@ -9,10 +9,11 @@
   (let [sorted-albums (->> (filter (fn [[[_ params] _]]
                                      (= kind (:type params))) responses)
                            (sort-by (fn [[[_ params] _]] (:offset params)))
-                           (map (comp :album val)))]
+                           (keep (comp :album val)))]
     ;; NOTE: we concatenate this manually to avoid duplication; we have to do
     ;; this because fetch more than conf/albums-per-page per page, otherwise we
     ;; can't know whether to show a link to the next page
+    ;; FIXME: Somehow (last sorted-albums) is nil when
     (concat (mapcat (partial take conf/albums-per-page) (butlast sorted-albums))
             (last sorted-albums))))
 
