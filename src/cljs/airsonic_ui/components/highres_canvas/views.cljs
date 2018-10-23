@@ -13,14 +13,14 @@
         pixel-ratio (.-devicePixelRatio js/window)]
     (set! (. canvas -width) width)
     (set! (. canvas -height) height)
+    (set! (.. canvas -style -width) (str width "px"))
+    (set! (.. canvas -style -height) (str height "px"))
     ;; retina drawing code:
     ;; set up dimensions, reset the transform matrix to the identity
     ;; matrix and automatically scale up
     (when (> pixel-ratio 1)
       (set! (. canvas -width) (* pixel-ratio width))
       (set! (. canvas -height) (* pixel-ratio height))
-      (set! (.. canvas -style -width) (str width "px"))
-      (set! (.. canvas -style -height) (str height "px"))
       (.setTransform ctx 1 0 0 1 0 0)
       (.scale ctx pixel-ratio pixel-ratio))
     (draw ctx)))
