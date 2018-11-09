@@ -9,9 +9,3 @@ cache:
     - node_modules
     - .shadow-cljs
     - $HOME/.m2
-jobs:
-  include:
-    - stage: test and build
-      script: npm test
-    - state: test and build
-      script: npm run build
