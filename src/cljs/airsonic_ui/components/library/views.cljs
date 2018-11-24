@@ -1,9 +1,7 @@
 (ns airsonic-ui.components.library.views
   (:require [re-frame.core :refer [subscribe]]
-            [airsonic-ui.config :as conf]
             [airsonic-ui.routes :as routes :refer [url-for]]
-            [airsonic-ui.components.collection.views :as collection]
-            [airsonic-ui.helpers :refer [add-classes]]))
+            [airsonic-ui.components.collection.views :as collection]))
 
 (defn tabs [{:keys [items active-item]}]
   [:div.tabs
@@ -12,6 +10,7 @@
             ^{:key idx} [:li (when (= params active-item)
                                {:class-name "is-active"})
                          [:a {:href (apply url-for route)} label]]))]])
+
 ;; this variable determines how many pages before the first known page we should list
 (def page-padding 2)
 
