@@ -88,12 +88,11 @@
                 :media-play "Play"
                 :media-pause "Pause"
                 :media-step-forward "Next"}]
-     (map (fn [[icon-glyph event]]
-            ^{:key icon-glyph} [:p.control>button.button.is-light
-                                      {:on-click (muted-dispatch [event])
-                                       :title (title icon-glyph)}
-                                      [icon icon-glyph]])
-          buttons))])
+     (for [[icon-glyph event] buttons]
+       ^{:key icon-glyph} [:p.control [:button.button.is-light
+                                       {:on-click (muted-dispatch [event])
+                                        :title (title icon-glyph)}
+                                       [icon icon-glyph]]]))])
 
 (defn- toggle-shuffle [playback-mode]
   (muted-dispatch [:audio-player/set-playback-mode (if (= playback-mode :shuffled)

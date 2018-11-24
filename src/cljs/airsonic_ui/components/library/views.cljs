@@ -12,8 +12,18 @@
             ^{:key idx} [:li (when (= params active-item)
                                {:class-name "is-active"})
                          [:a {:href (apply url-for route)} label]]))]])
-;; this variable determines how many pages before the first known page we should list 
+;; this variable determines how many pages before the first known page we should list
 (def page-padding 2)
+
+(defn pagination-link
+  "One of many numbered links to a page"
+  [current-page page href]
+  (let [current-page? (= page current-page)]
+    [(if current-page?
+       :a.pagination-link.is-current
+       :a.pagination-link)
+     (cond-> {:href href, :aria-label (str "Page " page)}
+       current-page? (assoc :aria-current "page")) page]))
 
 (defn pagination
   "Builds a pagination, calling `url-fn` for every rendered page link with the
@@ -22,11 +32,11 @@
   [{:keys [items current-page url-fn]}]
   ;; NOTE: This is currently slightly flawed. We don't have any good way to
   ;; know whether we're on the last possible page so we take the last loaded
-  ;; page instead 
+  ;; page instead
   (let [num-pages (last (keys items))
         first-page? (= current-page 1)
         pages (range (max 1 (- current-page page-padding))
-                     (min (inc (+ current-page page-padding)) (inc num-pages))) ]
+                     (min (inc (+ current-page page-padding)) (inc num-pages)))]
     [:nav.pagination.is-centered {:role "pagination", :aria-label "pagination"}
      ;; now we add buttons to progress one page in each direction
      [:a.pagination-previous (if first-page?
@@ -37,22 +47,17 @@
      [:ul.pagination-list
       ;; some indication that there are previous pages
       (when (> current-page (+ page-padding 2))
-        [:li>a.pagination-link {:href (url-fn 1), :aria-label "Page 1"} "1"])
+        [:li [pagination-link current-page 1 (url-fn 1)]])
       (when (> current-page (+ page-padding 1))
         [:li>span.pagination-ellipsis "…"])
       ;; all pagination links around our current page
       (for [page pages]
-        (let [current-page? (= page current-page)]
-          ^{:key page} [(cond-> :li>a.pagination-link
-                          current-page? (add-classes :is-current))
-                        (cond-> {:href (url-fn page), :aria-label (str "Page " page)}
-                          current-page? (assoc :aria-current "page")) page]))
+        ^{:key page} [:li [pagination-link current-page page (url-fn page)]])
       ;; some indication that there are more pages after
       (when (< current-page (- num-pages page-padding))
         [:li>span.pagination-ellipsis "…"])
       (when (< current-page (- num-pages page-padding))
-        [:li>a.pagination-link {:href (url-fn num-pages), :aria-label (str "Page " num-pages)} num-pages])]]))
-      
+        [:li [pagination-link current-page num-pages (url-fn num-pages)]])]]))
 
 (def tab-items [[[::routes/library {:kind "recent"} nil] "Recently played"]
                 [[::routes/library {:kind "newest"} nil] "Newest additions"]
