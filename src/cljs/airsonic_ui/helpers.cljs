@@ -12,11 +12,14 @@
                  (when (p song) (reduced [idx song]))) nil)))
 
 (defn muted-dispatch
-  "Dispatches a re-frame event while canceling default DOM behavior"
-  [ev]
+  "Dispatches a re-frame event while canceling default DOM behavior; to be
+  called for example in `:on-click`."
+  [ev & {:keys [sync?]}]
   (fn [e]
     (.preventDefault e)
-    (rf/dispatch ev)))
+    (if sync?
+      (rf/dispatch-sync ev)
+      (rf/dispatch ev))))
 
 (defn add-classes
   "Adds one or more classes to a hiccup keyword"
