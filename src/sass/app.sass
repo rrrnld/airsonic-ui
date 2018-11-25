@@ -148,13 +148,20 @@
       background-color: $light !important
       font-weight: bold
 
+// useful in general to pull elements closer together; bulma es very generous
+// with whitespace
+.section.is-small
+    padding-top: 24px
+    padding-bottom: 24px
+
 // occurs on many pages at the top to show details
 .hero
+  &.is-small + .section
+    padding-top: 0
+
   .media-content
     align-self: center
 
-  &.is-small + .section
-    padding-top: 0
 
 // floating notifications
 .notifications:not(:empty)
@@ -199,7 +206,7 @@
 
     ol
       list-style: none
-    
+
     +tablet
       column-count: 3
     +widescreen
@@ -207,7 +214,7 @@
 
     .group
       margin-bottom: 1.5rem
-      .subtitle.is-4 
+      .subtitle.is-4
         margin-bottom: 1rem
 
 .album.detail

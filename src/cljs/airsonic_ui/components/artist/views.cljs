@@ -28,18 +28,30 @@
      (when (:musicBrainzId artist-info)
        [musicbrainz-link artist-info])]))
 
+(defn similar-artists
+  "Given an artist-info response will return a list of similar artists"
+  [{similar-artists :similarArtist}]
+  [:div.tags.similar-artists
+   (for [{:keys [id name]} similar-artists]
+     ^{:key id} [:a.tag {:href (routes/url-for ::routes/artist.detail {:id id})} name])])
+
 (defn detail
   "Creates a nice artist page displaying the artist's name, bio (if available and
   listing) their albums."
   [{:keys [artist artist-info]}]
   [:div
-   [:section.hero>div.hero-body
-    [:div.container
-     [:h1.title (:name artist)]
-     [:div.content
-      [lastfm-bio artist-info]
-      [artist-links artist-info]]]]
-   [:section.section>div.container [collection/listing (:album artist)]]])
+   [:section.hero.is-small>div.hero-body>div.container
+    [:h1.title (:name artist)]
+    [:div.content
+     [lastfm-bio artist-info]
+     [artist-links artist-info]]]
+   [:section.section.is-small>div.container
+    [:h2.subtitle "Albums"]
+    [collection/listing (:album artist)]]
+   (when (:similarArtist artist-info)
+     [:section.section.is-small>div.container
+      [:h2.subtitle "Similar artists in your collection"]
+      [similar-artists artist-info]])])
 
 (defn alphabetical-listing
   [artists]
