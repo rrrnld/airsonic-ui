@@ -59,4 +59,6 @@ $ npm run build
 $ npm run deploy
 ```
 
+**Note:** If you have a continuous build running and run `npm run build` or `npm run deploy`, it will delete the compiled tests, causing the continuous tests to not run anymore. This can be fixed by running `npm test` again.
+
 All build artifacts land in `/public`. Don't change anything in there as changes will be overwritten.
