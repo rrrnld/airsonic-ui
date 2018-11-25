@@ -13,7 +13,7 @@
        (:artist song))
      " - "
      [:a
-      {:href "#" :on-click (muted-dispatch [:audio-player/play-all songs idx])}
+      {:href "#" :on-click (muted-dispatch [:audio-player/play-all songs idx] :sync? true)}
       (:title song)]
      [:span.duration (format-duration duration)]]))
 

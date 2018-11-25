@@ -52,7 +52,9 @@
                   " - "
                   [:a {:title (:title episode)
                        :href "#"
-                       :on-click (muted-dispatch [:audio-player/play-all episodes idx])}
+                       ;; the reason for :sync? true can be found here
+                       ;; https://github.com/heyarne/airsonic-ui/issues/33
+                       :on-click (muted-dispatch [:audio-player/play-all episodes idx] :sync? true)}
                    (:title episode)]]]]
       (episode-actions episode)))])
 
