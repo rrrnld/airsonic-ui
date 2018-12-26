@@ -33,7 +33,7 @@
 
 (defn missing-cover
   [item size]
-  [canvas {:class-name "missing-cover"
+  [canvas {:class "missing-cover"
            :draw #(generate-cover % item)}])
 
 (defn has-cover? [item]
@@ -45,7 +45,7 @@
   [item size]
   (let [original @(subscribe [::subs/cover-url item size])
         retina @(subscribe [::subs/cover-url item (* 2 size)])]
-    [:figure {:class-name (str "image is-" size "x" size)}
+    [:figure {:class (str "image is-" size "x" size)}
      (if (has-cover? item)
        [:img {:src original
               :srcSet (str original ", " retina " 2x")}]

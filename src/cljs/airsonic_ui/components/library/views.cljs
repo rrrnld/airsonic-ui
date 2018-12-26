@@ -8,7 +8,7 @@
    [:ul (for [[idx [route label]] (map-indexed vector items)]
           (let [[_ params _] route]
             ^{:key idx} [:li (when (= params active-item)
-                               {:class-name "is-active"})
+                               {:class "is-active"})
                          [:a {:href (apply url-for route)} label]]))]])
 
 ;; this variable determines how many pages before the first known page we should list
