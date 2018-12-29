@@ -10,6 +10,11 @@
 
 (defonce audio (atom nil))
 
+(defn normalize-time-ranges [time-ranges]
+  (if (> (.-length time-ranges) 0)
+    (.end time-ranges (dec (.-length time-ranges)))
+    0))
+
 (defn ->status
   "Takes an audio object and returns a map describing its current status"
   [elem]
@@ -17,12 +22,10 @@
    :paused? (.-paused elem)
    :current-src (.-currentSrc elem)
    :current-time (.-currentTime elem)
-   :seekable (let [seekable (.-seekable elem)]
-               (if (> (.-length seekable) 0)
-                 (.end seekable (dec (.-length seekable)))
-                 0))})
+   :seekable (normalize-time-ranges (.-seekable elem))
+   :buffered (normalize-time-ranges (.-buffered elem))})
 
-; explanation of these events: https://developer.mozilla.org/en-US/Apps/Fundamentals/Audio_and_video_delivery/Cross-browser_audio_basics
+ ; explanation of these events: https://developer.mozilla.org/en-US/Apps/Fundamentals/Audio_and_video_delivery/Cross-browser_audio_basics
 
 
 (defn attach-listeners! [el]

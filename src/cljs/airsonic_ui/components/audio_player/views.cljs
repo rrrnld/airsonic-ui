@@ -10,14 +10,14 @@
 ;; FIXME: Sometimes items don't have a duration
 
 (def progress-bar-color "rgb(93,93,93)")
-(def progress-bar-color-buffered "rgb(123,123,123)")
+(def progress-bar-color-buffered "rgb(143,143,143)")
 (def progress-bar-color-active "whitesmoke")
 
-(defn draw-progress [ctx current-time seekable duration]
+(defn draw-progress [ctx current-time buffered duration]
   (let [width (.. ctx -canvas -clientWidth)
         height (.. ctx -canvas -clientHeight)
         padding 5
-        seekable-x (+ padding (* (- width (* 2 padding)) (min 1 (/ seekable duration))))
+        buffered-x (+ padding (* (- width (* 2 padding)) (min 1 (/ buffered duration))))
         current-x (+ padding (* (- width (* 2 padding)) (min 1 (/ current-time duration))))]
     ;; vertically center everything
     (.translate ctx 0.5 (+ (Math/ceil (/ height 2)) 0.5))
@@ -33,7 +33,7 @@
     (doto ctx
       (.beginPath)
       (.moveTo padding 0)
-      (.lineTo seekable-x 0)
+      (.lineTo buffered-x 0)
       (.stroke))
     ;; draw the part that's already played
     (set! (.-strokeStyle ctx) progress-bar-color-active)
@@ -49,9 +49,9 @@
       (.arc current-x 0 (/ padding 2) 0 (* Math/PI 2))
       (.fill))))
 
-(defn current-progress [current-time seekable duration]
+(defn current-progress [current-time buffered duration]
   [canvas {:class "current-progress-canvas"
-           :draw #(draw-progress % current-time seekable duration)}])
+           :draw #(draw-progress % current-time buffered duration)}])
 
 ;; FIXME: It's ugly to have the canvas padding and styling scattered everywhere (sass, drawing code above, and here)
 
@@ -64,20 +64,20 @@
     (dispatch [:audio-player/seek (/ x width)])))
 
 (defn buffered-part
-  [seekable duration]
-  (let [width (min 100 (* (/ seekable duration) 100))]
+  [buffered duration]
+  (let [width (min 100 (* (/ buffered duration) 100))]
     [:div.buffered-part {:on-click seek
                          :style {:width (str "calc(" width "% - 1rem - 10px)")}}]))
 
 (defn current-song-info [song status]
   (let [current-time (:current-time status)
-        seekable (:seekable status)
+        buffered (:buffered status)
         duration (:duration song)]
     [:article.current-song-info
      [:div.current-name (:artist song) [:br] (:title song)]
      [:div.current-progress
-      [buffered-part seekable duration]
-      [current-progress current-time seekable duration]]]))
+      [buffered-part buffered duration]
+      [current-progress current-time buffered duration]]]))
 
 (defn song-controls [is-playing?]
   [:div.field.has-addons
