@@ -17,72 +17,47 @@
   .loader
     +loader
 
-// navi on the left side
-.sidebar
-  min-height: 100vh
-  background: $dark
-  a
-    color: $light
-
-.has-navbar-fixed-bottom .sidebar
-  // 2.5 = 3.25 ($navbar-height) - 0.75 ($padding)
-  min-height: calc(100vh - 2.5rem)
-
 // bottom bar
 .audio-player
+  // first clear some of that navigation styling
+  background-color: $dark
+  color: $light
+  min-height: 0
+
   .navbar-menu
-    color: $light
-    background: $dark
-    align-items: center
+    padding: 0
+    background-color: transparent
 
+  // now off to the contents
+
+  // when no song is playing
   .idle-notification
-    color: $light
+    color: inherit
 
+  // ... or with all the bells and whistles
   .audio-interaction
-    flex-grow: 1
-
-    .media-left
-      margin-right: 0
-
-    .level-left
-      flex-grow: 1
-      flex-shrink: 0
-
-    .level-right
-      display: flex
-
-      .button-group
-        margin: 0 .5rem
-
-        + .button-group
-          margin-left: 0
-
-      =tablet
-        flex-grow: 0
-        flex-shrink: 1
-        padding-left: .5rem
-        padding-right: .5rem
-
-  .media
-    flex-grow: 1
+    display: flex
     align-items: center
 
-.current-song-info
-  display: flex
-  align-items: center
+  .playback-info
+    // shows cover and current track
+    align-items: center
+    flex-grow: 1
+    color: inherit
 
-  .current-name,
-  .current-progress
-    padding: .5rem
+    .artist-and-title > *
+      display: inline-block
+      white-space: nowrap
+      width: 100%
+      text-overflow: ellipsis
 
-  .current-name
-    width: 30%
-    font-size: .8rem
-    white-space: nowrap
-    text-overflow: ellipsis
-    overflow: hidden
 
-  .current-progress
+  .progress-bar
+    // hide progress bar on mobile
+    display: none
+    @include =tablet
+      display: block
+
     flex-grow: 1
     position: relative
 
@@ -97,6 +72,12 @@
       display: block
       height: 1rem
       width: 100%
+
+  // buttons to control current playback and playlist behavior
+  .playback-controls,
+  .playback-mode-controls
+    flex-shrink: 0
+    padding: .3rem
 
 // preview card for album or artist listings
 .preview-card

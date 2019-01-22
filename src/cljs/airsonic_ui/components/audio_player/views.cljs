@@ -69,30 +69,39 @@
     [:div.buffered-part {:on-click seek
                          :style {:width (str "calc(" width "% - 1rem - 10px)")}}]))
 
-(defn current-song-info [song status]
+(defn progress-bar [song status]
   (let [current-time (:current-time status)
         buffered (:buffered status)
         duration (:duration song)]
-    [:article.current-song-info
-     [:div.current-name (:artist song) [:br] (:title song)]
-     [:div.current-progress
-      [buffered-part buffered duration]
-      [current-progress current-time buffered duration]]]))
+    [:article.progress-bar
+     [buffered-part buffered duration]
+     [current-progress current-time buffered duration]]))
 
-(defn song-controls [is-playing?]
-  [:div.field.has-addons
-   (let [buttons [[:media-step-backward :audio-player/previous-song]
-                  [(if is-playing? :media-pause :media-play) :audio-player/toggle-play-pause]
-                  [:media-step-forward :audio-player/next-song]]
-         title {:media-step-backward "Previous"
-                :media-play "Play"
-                :media-pause "Pause"
-                :media-step-forward "Next"}]
-     (for [[icon-glyph event] buttons]
-       ^{:key icon-glyph} [:p.control [:button.button.is-light
-                                       {:on-click (muted-dispatch [event])
-                                        :title (title icon-glyph)}
-                                       [icon icon-glyph]]]))])
+(defn playback-info [song status]
+  [:a.playback-info.media
+   {:href (routes/url-for ::routes/current-queue)
+    :title "Go to current queue"}
+   [:div.media-left [cover song 64]]
+   [:div.media-content
+    [:div.artist-and-title
+     [:span.artist(:artist song)]
+     [:span.song-title (:title song)]]]])
+
+(defn playback-controls [is-playing?]
+  [:div.playback-controls
+   [:div.field.has-addons
+    (let [buttons [[:media-step-backward :audio-player/previous-song]
+                   [(if is-playing? :media-pause :media-play) :audio-player/toggle-play-pause]
+                   [:media-step-forward :audio-player/next-song]]
+          title {:media-step-backward "Previous"
+                 :media-play "Play"
+                 :media-pause "Pause"
+                 :media-step-forward "Next"}]
+      (for [[icon-glyph event] buttons]
+        ^{:key icon-glyph} [:p.control [:button.button.is-light
+                                        {:on-click (muted-dispatch [event])
+                                         :title (title icon-glyph)}
+                                        [icon icon-glyph]]]))]])
 
 (defn- toggle-shuffle [playback-mode]
   (muted-dispatch [:audio-player/set-playback-mode (if (= playback-mode :shuffled)
@@ -116,11 +125,12 @@
                        :repeat-all "Repeating current queue, click to repeat current track"
                        :repeat-single "Repeating current track, click to repeat none"
                        "Click to repeat current queue")]
-    [:div.field.has-addons
-     ^{:key :shuffle-button} [shuffle-button {:on-click (toggle-shuffle playback-mode)
-                                              :title "Shuffle"} [icon :random]]
-     ^{:key :repeat-button} [repeat-button {:on-click (toggle-repeat-mode repeat-mode)
-                                            :title repeat-title} [icon :loop]]]))
+    [:div.playback-mode-controls
+     [:div.button-group>div.field.has-addons
+      ^{:key :shuffle-button} [shuffle-button {:on-click (toggle-shuffle playback-mode)
+                                               :title "Shuffle"} [icon :random]]
+      ^{:key :repeat-button} [repeat-button {:on-click (toggle-repeat-mode repeat-mode)
+                                             :title repeat-title} [icon :loop]]]]))
 
 (defn audio-player []
   (let [current-song @(subscribe [:audio/current-song])
@@ -130,14 +140,11 @@
     [:nav.navbar.is-fixed-bottom.audio-player
      [:div.navbar-menu.is-active
       (if current-song
-        ;; show song info
-        [:section.level.audio-interaction
-         [:div.level-left>article.media
-          [:div.media-left [cover current-song 48]]
-          [:div.media-content [current-song-info current-song playback-status]]]
-         [:div.level-right
-          [:div.button-group [:p.control>a.button.is-light {:href (routes/url-for ::routes/current-queue) :title "Go to current queue"} [icon :menu]]]
-          [:div.button-group [song-controls is-playing?]]
-          [:div.button-group [playback-mode-controls playlist]]]]
+        ;; show song info, controls, progress bar, etc.
+        [:section.audio-interaction
+         [playback-info current-song playback-status]
+         [playback-controls is-playing?]
+         [progress-bar current-song playback-status]
+         [playback-mode-controls playlist]]
         ;; not playing anything
         [:p.navbar-item.idle-notification "No audio playing"])]]))
