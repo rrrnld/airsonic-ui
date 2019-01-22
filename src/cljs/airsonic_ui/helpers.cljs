@@ -1,7 +1,8 @@
 (ns airsonic-ui.helpers
   "Assorted helper functions"
   (:require [re-frame.core :as rf]
-            [clojure.string :as str]))
+            [clojure.string :as str])
+  (:import [goog.string format]))
 
 (defn find-where
   "Returns the the first item in `coll` with its index for which `(p song)`
@@ -35,11 +36,22 @@
       (str/lower-case)
       (keyword)))
 
-(defn format-duration [seconds]
-  (let [hours (quot seconds 3600)
-        minutes (quot (rem seconds 3600) 60)
-        seconds (rem seconds 60)]
-    (-> (cond-> ""
-          (> hours 0) (str hours "h ")
-          (> minutes 0) (str minutes "m "))
-        (str seconds "s"))))
+(defn- brief-duration [hours minutes seconds]
+  (str (when (> hours 0)
+         (format "%02d:" hours))
+       (format "%02d:%02d" minutes seconds)))
+
+(defn- long-duration [hours minutes seconds]
+  (str/trim
+   (cond-> ""
+     (> hours 0) (str hours "h ")
+     (> minutes 0) (str minutes "m ")
+     (> seconds 0) (str seconds "s"))))
+
+(defn format-duration [seconds & {:keys [brief?]}]
+  (let [hours (Math/round (quot seconds 3600))
+        minutes (Math/round (quot (rem seconds 3600) 60))
+        seconds (Math/round (rem seconds 60))]
+    (if brief?
+      (brief-duration hours minutes seconds)
+      (long-duration hours minutes seconds))))

@@ -64,19 +64,30 @@
         overflow: hidden
         text-overflow: ellipsis
 
-  .progress-bar
+  .progress-indicators
     // hide progress bar on mobile
     display: none
     +tablet
-      display: block
+      display: flex
 
     flex-grow: 3
-    position: relative
     height: 1rem
 
-    .complete-song,
-    .buffered-part,
-    .played-back
+    .progress-info-text
+      color: whitesmoke
+      font-size: $size-7
+      flex-shrink: 0
+      flex-grow: 0
+
+    .progress-bars
+      margin-left: .6rem
+      margin-right: .6rem
+      position: relative
+      flex-grow: 1
+
+    .complete-song-bar,
+    .buffered-part-bar,
+    .played-back-bar
       height: 1rem
       position: absolute
       top: 0
@@ -90,19 +101,20 @@
         position: relative
         top: 50%
 
-    .complete-song
+
+    .complete-song-bar
       width: 100%
 
       &:after
         background: rgb(93,93,93)
 
-    .buffered-part
+    .buffered-part-bar
       cursor: pointer
 
       &:after
         background: rgb(143,143,143)
 
-    .played-back
+    .played-back-bar
       pointer-events: none
 
       &:after

@@ -1,7 +1,7 @@
 (ns airsonic-ui.components.audio-player.views
   (:require [re-frame.core :refer [subscribe dispatch]]
             [airsonic-ui.routes :as routes]
-            [airsonic-ui.helpers :refer [add-classes muted-dispatch]]
+            [airsonic-ui.helpers :as h]
             [airsonic-ui.views.cover :refer [cover]]
             [airsonic-ui.views.icon :refer [icon]]))
 
@@ -17,18 +17,23 @@
 (defn- ratio->width [ratio]
   (str (.toFixed (* 100 ratio) 2) "%"))
 
-(defn progress-bar [song status]
+(defn progress-indicators [song status]
   (let [current-time (:current-time status)
         buffered (:buffered status)
         duration (:duration song)
+        progress-text (str (h/format-duration current-time :brief? true)
+                           " / "
+                           (h/format-duration duration :brief? true))
         buffered-width (ratio->width (/ buffered duration))
         played-width (ratio->width (/ current-time duration))]
-    [:article.progress-bar {:aria-hidden "true"}
-     [:div.complete-song]
-     [:div.buffered-part {:style {:width buffered-width}
-                          :on-click seek}]
-     [:div.played-back {:style {:width played-width}}
-      [:div.played-back-knob]]]))
+    [:article.progress-indicators {:aria-hidden "true"}
+     [:div.progress-bars
+      [:div.complete-song-bar]
+      [:div.buffered-part-bar {:style {:width buffered-width}
+                               :on-click seek}]
+      [:div.played-back-bar {:style {:width played-width}}
+       [:div.played-back-knob]]]
+     [:div.progress-info-text.duration-text progress-text]]))
 
 (defn playback-info [song status]
   [:a.playback-info.media
@@ -52,25 +57,25 @@
                  :media-step-forward "Next"}]
       (for [[icon-glyph event] buttons]
         ^{:key icon-glyph} [:p.control [:button.button.is-light
-                                        {:on-click (muted-dispatch [event])
+                                        {:on-click (h/muted-dispatch [event])
                                          :title (title icon-glyph)}
                                         [icon icon-glyph]]]))]])
 
 (defn- toggle-shuffle [playback-mode]
-  (muted-dispatch [:audio-player/set-playback-mode (if (= playback-mode :shuffled)
+  (h/muted-dispatch [:audio-player/set-playback-mode (if (= playback-mode :shuffled)
                                                      :linear :shuffled)]))
 
 (defn- toggle-repeat-mode [current-mode]
   (let [modes (cycle '(:repeat-none :repeat-all :repeat-single))
         next-mode (->> (drop-while (partial not= current-mode) modes)
                        (second))]
-    (muted-dispatch [:audio-player/set-repeat-mode next-mode])))
+    (h/muted-dispatch [:audio-player/set-repeat-mode next-mode])))
 
 (defn playback-mode-controls [playlist]
   (let [{:keys [repeat-mode playback-mode]} playlist
         button :p.control>button.button.is-light
-        shuffle-button (add-classes button (when (= playback-mode :shuffled) :is-primary))
-        repeat-button (add-classes button (case repeat-mode
+        shuffle-button (h/add-classes button (when (= playback-mode :shuffled) :is-primary))
+        repeat-button (h/add-classes button (case repeat-mode
                                             :repeat-single :is-info
                                             :repeat-all :is-primary
                                             nil))
@@ -96,7 +101,7 @@
         ;; show song info, controls, progress bar, etc.
         [:section.audio-interaction
          [playback-info current-song playback-status]
-         [progress-bar current-song playback-status]
+         [progress-indicators current-song playback-status]
          [playback-controls is-playing?]
          [playback-mode-controls playlist]]
         ;; not playing anything
