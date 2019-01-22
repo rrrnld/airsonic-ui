@@ -18,11 +18,14 @@
     +loader
 
 // bottom bar
+.has-navbar-bottom
+  padding-bottom: 64px
+
 .audio-player
   // first clear some of that navigation styling
   background-color: $dark
   color: $light
-  min-height: 0
+  min-height: 64px
 
   .navbar-menu
     padding: 0
@@ -37,6 +40,7 @@
   // ... or with all the bells and whistles
   .audio-interaction
     display: flex
+    flex-grow: 1
     align-items: center
 
   .playback-info
@@ -45,39 +49,84 @@
     flex-grow: 1
     color: inherit
 
-    .artist-and-title > *
-      display: inline-block
-      white-space: nowrap
-      width: 100%
-      text-overflow: ellipsis
+    .media-left
+      margin-right: .6rem
 
+    .artist-and-title
+      margin-right: .6rem
+
+      .artist,
+      .song-title
+        display: block
+        white-space: nowrap
+        width: 100%
+        max-width: 100%
+        overflow: hidden
+        text-overflow: ellipsis
 
   .progress-bar
     // hide progress bar on mobile
     display: none
-    @include =tablet
+    +tablet
       display: block
 
-    flex-grow: 1
+    flex-grow: 3
     position: relative
+    height: 1rem
+
+    .complete-song,
+    .buffered-part,
+    .played-back
+      height: 1rem
+      position: absolute
+      top: 0
+      left: 0
+
+      // these are the actual bars
+      &:after
+        content: ''
+        display: block
+        height: 1px
+        position: relative
+        top: 50%
+
+    .complete-song
+      width: 100%
+
+      &:after
+        background: rgb(93,93,93)
 
     .buffered-part
-      position: absolute
-      top: .5rem
-      left: calc(.5rem + 5px)
-      height: 1rem
       cursor: pointer
 
-    .current-progress-canvas
-      display: block
-      height: 1rem
-      width: 100%
+      &:after
+        background: rgb(143,143,143)
+
+    .played-back
+      pointer-events: none
+
+      &:after
+        background: whitesmoke
+
+      .played-back-knob
+        position: absolute
+        width: 5px
+        height: 5px
+        left: 100%
+        top: 50%
+        margin-left: -2.5px
+        margin-top: -2.5px
+        background: whitesmoke
+        border-radius: 100%
 
   // buttons to control current playback and playlist behavior
   .playback-controls,
   .playback-mode-controls
     flex-shrink: 0
-    padding: .3rem
+    padding-right: .6rem
+
+  .playback-controls
+    padding-left: .6rem
 
 // preview card for album or artist listings
 .preview-card

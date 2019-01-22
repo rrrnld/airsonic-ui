@@ -1,81 +1,34 @@
 (ns airsonic-ui.components.audio-player.views
   (:require [re-frame.core :refer [subscribe dispatch]]
             [airsonic-ui.routes :as routes]
-            [airsonic-ui.components.highres-canvas.views :refer [canvas]]
             [airsonic-ui.helpers :refer [add-classes muted-dispatch]]
             [airsonic-ui.views.cover :refer [cover]]
             [airsonic-ui.views.icon :refer [icon]]))
 
 ;; currently playing / coming next / audio controls...
-;; FIXME: Sometimes items don't have a duration
-
-(def progress-bar-color "rgb(93,93,93)")
-(def progress-bar-color-buffered "rgb(143,143,143)")
-(def progress-bar-color-active "whitesmoke")
-
-(defn draw-progress [ctx current-time buffered duration]
-  (let [width (.. ctx -canvas -clientWidth)
-        height (.. ctx -canvas -clientHeight)
-        padding 5
-        buffered-x (+ padding (* (- width (* 2 padding)) (min 1 (/ buffered duration))))
-        current-x (+ padding (* (- width (* 2 padding)) (min 1 (/ current-time duration))))]
-    ;; vertically center everything
-    (.translate ctx 0.5 (+ (Math/ceil (/ height 2)) 0.5))
-    ;; draw complete bar
-    (set! (.-strokeStyle ctx) progress-bar-color)
-    (doto ctx
-      (.beginPath)
-      (.moveTo padding 0)
-      (.lineTo (- width (* 2 padding)) 0)
-      (.stroke))
-    ;; draw the buffered part
-    (set! (.-strokeStyle ctx) progress-bar-color-buffered)
-    (doto ctx
-      (.beginPath)
-      (.moveTo padding 0)
-      (.lineTo buffered-x 0)
-      (.stroke))
-    ;; draw the part that's already played
-    (set! (.-strokeStyle ctx) progress-bar-color-active)
-    (doto ctx
-      (.beginPath)
-      (.moveTo padding 0)
-      (.lineTo current-x 0)
-      (.stroke))
-    ;; draw a dot marking the current time
-    (set! (.-fillStyle ctx) progress-bar-color-active)
-    (doto ctx
-      (.beginPath)
-      (.arc current-x 0 (/ padding 2) 0 (* Math/PI 2))
-      (.fill))))
-
-(defn current-progress [current-time buffered duration]
-  [canvas {:class "current-progress-canvas"
-           :draw #(draw-progress % current-time buffered duration)}])
-
-;; FIXME: It's ugly to have the canvas padding and styling scattered everywhere (sass, drawing code above, and here)
 
 (defn seek
   "Calculates the position of the click and sets current playback accordingly"
   [ev]
-  (let [x (- (.. ev -nativeEvent -pageX)
-             (.. ev -target getBoundingClientRect -left))
-        width (- (.. ev -target -nextElementSibling -clientWidth) 10)] ;; <- 10 = 2 * canvas-padding
-    (dispatch [:audio-player/seek (/ x width)])))
+  (let [x-ratio (/ (.. ev -nativeEvent -layerX)
+                   (.. ev -target -parentElement getBoundingClientRect -width))]
+    (dispatch [:audio-player/seek x-ratio])))
 
-(defn buffered-part
-  [buffered duration]
-  (let [width (min 100 (* (/ buffered duration) 100))]
-    [:div.buffered-part {:on-click seek
-                         :style {:width (str "calc(" width "% - 1rem - 10px)")}}]))
+(defn- ratio->width [ratio]
+  (str (.toFixed (* 100 ratio) 2) "%"))
 
 (defn progress-bar [song status]
   (let [current-time (:current-time status)
         buffered (:buffered status)
-        duration (:duration song)]
-    [:article.progress-bar
-     [buffered-part buffered duration]
-     [current-progress current-time buffered duration]]))
+        duration (:duration song)
+        buffered-width (ratio->width (/ buffered duration))
+        played-width (ratio->width (/ current-time duration))]
+    [:article.progress-bar {:aria-hidden "true"}
+     [:div.complete-song]
+     [:div.buffered-part {:style {:width buffered-width}
+                          :on-click seek}]
+     [:div.played-back {:style {:width played-width}}
+      [:div.played-back-knob]]]))
 
 (defn playback-info [song status]
   [:a.playback-info.media
@@ -143,8 +96,8 @@
         ;; show song info, controls, progress bar, etc.
         [:section.audio-interaction
          [playback-info current-song playback-status]
-         [playback-controls is-playing?]
          [progress-bar current-song playback-status]
+         [playback-controls is-playing?]
          [playback-mode-controls playlist]]
         ;; not playing anything
         [:p.navbar-item.idle-notification "No audio playing"])]]))
