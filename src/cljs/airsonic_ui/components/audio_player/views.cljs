@@ -15,7 +15,7 @@
     (dispatch [:audio-player/seek x-ratio])))
 
 (defn- ratio->width [ratio]
-  (str (.toFixed (* 100 ratio) 2) "%"))
+  (str (.toFixed (min 100 (* 100 ratio)) 2) "%"))
 
 (defn progress-indicators [song status]
   (let [current-time (:current-time status)
