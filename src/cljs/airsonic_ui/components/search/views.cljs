@@ -19,28 +19,27 @@
                        :default-value search-term
                        :placeholder "Search"}]]])))
 
+(defn result-cards [items]
+  [:div.columns.is-multiline.is-mobile
+   (for [[url item] items]
+     ^{:key url} [:div.column.is-one-fifth-tablet.is-one-third-mobile
+                  [card item
+                   :url-fn (constantly url)
+                   :content [:div>a
+                             {:href url, :title (:name item)}
+                             (:name item)]]])])
+
+(defn- artist-url [artist]
+  (url-for ::routes/artist.detail (select-keys artist [:id])))
 
 (defn artist-results [{:keys [artist]}]
-  [:div.columns.is-multiline.is-mobile
-   (for [[idx artist] (map-indexed vector artist)]
-     (let [url #(url-for ::routes/artist.detail (select-keys % [:id]))]
-       ^{:key idx} [:div.column.is-2
-                    [card artist
-                     :url-fn url
-                     :content [:div>a
-                               {:href (url artist), :title (:name artist)}
-                               (:name artist)]]]))])
+  [result-cards (map (juxt artist-url identity) artist)])
+
+(defn- album-url [album]
+  (url-for ::routes/album.detail (select-keys album [:id])))
 
 (defn album-results [{:keys [album]}]
-  [:div.columns.is-multiline.is-mobile
-   (for [[idx album] (map-indexed vector album)]
-     (let [url #(url-for ::routes/album.detail (select-keys % [:id]))
-           title (str (:name album) " (" (:artist album) ")")]
-       ^{:key idx} [:div.column.is-2 [card album
-                                      :url-fn url
-                                      :content [:div>a
-                                                {:href (url album), :title title}
-                                                title]]]))])
+  [result-cards (map (juxt album-url identity) album)])
 
 (defn song-results [{:keys [song]}]
   [song/listing song])
