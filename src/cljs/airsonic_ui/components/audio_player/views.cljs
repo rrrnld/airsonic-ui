@@ -95,14 +95,13 @@
         playlist @(subscribe [:audio/playlist])
         playback-status @(subscribe [:audio/playback-status])
         is-playing? @(subscribe [:audio/is-playing?])]
-    [:nav.navbar.is-fixed-bottom.audio-player
-     [:div.navbar-menu.is-active
-      (if current-song
-        ;; show song info, controls, progress bar, etc.
-        [:section.audio-interaction
-         [playback-info current-song playback-status]
-         [progress-indicators current-song playback-status]
-         [playback-controls is-playing?]
-         [playback-mode-controls playlist]]
-        ;; not playing anything
-        [:p.navbar-item.idle-notification "No audio playing"])]]))
+    [:nav.audio-player
+     (if current-song
+       ;; show song info, controls, progress bar, etc.
+       [:section.audio-interaction
+        [playback-info current-song playback-status]
+        [progress-indicators current-song playback-status]
+        [playback-controls is-playing?]
+        [playback-mode-controls playlist]]
+       ;; not playing anything
+       [:p.navbar-item.idle-notification "No audio playing"])]))

@@ -18,18 +18,19 @@
     +loader
 
 // bottom bar
-.has-navbar-bottom
+.has-navbar-fixed-bottom
   padding-bottom: 64px
 
 .audio-player
+  +navbar-fixed
+  bottom: 0
+
   // first clear some of that navigation styling
   background-color: $dark
-  color: $light
+  color: $dark-invert
   min-height: 64px
-
-  .navbar-menu
-    padding: 0
-    background-color: transparent
+  display: flex
+  align-items: center
 
   // now off to the contents
 
