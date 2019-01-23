@@ -40,7 +40,7 @@
   [:div
    [:section.hero.is-small>div.hero-body
     [:div.container
-     [:article.media
+     [:article.collection-header.media
       [:div.media-left [cover album 128]]
       [:div.media-content
        [:h2.title (:name album)]
