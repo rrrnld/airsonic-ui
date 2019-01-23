@@ -6,16 +6,29 @@
                      :c "airsonic-ui-cljs"
                      :v "1.15.0"})
 
+(defn- unroll-variadic-params
+  "Turns {:id [1 2 3], :foo :bar} into [[:id 1] [:id 2] [:id 3] [:foo :bar]]"
+  [params]
+  (->>
+   (map (fn [[k vs]]
+          (if (sequential? vs)
+            (map (fn [v] [k v]) vs)
+            [k vs])) params)
+   (flatten)
+   (partition 2)))
+
 (def ^:private encode js/encodeURIComponent)
 
 (defn url
   "Returns an absolute url to an API endpoint"
   [credentials endpoint params]
   (let [server (:server credentials)
-        query (->> (merge default-params (select-keys credentials [:u :p]) params)
+        auth (select-keys credentials [:u :p])
+        query (->> (merge default-params auth params)
+                   (unroll-variadic-params)
                    (map (fn [[k v]] (str (encode (name k)) "=" (encode v))))
                    (str/join "&"))]
-    (str server (when-not (str/ends-with? server "/") "/") "rest/" endpoint "?" query)))
+    (str (str/replace server #"/+$" "") "/rest/" endpoint "?" query)))
 
 (defn stream-url [credentials song-or-episode]
   ;; podcasts have a stream-id, normal songs just use their id
@@ -63,4 +76,3 @@
              #{:artistId :name :songCount :artist} :album
              #{:id :name :albumCount} :artist
              :unknown)))
-

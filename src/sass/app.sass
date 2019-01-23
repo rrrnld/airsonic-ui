@@ -17,86 +17,113 @@
   .loader
     +loader
 
-// navi on the left side
-.sidebar
-  min-height: 100vh
-  background: $dark
-  a
-    color: $light
-
-.has-navbar-fixed-bottom .sidebar
-  // 2.5 = 3.25 ($navbar-height) - 0.75 ($padding)
-  min-height: calc(100vh - 2.5rem)
-
 // bottom bar
+.has-navbar-fixed-bottom
+  padding-bottom: 64px
+
 .audio-player
-  .navbar-menu
-    color: $light
-    background: $dark
-    align-items: center
+  +navbar-fixed
+  bottom: 0
 
-  .idle-notification
-    color: $light
-
-  .audio-interaction
-    flex-grow: 1
-
-    .media-left
-      margin-right: 0
-
-    .level-left
-      flex-grow: 1
-      flex-shrink: 0
-
-    .level-right
-      display: flex
-
-      .button-group
-        margin: 0 .5rem
-
-        + .button-group
-          margin-left: 0
-
-      =tablet
-        flex-grow: 0
-        flex-shrink: 1
-        padding-left: .5rem
-        padding-right: .5rem
-
-  .media
-    flex-grow: 1
-    align-items: center
-
-.current-song-info
+  // first clear some of that navigation styling
+  background-color: $dark
+  color: $dark-invert
+  min-height: 64px
   display: flex
   align-items: center
 
-  .current-name,
-  .current-progress
-    padding: .5rem
+  // now off to the contents
 
-  .current-name
-    width: 30%
-    font-size: .8rem
-    white-space: nowrap
-    text-overflow: ellipsis
-    overflow: hidden
+  // when no song is playing
+  .idle-notification
+    color: inherit
 
-  .current-progress
+  // ... or with all the bells and whistles
+  .audio-interaction
+    display: flex
     flex-grow: 1
-    position: relative
+    align-items: center
 
-    .buffered-part
-      position: absolute
-      top: .5rem
-      left: calc(.5rem + 5px)
-      height: 1rem
-      cursor: pointer
+  .playback-info
+    // shows cover and current track
+    align-items: center
+    flex-grow: 1
+    flex-basis: 25%
+    color: inherit
 
-    .current-progress-canvas
-      display: block
+    .media-left
+      margin-right: .6rem
+
+    .artist-and-title
+      margin-right: .6rem
+
+      .artist,
+      .song-title
+        display: block
+        white-space: nowrap
+        width: 100%
+        max-width: 100%
+        overflow: hidden
+        text-overflow: ellipsis
+
+  .progress-indicators
+    // hide progress bar on mobile
+    display: none
+    +tablet
+      display: flex
+
+    flex-basis: 75%
+    height: 1rem
+
+    .progress-info-text
+      color: $dark-invert
+      font-size: $size-7
+      flex-shrink: 0
+      flex-grow: 0
+
+    svg
+      overflow: visible
+
+    .progress-bars
+      margin-left: .6rem
+      margin-right: .6rem
+      position: relative
+      flex-grow: 1
+
+    .complete-song-bar,
+    .buffered-part-bar,
+    .played-back-bar
       height: 1rem
+
+    .complete-song-bar
       width: 100%
+
+      rect
+        fill: rgb(93,93,93)
+
+    .buffered-part-bar
+      rect
+        fill: rgb(143,143,143)
+
+      .click-dummy
+        cursor: pointer
+        fill: transparent
+
+    .played-back-bar
+      pointer-events: none
+
+      circle,
+      rect
+        fill: $dark-invert
+
+  // buttons to control current playback and playlist behavior
+  .playback-controls,
+  .playback-mode-controls
+    flex-shrink: 0
+    padding-right: .6rem
+
+  .playback-controls
+    padding-left: .6rem
 
 // preview card for album or artist listings
 .preview-card
@@ -121,15 +148,15 @@
 
   &.is-48x48 .missing-cover
     width: 48px
-    height: 48px
+    height: auto
 
   &.is-128x128 .missing-cover
     width: 128px
-    height: 128px
+    height: auto
 
   &.is-256x256 .missing-cover
     width: 256px
-    height: 256px
+    height: auto
 
 // occurs in album detail view
 .table
@@ -218,6 +245,20 @@
         margin-bottom: 1rem
 
 .album.detail
+  .collection-header
+    display: block
+
+    .media-left
+      margin-right: 0
+      margin-bottom: 1rem
+
+    +tablet
+      display: flex
+
+      .media-left
+        margin-right: 1rem
+        margin-bottom: 0
+
   .collection-info
     list-style: none
 

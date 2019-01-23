@@ -31,3 +31,15 @@
     (is (= :hello-world (helpers/kebabify :HelloWorld)))
     (is (= :how-are-you (helpers/kebabify :howAreYou)))
     (is (= :foobar (helpers/kebabify :foobar)))))
+
+(deftest format-duration
+  (testing "Should format hours, minutes and seconds"
+    (is (= "1h" (helpers/format-duration 3600)))
+    (is (= "59m" (helpers/format-duration (* 59 60))))
+    (is (= "1m" (helpers/format-duration 60)))
+    (is (= "5s" (helpers/format-duration 5))))
+  (testing "Should respect the :brief? option"
+    (is (= "01:00:00" (helpers/format-duration 3600 :brief? true)))
+    (is (= "59:00" (helpers/format-duration (* 59 60) :brief? true)))
+    (is (= "01:00" (helpers/format-duration 60 :brief? true)))
+    (is (= "00:05" (helpers/format-duration 5 :brief? true)))))

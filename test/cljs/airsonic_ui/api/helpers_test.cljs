@@ -26,6 +26,17 @@
           encoded-str (js/encodeURIComponent query)]
       (is (str/includes? (api/url {:server "http://localhost"} "search3" {:query query}) encoded-str)))))
 
+(deftest variadic-parameters
+  (testing "Should append list-like parameters correctly"
+    (is (= (count (re-seq #"id=" (api/url {:server "http://localost"} "test" {:id []}))) 0))
+    (is (= (count (re-seq #"id=" (api/url {:server "http://localost"} "test" {:id [1]}))) 1))
+    (is (= (count (re-seq #"id=" (api/url {:server "http://localost"} "test" {:id (range 10)}))) 10)))
+  (testing "Should keep the non-lists"
+    (let [mixed (api/url {:server "http://localost"} "test" {:id (range 5) :foo "bar"})]
+      (is (some? (re-find #"u=user" (api/url {:server "http://localhost"} "test" {:u "user"}))))
+      (is (and (some? (re-find #"foo=bar" mixed))
+               (= (count (re-seq #"id=" mixed)) 5))))))
+
 (deftest stream-urls
   (testing "Should construct the url based on a song's id"
     (let [stream-url (api/stream-url {:server "http://localhost"} fixtures/song)]
