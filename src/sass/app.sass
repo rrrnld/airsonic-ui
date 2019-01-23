@@ -48,6 +48,7 @@
     // shows cover and current track
     align-items: center
     flex-grow: 1
+    flex-basis: 25%
     color: inherit
 
     .media-left
@@ -71,14 +72,17 @@
     +tablet
       display: flex
 
-    flex-grow: 3
+    flex-basis: 75%
     height: 1rem
 
     .progress-info-text
-      color: whitesmoke
+      color: $dark-invert
       font-size: $size-7
       flex-shrink: 0
       flex-grow: 0
+
+    svg
+      overflow: visible
 
     .progress-bars
       margin-left: .6rem
@@ -90,47 +94,27 @@
     .buffered-part-bar,
     .played-back-bar
       height: 1rem
-      position: absolute
-      top: 0
-      left: 0
-
-      // these are the actual bars
-      &:after
-        content: ''
-        display: block
-        height: 1px
-        position: relative
-        top: 50%
-
 
     .complete-song-bar
       width: 100%
 
-      &:after
-        background: rgb(93,93,93)
+      rect
+        fill: rgb(93,93,93)
 
     .buffered-part-bar
-      cursor: pointer
+      rect
+        fill: rgb(143,143,143)
 
-      &:after
-        background: rgb(143,143,143)
+      .click-dummy
+        cursor: pointer
+        fill: transparent
 
     .played-back-bar
       pointer-events: none
 
-      &:after
-        background: whitesmoke
-
-      .played-back-knob
-        position: absolute
-        width: 5px
-        height: 5px
-        left: 100%
-        top: 50%
-        margin-left: -2.5px
-        margin-top: -2.5px
-        background: whitesmoke
-        border-radius: 100%
+      circle,
+      rect
+        fill: $dark-invert
 
   // buttons to control current playback and playlist behavior
   .playback-controls,

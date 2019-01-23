@@ -17,6 +17,18 @@
 (defn- ratio->width [ratio]
   (str (.toFixed (min 100 (* 100 ratio)) 2) "%"))
 
+(defn progress-bars [buffered-width played-width]
+  [:svg.progress-bars {:aria-hidden "true"}
+   [:svg.complete-song-bar
+    [:rect {:x 0, :y "50%", :width "100%", :height 1}]]
+   [:svg.buffered-part-bar
+    [:rect.click-dummy {:on-click seek
+                        :x 0, :y 0, :width buffered-width, :height "100%"}]
+    [:rect {:x 0, :y "50%", :width buffered-width, :height 1}]]
+   [:svg.played-back-bar
+    [:rect {:x 0, :y "50%", :width played-width, :height 1}]
+    [:circle {:cx played-width, :cy "50%", :r 2.5}]]])
+
 (defn progress-indicators [song status]
   (let [current-time (:current-time status)
         buffered (:buffered status)
@@ -26,13 +38,8 @@
                            (h/format-duration duration :brief? true))
         buffered-width (ratio->width (/ buffered duration))
         played-width (ratio->width (/ current-time duration))]
-    [:article.progress-indicators {:aria-hidden "true"}
-     [:div.progress-bars
-      [:div.complete-song-bar]
-      [:div.buffered-part-bar {:style {:width buffered-width}
-                               :on-click seek}]
-      [:div.played-back-bar {:style {:width played-width}}
-       [:div.played-back-knob]]]
+    [:article.progress-indicators
+     [progress-bars buffered-width played-width]
      [:div.progress-info-text.duration-text progress-text]]))
 
 (defn playback-info [song status]
