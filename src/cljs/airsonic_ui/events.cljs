@@ -1,11 +1,11 @@
 (ns airsonic-ui.events
-  (:require [re-frame.core :as re-frame]
+  (:require [re-frame.core :as rf]
             [ajax.core :as ajax]
             [airsonic-ui.routes :as routes]
             [airsonic-ui.db :as db]
             [airsonic-ui.api.helpers :as api]))
 
-(re-frame/reg-fx
+(rf/reg-fx
  ;; a simple effect to keep println statements out of our event handlers
  :log
  (fn [params]
@@ -31,9 +31,9 @@
       (assoc effects :dispatch [:credentials/verify credentials])
       effects)))
 
-(re-frame/reg-event-fx
+(rf/reg-event-fx
  ::initialize-app
- [(re-frame/inject-cofx :store)]
+ [(rf/inject-cofx :store)]
  initialize-app)
 
 (defn verify-credentials
@@ -44,7 +44,7 @@
   (if (every? string? ((juxt :u :p :server) credentials))
     {:dispatch [:credentials/send-authentication-request credentials]}))
 
-(re-frame/reg-event-fx :credentials/verify verify-credentials)
+(rf/reg-event-fx :credentials/verify verify-credentials)
 
 ;; ---
 ;; auth logic
@@ -57,7 +57,7 @@
     {:db (assoc db :credentials credentials)
      :dispatch [:credentials/send-authentication-request credentials]}))
 
-(re-frame/reg-event-fx :credentials/user-login user-login)
+(rf/reg-event-fx :credentials/user-login user-login)
 
 (defn authentication-request
   "Tries to authenticate a user by requesting info about the given user, saving
@@ -69,7 +69,7 @@
                 :on-success [:credentials/authentication-response credentials]
                 :on-failure [:api/failed-response]}}) ; <- we don't need endpoint and params here because the response is not cached
 
-(re-frame/reg-event-fx :credentials/send-authentication-request authentication-request)
+(rf/reg-event-fx :credentials/send-authentication-request authentication-request)
 
 (defn authentication-response
   "Since we don't get real status codes, we have to look into the server's
@@ -79,7 +79,7 @@
                [:credentials/authentication-failure response]
                [:credentials/authentication-success credentials response])})
 
-(re-frame/reg-event-fx :credentials/authentication-response authentication-response)
+(rf/reg-event-fx :credentials/authentication-response authentication-response)
 
 (defn authentication-failure
   "Removes all stored credentials and displays potential api errors to the user"
@@ -88,7 +88,7 @@
    :store (dissoc store :credentials)
    :db (dissoc db :credentials)})
 
-(re-frame/reg-event-fx :credentials/authentication-failure authentication-failure)
+(rf/reg-event-fx :credentials/authentication-failure authentication-failure)
 
 (defn authentication-success
   "Gets called after the server indicates that the credentials entered by a user
@@ -99,7 +99,7 @@
            (assoc :user (api/unwrap-response auth-response)))
    :dispatch [::logged-in]})
 
-(re-frame/reg-event-fx :credentials/authentication-success authentication-success)
+(rf/reg-event-fx :credentials/authentication-success authentication-success)
 
 (defn logged-in
   [cofx _]
@@ -107,9 +107,9 @@
                      [::routes/library])]
     {:dispatch [:routes/do-navigation redirect]}))
 
-(re-frame/reg-event-fx
+(rf/reg-event-fx
  ::logged-in
- [(re-frame/inject-cofx :routes/from-query-param :redirect)]
+ [(rf/inject-cofx :routes/from-query-param :redirect)]
  logged-in)
 
 (defn logout
@@ -123,21 +123,21 @@
      :db db/default-db
      :audio/stop nil}))
 
-(re-frame/reg-event-fx ::logout logout)
+(rf/reg-event-fx ::logout logout)
 
 ;; ---
 ;; routing
 ;; ---
 
-(re-frame/reg-event-fx
+(rf/reg-event-fx
  :routes/did-navigate
  (fn [{:keys [db]} [_ route params query]]
    {:db (assoc db :routes/current-route [route params query])
     :dispatch-n (routes/route-events route params query)}))
 
-(re-frame/reg-event-fx
+(rf/reg-event-fx
  :routes/unauthorized
- [(re-frame/inject-cofx :routes/current-route)]
+ [(rf/inject-cofx :routes/current-route)]
  (fn [{:routes/keys [current-route]} _]
    {:dispatch [::logout :redirect-to current-route]}))
 
@@ -161,10 +161,10 @@
      :dispatch-later [{:ms (get notification-duration level)
                        :dispatch [:notification/hide id]}]}))
 
-(re-frame/reg-event-fx :notification/show show-notification)
+(rf/reg-event-fx :notification/show show-notification)
 
 (defn hide-notification
   [db [_ notification-id]]
   (update db :notifications dissoc notification-id))
 
-(re-frame/reg-event-db :notification/hide hide-notification)
+(rf/reg-event-db :notification/hide hide-notification)

@@ -1,7 +1,7 @@
 (ns airsonic-ui.routes
   (:require [bide.core :as r]
             [cljs.reader :refer [read-string]]
-            [re-frame.core :as re-frame]
+            [re-frame.core :as rf]
             [airsonic-ui.config :as conf]))
 
 (def default-route ::login)
@@ -96,15 +96,15 @@
 
 ;; subscription returning the matched route for the current hashbang
 
-(re-frame/reg-sub :routes/current-route (fn [db _] (:routes/current-route db)))
+(rf/reg-sub :routes/current-route (fn [db _] (:routes/current-route db)))
 
 ;; NOTE: There is some duplication here. The route events are provided as a
 ;; subscription but they are also invoked directly in events.cljs. It didn't
 ;; seem to justify pulling in a whole library and we need it in our top most view
 
-(re-frame/reg-sub
+(rf/reg-sub
  :routes/events-for-current-route
- (fn [db _] (re-frame/subscribe [:routes/current-route]))
+ (fn [db _] (rf/subscribe [:routes/current-route]))
  (fn [current-route _] (apply route-events current-route)))
 
 ;; these are helper effects we can use to navigate; the first two manage an atom
@@ -133,7 +133,7 @@
               (apply r/navigate! router route)
               (dissoc context :event)))))
 
-(re-frame/reg-event-fx :routes/do-navigation do-navigation (fn [& _] nil))
+(rf/reg-event-fx :routes/do-navigation do-navigation (fn [& _] nil))
 
 (defn can-access? [route]
   (or (not (protected-routes route))
@@ -143,8 +143,8 @@
   [route-id params query]
   #_(println "calling on-navigate with" route credentials')
   (if (can-access? route-id)
-    (re-frame/dispatch [:routes/did-navigate route-id params query])
-    (re-frame/dispatch [:routes/unauthorized route-id params query])))
+    (rf/dispatch [:routes/did-navigate route-id params query])
+    (rf/dispatch [:routes/unauthorized route-id params query])))
 
 (defn encode-route
   "Takes a parsed route and returns a representation that's suitable for
@@ -163,13 +163,13 @@
   (r/match router (subs (.. js/window -location -hash) 1)))
 
 ;; add the current route to our coeffect map
-(re-frame/reg-cofx
+(rf/reg-cofx
  :routes/current-route
  (fn [coeffects _]
    (assoc coeffects :routes/current-route (current-route))))
 
 ;; add route into from a URL parameter to our coeffect map
-(re-frame/reg-cofx
+(rf/reg-cofx
  :routes/from-query-param
  (fn [coeffects param]
    ;; this allows us to encode a complete route in a url fragment; useful for
@@ -184,5 +184,5 @@
                         :on-navigate on-navigate}))
   ([_] (start-routing!))) ;; <- 1-arity is for the re-frame effect exposed below
 
-(re-frame/reg-fx
+(rf/reg-fx
  :routes/start-routing start-routing!)

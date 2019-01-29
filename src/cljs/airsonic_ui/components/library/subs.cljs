@@ -1,5 +1,5 @@
 (ns airsonic-ui.components.library.subs
-  (:require [re-frame.core :as re-frame]
+  (:require [re-frame.core :as rf]
             [airsonic-ui.config :as conf]))
 
 ;; first some helper functions to make the structure a bit clearer
@@ -34,7 +34,7 @@
        (map (fn [[k v]] [(inc k) v]))
        (into (sorted-map))))
 
-(re-frame/reg-sub
+(rf/reg-sub
  :library/paginated
  :<- [:api/responses-for-endpoint "getAlbumList2"]
  paginated-library)

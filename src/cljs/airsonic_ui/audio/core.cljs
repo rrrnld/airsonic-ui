@@ -2,7 +2,7 @@
   "This namespace contains some JS interop code to interact with an audio player
   and receive information about the current playback status so we can use it in
   our re-frame app."
-  (:require [re-frame.core :as re-frame]
+  (:require [re-frame.core :as rf]
             [airsonic-ui.audio.playlist :as playlist]
             [goog.functions :refer [throttle]]))
 
@@ -29,13 +29,13 @@
 
 
 (defn attach-listeners! [el]
-  (let [emit-audio-update (throttle #(re-frame/dispatch [:audio/update (->status el)]) 16)]
+  (let [emit-audio-update (throttle #(rf/dispatch [:audio/update (->status el)]) 16)]
     (doseq [event ["loadstart" "progress" "play" "timeupdate" "pause"]]
       (.addEventListener el event emit-audio-update))))
 
 ;; effects to be fired from event handlers
 
-(re-frame/reg-fx
+(rf/reg-fx
  :audio/play
  (fn [stream-url]
    (when-not @audio
@@ -45,19 +45,19 @@
    (set! (.-src @audio) stream-url)
    (.play @audio)))
 
-(re-frame/reg-fx
+(rf/reg-fx
  :audio/pause
  (fn [_]
    (some-> @audio .pause)))
 
-(re-frame/reg-fx
+(rf/reg-fx
  :audio/stop
  (fn [_]
    (when-let [audio @audio]
      (.pause audio)
      (set! (.-currentTime audio) 0))))
 
-(re-frame/reg-fx
+(rf/reg-fx
  :audio/toggle-play-pause
  (fn [_]
    (if-let [a @audio]
@@ -65,7 +65,7 @@
        (.play a)
        (.pause a)))))
 
-(re-frame/reg-fx
+(rf/reg-fx
  :audio/seek
  (fn [[percentage duration]]
    (set! (. @audio -currentTime)
@@ -78,16 +78,16 @@
   [db _]
   (:audio db))
 
-(re-frame/reg-sub :audio/summary summary)
+(rf/reg-sub :audio/summary summary)
 
 (defn playlist
   "Lists the complete playlist"
   [summary _]
   (:playlist summary))
 
-(re-frame/reg-sub
+(rf/reg-sub
  :audio/playlist
- (fn [_ _] (re-frame/subscribe [:audio/summary]))
+ (fn [_ _] (rf/subscribe [:audio/summary]))
  playlist)
 
 (defn current-song
@@ -96,9 +96,9 @@
   [playlist _]
   (playlist/peek playlist))
 
-(re-frame/reg-sub
+(rf/reg-sub
  :audio/current-song
- (fn [_ _] (re-frame/subscribe [:audio/playlist]))
+ (fn [_ _] (rf/subscribe [:audio/playlist]))
  current-song)
 
 (defn playback-status
@@ -106,9 +106,9 @@
   [summary _]
   (:playback-status summary))
 
-(re-frame/reg-sub
+(rf/reg-sub
  :audio/playback-status
- (fn [_ _] (re-frame/subscribe [:audio/summary]))
+ (fn [_ _] (rf/subscribe [:audio/summary]))
  playback-status)
 
 (defn is-playing?
@@ -117,7 +117,7 @@
   (and (not (:paused? playback-status))
        (not (:ended? playback-status))))
 
-(re-frame/reg-sub
+(rf/reg-sub
  :audio/is-playing?
- (fn [_ _] (re-frame/subscribe [:audio/playback-status]))
+ (fn [_ _] (rf/subscribe [:audio/playback-status]))
  is-playing?)
