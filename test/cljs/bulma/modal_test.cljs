@@ -23,6 +23,14 @@
                      (ev/hide-modal [::ev/hide]))]
       (is (not (some? (sub/visible-modal new-db [::sub/visible-modal]))))))
   (testing "Should tell us about the visibility of a modal with a predicate"
-    (is (-> (ev/show-modal {} [::ev/show :getting-repetitive])
-            (sub/visible-modal [::sub/visible-modal])
-            (sub/visible? [::sub/visible? :getting-repetitive])))))
+    (is (true? (-> (ev/show-modal {} [::ev/show :getting-repetitive])
+                   (sub/visible-modal [::sub/visible-modal])
+                   (sub/visible? [::sub/visible? :getting-repetitive])))))
+  (testing "Modal toggling"
+    (is (true? (-> (ev/toggle-modal {} [::ev/toggle :some-generic-modal])
+                   (sub/visible-modal [::sub/visible-modal])
+                   (sub/visible? [::sub/visible? :some-generic-modal]))))
+    (is (not (true? (-> (ev/toggle-modal {} [::ev/toggle :some-generic-modal])
+                        (ev/toggle-modal [::ev/toggle :some-generic-modal])
+                        (sub/visible-modal [::sub/visible-modal])
+                        (sub/visible? [::sub/visible? :some-generic-modal])))))))
