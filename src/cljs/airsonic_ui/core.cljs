@@ -11,6 +11,7 @@
             [airsonic-ui.api.events]
             [airsonic-ui.api.subs]
             [airsonic-ui.components.audio-player.events]
+            [airsonic-ui.components.keyboard-shortcuts.events :as keyboard]
             [airsonic-ui.components.library.subs]
             [airsonic-ui.components.search.events]
             [airsonic-ui.components.search.subs]
@@ -28,8 +29,8 @@
   (reagent/render [views/main-panel] (.getElementById js/document "app")))
 
 (defn ^:export init []
-  (storage/reg-co-fx! :airsonic-ui {:fx :store
-                                    :cofx :store})
+  (storage/reg-co-fx! :airsonic-ui {:fx :store, :cofx :store})
   (rf/dispatch-sync [::events/initialize-app])
+  (rf/dispatch [::keyboard/init-shortcuts])
   (dev-setup)
   (mount-root))

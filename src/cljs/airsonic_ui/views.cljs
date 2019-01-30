@@ -19,6 +19,7 @@
             [airsonic-ui.components.bangpow.views :refer [not-found]]
             [airsonic-ui.components.collection.views :as collection]
             [airsonic-ui.components.current-queue.views :refer [current-queue]]
+            [airsonic-ui.components.keyboard-shortcuts.views :as keyboard]
             [airsonic-ui.components.library.views :as library]
             [airsonic-ui.components.podcast.views :as podcast]
             [airsonic-ui.components.search.views :as search]))
@@ -130,6 +131,7 @@
         [route-id :as route] @(subscribe [:routes/current-route])]
     [(add-classes :div route-id)
      [notification-list notifications]
+     [keyboard/help-modal]
      (if is-booting?
        [:div.app-loading>div.loader]
        [:div
