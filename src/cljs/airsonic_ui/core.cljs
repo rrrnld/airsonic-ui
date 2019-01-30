@@ -1,6 +1,6 @@
 (ns airsonic-ui.core
   (:require [reagent.core :as reagent]
-            [re-frame.core :as re-frame]
+            [re-frame.core :as rf]
             ;; 3rd party effects / coeffects
             [day8.re-frame.http-fx]
             [akiroz.re-frame.storage :as storage]
@@ -11,6 +11,7 @@
             [airsonic-ui.api.events]
             [airsonic-ui.api.subs]
             [airsonic-ui.components.audio-player.events]
+            [airsonic-ui.components.keyboard-shortcuts.events :as keyboard]
             [airsonic-ui.components.library.subs]
             [airsonic-ui.components.search.events]
             [airsonic-ui.components.search.subs]
@@ -24,12 +25,12 @@
     (println "dev mode")))
 
 (defn mount-root []
-  (re-frame/clear-subscription-cache!)
+  (rf/clear-subscription-cache!)
   (reagent/render [views/main-panel] (.getElementById js/document "app")))
 
 (defn ^:export init []
-  (storage/reg-co-fx! :airsonic-ui {:fx :store
-                                    :cofx :store})
-  (re-frame/dispatch-sync [::events/initialize-app])
+  (storage/reg-co-fx! :airsonic-ui {:fx :store, :cofx :store})
+  (rf/dispatch-sync [::events/initialize-app])
+  (rf/dispatch [::keyboard/init-shortcuts])
   (dev-setup)
   (mount-root))
