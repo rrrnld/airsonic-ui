@@ -23,7 +23,8 @@
    :current-src (.-currentSrc elem)
    :current-time (.-currentTime elem)
    :seekable (normalize-time-ranges (.-seekable elem))
-   :buffered (normalize-time-ranges (.-buffered elem))})
+   :buffered (normalize-time-ranges (.-buffered elem))
+   :volume (.-volume elem)})
 
  ; explanation of these events: https://developer.mozilla.org/en-US/Apps/Fundamentals/Audio_and_video_delivery/Cross-browser_audio_basics
 
@@ -70,6 +71,11 @@
  (fn [[percentage duration]]
    (set! (. @audio -currentTime)
          (* percentage duration))))
+
+(rf/reg-fx
+ :audio/set-volume
+ (fn [percentage]
+   (set! (. @audio -volume) percentage)))
 
 ;; subscriptions
 

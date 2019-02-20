@@ -122,13 +122,54 @@
         fill: $dark-invert
 
   // buttons to control current playback and playlist behavior
-  .playback-controls,
-  .playback-mode-controls
+  .button-controls
+    position: relative
     flex-shrink: 0
     padding-right: .6rem
 
-  .playback-controls
-    padding-left: .6rem
+    &:first-of-type
+      padding-left: .6rem
+
+  .button-menu
+    svg.volume-bar
+      overflow: visible
+
+      .inactive
+        fill: $background
+
+      .active
+        fill: $link
+
+      .click-dummy
+        cursor: pointer
+        fill: transparent
+
+.button-menu
+  position: absolute
+  z-index: 100
+  width: 36px
+  bottom: calc(100% + .3em)
+  padding: $button-padding-horizontal $button-padding-horizontal / 2
+
+  border-radius: $radius
+  background: $white
+  color: $dark
+  box-shadow: 0 0 2px rgba(0,0,0,.1), 0 0 4px rgba(0,0,0,.1)
+
+  // little arrow at the bottom
+  &::after
+    position: absolute
+    content: ''
+    display: block
+    width: 6px
+    height: 6px
+    background: inherit
+    top: 100%
+    left: 50%
+    margin-left: -3px
+    margin-top: -3px
+    transform: rotate(45deg)
+    box-shadow: 2px 2px 1px rgba(0,0,0,.1)
 
 // preview card for album or artist listings
 .preview-card

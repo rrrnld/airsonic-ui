@@ -53,7 +53,7 @@
      [:span.song-title (:title song)]]]])
 
 (defn playback-controls [is-playing?]
-  [:div.playback-controls
+  [:div.button-controls.playback-controls
    [:div.field.has-addons
     (let [buttons [[:media-step-backward :audio-player/previous-song]
                    [(if is-playing? :media-pause :media-play) :audio-player/toggle-play-pause]
@@ -78,19 +78,46 @@
                        (second))]
     (h/muted-dispatch [:audio-player/set-repeat-mode next-mode])))
 
+(defn set-volume [ev]
+  (let [y-ratio (/ (.. ev -nativeEvent -offsetY)
+                   (.. ev -target getBoundingClientRect -height))]
+    (dispatch [:audio-player/set-volume (- 1 y-ratio)])))
+
+(defn volume-controls [playback-status]
+  (let [y-pos (* (- 1 (:volume playback-status)) 100)]
+    [:div.button-controls.volume-controls
+     [:div.button-menu
+      [:svg.volume-bar {:width "100%", :height "100%"}
+       ;; the translate(...) makes the 1px rects look smoother
+       [:g {:transform "translate(-0.5,0)"}
+        ;; background line
+        [:rect.inactive {:x "50%", :y 0, :width 1, :height "100%"}]
+        ;; below are the line and circle that show the current volume
+        [:rect.active {:x "50%", :y (str y-pos "%"),
+                       :width 1, :height (str (- 100 y-pos) "%")}]]
+       [:circle.active {:cx "50%", :cy (str y-pos "%"), :r 3}]
+       [:rect.click-dummy {:x 0, :y 0, :width "100%", :height "100%"
+                           :on-mouse-down set-volume
+                           :on-mouse-up set-volume
+                           ;; fire the on-mouse-move only when left mouse button is pressed
+                           :on-mouse-move #(when (= 1 (.-buttons %))
+                                             (set-volume %))}]]]
+     [:p.control>button.button.is-light
+      [icon :volume-high]]]))
+
 (defn playback-mode-controls [playlist]
   (let [{:keys [repeat-mode playback-mode]} playlist
         button :p.control>button.button.is-light
         shuffle-button (h/add-classes button (when (= playback-mode :shuffled) :is-primary))
         repeat-button (h/add-classes button (case repeat-mode
-                                            :repeat-single :is-info
-                                            :repeat-all :is-primary
-                                            nil))
+                                              :repeat-single :is-info
+                                              :repeat-all :is-primary
+                                              nil))
         repeat-title (case repeat-mode
                        :repeat-all "Repeating current queue, click to repeat current track"
                        :repeat-single "Repeating current track, click to repeat none"
                        "Click to repeat current queue")]
-    [:div.playback-mode-controls
+    [:div.button-controls.playback-mode-controls
      [:div.button-group>div.field.has-addons
       ^{:key :shuffle-button} [shuffle-button {:on-click (toggle-shuffle playback-mode)
                                                :title "Shuffle"} [icon :random]]
@@ -109,6 +136,7 @@
         [playback-info current-song playback-status]
         [progress-indicators current-song playback-status]
         [playback-controls is-playing?]
+        [volume-controls playback-status]
         [playback-mode-controls playlist]]
        ;; not playing anything
        [:p.navbar-item.idle-notification "No audio playing"])]))

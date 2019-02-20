@@ -67,3 +67,9 @@
  (fn [{:keys [db]} [_ percentage]]
    (let [duration (:duration (playlist/peek (get-in db [:audio :playlist])))]
      {:audio/seek [percentage duration]})))
+
+(rf/reg-event-fx
+ :audio-player/set-volume
+ (fn [{:keys [db]} [_ percentage]]
+   {:db (assoc-in db [:audio :playback-status :volume] percentage)
+    :audio/set-volume percentage}))
