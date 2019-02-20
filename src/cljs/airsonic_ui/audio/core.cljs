@@ -93,7 +93,7 @@
 
 (rf/reg-sub
  :audio/playlist
- (fn [_ _] (rf/subscribe [:audio/summary]))
+ :<- [:audio/summary]
  playlist)
 
 (defn current-song
@@ -104,7 +104,7 @@
 
 (rf/reg-sub
  :audio/current-song
- (fn [_ _] (rf/subscribe [:audio/playlist]))
+ :<- [:audio/playlist]
  current-song)
 
 (defn playback-status
@@ -114,7 +114,7 @@
 
 (rf/reg-sub
  :audio/playback-status
- (fn [_ _] (rf/subscribe [:audio/summary]))
+ :<- [:audio/summary]
  playback-status)
 
 (defn is-playing?
@@ -125,5 +125,5 @@
 
 (rf/reg-sub
  :audio/is-playing?
- (fn [_ _] (rf/subscribe [:audio/playback-status]))
+ :<- [:audio/playback-status]
  is-playing?)

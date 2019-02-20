@@ -104,15 +104,23 @@
                          :on-mouse-move #(when (= 1 (.-buttons %))
                                            (set-volume %))}]]))
 
+(def toggle-volume-slider #(swap! volume-slider-visible? not))
+(def hide-volume-slider #(reset! volume-slider-visible? false))
+
 (defn volume-controls [playback-status]
-  [:div.button-controls.volume-controls
-   (when @volume-slider-visible?
-     [:div.button-menu
-      [:div.button-menu-closer {:on-click #(reset! volume-slider-visible? false)}]
-      [volume-slider (:volume playback-status)]])
-   [:p.control>button.button.is-light
-    {:on-click #(swap! volume-slider-visible? not)}
-    [icon :volume-high]]])
+  (let [volume (:volume playback-status)
+        volume-icon (cond
+                      (> volume 0.66) :volume-high
+                      (> volume 0.1)  :volume-low
+                      :else           :volume-off)]
+    [:div.button-controls.volume-controls
+     (when @volume-slider-visible?
+       [:div.button-menu
+        [:div.button-menu-closer {:on-click hide-volume-slider}]
+        [volume-slider volume]])
+     [:p.control>button.button.is-light
+      {:on-click toggle-volume-slider}
+      [icon volume-icon]]]))
 
 (defn playback-mode-controls [playlist]
   (let [{:keys [repeat-mode playback-mode]} playlist
