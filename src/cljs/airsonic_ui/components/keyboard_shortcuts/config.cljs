@@ -14,6 +14,12 @@
    ["→" "Next song"
     [:audio-player/next-song]
     [{:keyCode 39}]]
+   ["+" "Increase volume"
+    [:audio-player/increase-volume]
+    [{:keyCode 171}]]
+   ["-" "Decrease volume"
+    [:audio-player/decrease-volume]
+    [{:keyCode 173}]]
    ["?" "Show / hide keyboard shortcut help"
     [:bulma.modal.events/toggle :keyboard-shortcuts-help]
     [{:keyCode 63}]]])

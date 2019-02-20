@@ -31,7 +31,7 @@
 
 (defn attach-listeners! [el]
   (let [emit-audio-update (throttle #(rf/dispatch [:audio/update (->status el)]) 16)]
-    (doseq [event ["loadstart" "progress" "play" "timeupdate" "pause"]]
+    (doseq [event ["loadstart" "progress" "play" "timeupdate" "pause" "volumechange"]]
       (.addEventListener el event emit-audio-update))))
 
 ;; effects to be fired from event handlers
@@ -72,10 +72,26 @@
    (set! (. @audio -currentTime)
          (* percentage duration))))
 
+(defn- set-volume! [volume]
+  (set! (.-volume @audio) volume))
+
 (rf/reg-fx
  :audio/set-volume
  (fn [percentage]
-   (set! (. @audio -volume) percentage)))
+   (when @audio
+     (set-volume! percentage))))
+
+(rf/reg-fx
+ :audio/increase-volume
+ (fn [_]
+   (when-let [vol (some-> @audio .-volume)]
+     (set-volume! (min 1 (+ vol 0.05))))))
+
+(rf/reg-fx
+ :audio/decrease-volume
+ (fn [_]
+   (when-let [vol (some-> @audio .-volume)]
+     (set-volume! (max 0 (- vol 0.05))))))
 
 ;; subscriptions
 

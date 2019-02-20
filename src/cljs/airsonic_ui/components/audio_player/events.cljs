@@ -70,6 +70,15 @@
 
 (rf/reg-event-fx
  :audio-player/set-volume
- (fn [{:keys [db]} [_ percentage]]
-   {:db (assoc-in db [:audio :playback-status :volume] percentage)
-    :audio/set-volume percentage}))
+ (fn [_ [_ percentage]]
+   {:audio/set-volume percentage}))
+
+(rf/reg-event-fx
+ :audio-player/increase-volume
+ (fn [_ _]
+   {:audio/increase-volume nil}))
+
+(rf/reg-event-fx
+ :audio-player/decrease-volume
+ (fn [_ _]
+   {:audio/decrease-volume nil}))
