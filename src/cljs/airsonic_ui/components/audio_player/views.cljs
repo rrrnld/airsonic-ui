@@ -1,5 +1,6 @@
 (ns airsonic-ui.components.audio-player.views
   (:require [re-frame.core :refer [subscribe dispatch]]
+            [reagent.core :as r]
             [airsonic-ui.routes :as routes]
             [airsonic-ui.helpers :as h]
             [airsonic-ui.views.cover :refer [cover]]
@@ -83,27 +84,35 @@
                    (.. ev -target getBoundingClientRect -height))]
     (dispatch [:audio-player/set-volume (- 1 y-ratio)])))
 
+(defonce volume-slider-visible? (r/atom false))
+
+(defn volume-slider [volume]
+  (let [y-pos (* (- 1 volume) 100)]
+    [:svg.volume-bar {:width "100%", :height "100%"}
+     ;; the translate(...) makes the 1px rects look smoother
+     [:g {:transform "translate(-0.5,0)"}
+      ;; background line
+      [:rect.inactive {:x "50%", :y 0, :width 1, :height "100%"}]
+      ;; below are the line and circle that show the current volume
+      [:rect.active {:x "50%", :y (str y-pos "%"),
+                     :width 1, :height (str (- 100 y-pos) "%")}]]
+     [:circle.active {:cx "50%", :cy (str y-pos "%"), :r 3}]
+     [:rect.click-dummy {:x 0, :y 0, :width "100%", :height "100%"
+                         :on-mouse-down set-volume
+                         :on-mouse-up set-volume
+                         ;; fire the on-mouse-move only when left mouse button is pressed
+                         :on-mouse-move #(when (= 1 (.-buttons %))
+                                           (set-volume %))}]]))
+
 (defn volume-controls [playback-status]
-  (let [y-pos (* (- 1 (:volume playback-status)) 100)]
-    [:div.button-controls.volume-controls
+  [:div.button-controls.volume-controls
+   (when @volume-slider-visible?
      [:div.button-menu
-      [:svg.volume-bar {:width "100%", :height "100%"}
-       ;; the translate(...) makes the 1px rects look smoother
-       [:g {:transform "translate(-0.5,0)"}
-        ;; background line
-        [:rect.inactive {:x "50%", :y 0, :width 1, :height "100%"}]
-        ;; below are the line and circle that show the current volume
-        [:rect.active {:x "50%", :y (str y-pos "%"),
-                       :width 1, :height (str (- 100 y-pos) "%")}]]
-       [:circle.active {:cx "50%", :cy (str y-pos "%"), :r 3}]
-       [:rect.click-dummy {:x 0, :y 0, :width "100%", :height "100%"
-                           :on-mouse-down set-volume
-                           :on-mouse-up set-volume
-                           ;; fire the on-mouse-move only when left mouse button is pressed
-                           :on-mouse-move #(when (= 1 (.-buttons %))
-                                             (set-volume %))}]]]
-     [:p.control>button.button.is-light
-      [icon :volume-high]]]))
+      [:div.button-menu-closer {:on-click #(reset! volume-slider-visible? false)}]
+      [volume-slider (:volume playback-status)]])
+   [:p.control>button.button.is-light
+    {:on-click #(swap! volume-slider-visible? not)}
+    [icon :volume-high]]])
 
 (defn playback-mode-controls [playlist]
   (let [{:keys [repeat-mode playback-mode]} playlist
