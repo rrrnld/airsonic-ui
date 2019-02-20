@@ -1,7 +1,6 @@
 (ns airsonic-ui.views.breadcrumbs
   (:require [re-frame.core :refer [subscribe]]
-            [airsonic-ui.routes :as routes :refer [url-for]]
-            [airsonic-ui.views.loading-spinner :refer [loading-spinner]]))
+            [airsonic-ui.routes :as routes :refer [url-for]]))
 
 ;; Breadcrumbs are implemented in such a way that they provide a stringent
 ;; hierarchy no matter how you came to the url. They should allow easy
@@ -15,7 +14,7 @@
        (for [[idx [href label]] (map-indexed vector (butlast items))]
          [:li {:key idx} [:a {:href href} label]])
        [:li.is-active>a (last items)
-        (when content-pending? [loading-spinner])]]]]))
+        (when content-pending? [:span.loader])]]]]))
 
 (defmulti breadcrumbs
   (fn dispatch-on [[route-id] content] route-id))

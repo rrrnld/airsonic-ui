@@ -17,6 +17,11 @@
   .loader
     +loader
 
+// small loading indicator at top of content
+.breadcrumb
+  .loader
+    margin-left: .5em
+
 // bottom bar
 .has-navbar-fixed-bottom
   padding-bottom: 64px
@@ -189,7 +194,6 @@
   .media-content
     align-self: center
 
-
 // floating notifications
 .notifications:not(:empty)
   @extend .container
@@ -198,21 +202,6 @@
   left: 0
   right: 0
   padding-top: 3.2rem
-
-// loading indicator
-@keyframes you-spin-my-head-right-round
-  from
-    transform: rotate(0deg)
-    transform-origin: 50% 46%
-
-  to
-    transform: rotate(359deg)
-    transform-origin: 50% 46%
-
-.loading-spinner
-  .icon
-    animation: 1s infinite you-spin-my-head-right-round
-
 
 // route specific styling
 .search
