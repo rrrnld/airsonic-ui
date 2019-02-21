@@ -80,9 +80,10 @@
     (h/muted-dispatch [:audio-player/set-repeat-mode next-mode])))
 
 (defn set-volume [ev]
-  (let [y-ratio (/ (.. ev -nativeEvent -offsetY)
-                   (.. ev -target getBoundingClientRect -height))]
-    (dispatch [:audio-player/set-volume (- 1 y-ratio)])))
+  (when (= 1 (.-buttons ev)) ;; only on left-click
+    (let [y-ratio (/ (.. ev -nativeEvent -offsetY)
+                     (.. ev -target getBoundingClientRect -height))]
+      (dispatch [:audio-player/set-volume (- 1 y-ratio)]))))
 
 (defonce volume-slider-visible? (r/atom false))
 
@@ -100,9 +101,7 @@
      [:rect.click-dummy {:x 0, :y 0, :width "100%", :height "100%"
                          :on-mouse-down set-volume
                          :on-mouse-up set-volume
-                         ;; fire the on-mouse-move only when left mouse button is pressed
-                         :on-mouse-move #(when (= 1 (.-buttons %))
-                                           (set-volume %))}]]))
+                         :on-mouse-move set-volume}]]))
 
 (def toggle-volume-slider #(swap! volume-slider-visible? not))
 (def hide-volume-slider #(reset! volume-slider-visible? false))
