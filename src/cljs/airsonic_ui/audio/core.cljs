@@ -102,15 +102,15 @@
 
 (rf/reg-sub :audio/summary summary)
 
-(defn playlist
-  "Lists the complete playlist"
+(defn current-queue
+  "Lists the complete current-queue"
   [summary _]
-  (:playlist summary))
+  (:current-queue summary))
 
 (rf/reg-sub
- :audio/playlist
+ :audio/current-queue
  :<- [:audio/summary]
- playlist)
+ current-queue)
 
 (defn current-song
   "Gives us information about the currently played song as presented by
@@ -120,7 +120,7 @@
 
 (rf/reg-sub
  :audio/current-song
- :<- [:audio/playlist]
+ :<- [:audio/current-queue]
  current-song)
 
 (defn playback-status

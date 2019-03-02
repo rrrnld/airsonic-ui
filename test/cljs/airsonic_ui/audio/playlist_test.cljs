@@ -56,7 +56,7 @@
             linear (playlist/->playlist queue :playback-mode :linear :repeat-mode :repeat-none)
             shuffled (playlist/set-playback-mode linear :shuffled)]
         (testing "should re-order the tracks"
-          (is (not= (map :playlist/order (:queue shuffled)) (map :playlist/order (:queue linear)))))
+          (is (not= (map :playlist/order (:items shuffled)) (map :playlist/order (:items linear)))))
         (testing "should not change the currently playing track"
           (is (same-song? (playlist/peek linear) (playlist/peek shuffled))))
         (testing "should not change the repeat mode"
@@ -66,8 +66,8 @@
             shuffled (playlist/->playlist queue :playback-mode :shuffled :repeat-mode :repeat-none)
             linear (playlist/set-playback-mode shuffled :linear)]
         (testing "should set the correct order for tracks"
-          (is (every? #(apply same-song? %) (interleave queue (:queue linear))))
-          (is (< (:playlist/order (first (:queue linear))) (:playlist/order (last (:queue linear))))))
+          (is (every? #(apply same-song? %) (interleave queue (:items linear))))
+          (is (< (:playlist/order (first (:items linear))) (:playlist/order (last (:items linear))))))
         (testing "should not change the currently playing track"
           (is (same-song? (playlist/peek linear) (playlist/peek shuffled))))
         (testing "should not change the repeat mode"
@@ -124,9 +124,9 @@
             (str repeat-mode)))))
   (testing "Should re-shuffle the playlist when wrapping around and repeat-mode is all"
     (let [playlist (playlist/->playlist (song-queue 100) :playback-mode :shuffled :repeat-mode :repeat-all)
-          [last-idx _] (find-where #(= (:playlist/order %) 99) (:queue playlist))]
-      (is (not= (map :playlist/order (:queue playlist))
-                (map :playlist/order (:queue (-> (playlist/set-current-song playlist last-idx)
+          [last-idx _] (find-where #(= (:playlist/order %) 99) (:items playlist))]
+      (is (not= (map :playlist/order (:items playlist))
+                (map :playlist/order (:items (-> (playlist/set-current-song playlist last-idx)
                                         (playlist/next-song))))))))
   (testing "Should always give the same track when repeat-mode is single"
     (let [queue (song-queue 3)
@@ -202,7 +202,7 @@
                        (playlist/->playlist (song-queue 10) :playback-mode :shuffled :repeat-mode :repeat-all))
             playlist' (with-redefs [shuffle reverse]
                         (playlist/previous-song playlist))]
-        (is (not= (map :playlist/order (:queue playlist)) (map :playlist/order (:queue playlist'))))))))
+        (is (not= (map :playlist/order (:items playlist)) (map :playlist/order (:items playlist'))))))))
 
 (deftest set-current-song
   (testing "Should correctly set the new song"

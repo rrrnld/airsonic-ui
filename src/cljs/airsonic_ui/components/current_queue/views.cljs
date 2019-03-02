@@ -8,7 +8,9 @@
   [:section.section>div.container
    [:h1.title "Current Queue"]
    [sortable/sortable-component]
-   (if-let [playlist @(subscribe [:audio/playlist])]
-     [song/listing (:queue playlist)]
-     [:p "You are currently not playing anything. Use the search or go to your "
-      [:a {:href (r/url-for ::r/library)} "Library"] " to start playing some music."])])
+   (let [current-queue @(subscribe [:audio/current-queue])
+         #_#_ current-song @(subscribe [:audio/current-song])]
+     (if (some? current-queue)
+       [song/listing (:items current-queue)]
+       [:p "You are currently not playing anything. Use the search or go to your "
+        [:a {:href (r/url-for ::r/library)} "Library"] " to start playing some music."]))])

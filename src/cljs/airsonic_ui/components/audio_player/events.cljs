@@ -10,43 +10,43 @@
    (let [playlist (-> (playlist/->playlist songs :playback-mode :linear :repeat-mode :repeat-all)
                       (playlist/set-current-song start-idx))]
      {:audio/play (api/stream-url (:credentials db) (playlist/peek playlist))
-      :db (assoc-in db [:audio :playlist] playlist)})))
+      :db (assoc-in db [:audio :current-queue] playlist)})))
 
 (rf/reg-event-db
  :audio-player/set-playback-mode
  (fn [db [_ playback-mode]]
-   (update-in db [:audio :playlist] #(playlist/set-playback-mode % playback-mode))))
+   (update-in db [:audio :current-queue] #(playlist/set-playback-mode % playback-mode))))
 
 (rf/reg-event-db
  :audio-player/set-repeat-mode
  (fn [db [_ repeat-mode]]
-   (update-in db [:audio :playlist] #(playlist/set-repeat-mode % repeat-mode))))
+   (update-in db [:audio :current-queue] #(playlist/set-repeat-mode % repeat-mode))))
 
 (rf/reg-event-fx
  :audio-player/next-song
  (fn [{:keys [db]} _]
-   (let [db (update-in db [:audio :playlist] playlist/next-song)
-         next (playlist/peek (get-in db [:audio :playlist]))]
+   (let [db (update-in db [:audio :current-queue] playlist/next-song)
+         next (playlist/peek (get-in db [:audio :current-queue]))]
      {:db db
       :audio/play (api/stream-url (:credentials db) next)})))
 
 (rf/reg-event-fx
  :audio-player/previous-song
  (fn [{:keys [db]} _]
-   (let [db (update-in db [:audio :playlist] playlist/previous-song)
-         prev (playlist/peek (get-in db [:audio :playlist]))]
+   (let [db (update-in db [:audio :current-queue] playlist/previous-song)
+         prev (playlist/peek (get-in db [:audio :current-queue]))]
      {:db db
       :audio/play (api/stream-url (:credentials db) prev)})))
 
 (rf/reg-event-db
  :audio-player/enqueue-next
  (fn [db [_ song]]
-   (update-in db [:audio :playlist] #(playlist/enqueue-next % song))))
+   (update-in db [:audio :current-queue] #(playlist/enqueue-next % song))))
 
 (rf/reg-event-db
  :audio-player/enqueue-last
  (fn [db [_ song]]
-   (update-in db [:audio :playlist] #(playlist/enqueue-last % song))))
+   (update-in db [:audio :current-queue] #(playlist/enqueue-last % song))))
 
 (rf/reg-event-fx
  :audio-player/toggle-play-pause
@@ -65,7 +65,7 @@
 (rf/reg-event-fx
  :audio-player/seek
  (fn [{:keys [db]} [_ percentage]]
-   (let [duration (:duration (playlist/peek (get-in db [:audio :playlist])))]
+   (let [duration (:duration (playlist/peek (get-in db [:audio :current-queue])))]
      {:audio/seek [percentage duration]})))
 
 (rf/reg-event-fx

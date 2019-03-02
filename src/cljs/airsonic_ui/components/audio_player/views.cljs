@@ -142,7 +142,7 @@
 
 (defn audio-player []
   (let [current-song @(subscribe [:audio/current-song])
-        playlist @(subscribe [:audio/playlist])
+        current-queue @(subscribe [:audio/current-queue])
         playback-status @(subscribe [:audio/playback-status])
         is-playing? @(subscribe [:audio/is-playing?])]
     [:nav.audio-player
@@ -153,6 +153,6 @@
         [progress-indicators current-song playback-status]
         [playback-controls is-playing?]
         [volume-controls playback-status]
-        [playback-mode-controls playlist]]
+        [playback-mode-controls current-queue]]
        ;; not playing anything
        [:p.navbar-item.idle-notification "No audio playing"])]))
