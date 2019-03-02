@@ -23,14 +23,15 @@
    :current-src (.-currentSrc elem)
    :current-time (.-currentTime elem)
    :seekable (normalize-time-ranges (.-seekable elem))
-   :buffered (normalize-time-ranges (.-buffered elem))})
+   :buffered (normalize-time-ranges (.-buffered elem))
+   :volume (.-volume elem)})
 
  ; explanation of these events: https://developer.mozilla.org/en-US/Apps/Fundamentals/Audio_and_video_delivery/Cross-browser_audio_basics
 
 
 (defn attach-listeners! [el]
   (let [emit-audio-update (throttle #(rf/dispatch [:audio/update (->status el)]) 16)]
-    (doseq [event ["loadstart" "progress" "play" "timeupdate" "pause"]]
+    (doseq [event ["loadstart" "progress" "play" "timeupdate" "pause" "volumechange"]]
       (.addEventListener el event emit-audio-update))))
 
 ;; effects to be fired from event handlers
@@ -71,6 +72,27 @@
    (set! (. @audio -currentTime)
          (* percentage duration))))
 
+(defn- set-volume! [volume]
+  (set! (.-volume @audio) volume))
+
+(rf/reg-fx
+ :audio/set-volume
+ (fn [percentage]
+   (when @audio
+     (set-volume! percentage))))
+
+(rf/reg-fx
+ :audio/increase-volume
+ (fn [_]
+   (when-let [vol (some-> @audio .-volume)]
+     (set-volume! (min 1 (+ vol 0.05))))))
+
+(rf/reg-fx
+ :audio/decrease-volume
+ (fn [_]
+   (when-let [vol (some-> @audio .-volume)]
+     (set-volume! (max 0 (- vol 0.05))))))
+
 ;; subscriptions
 
 (defn summary
@@ -87,7 +109,7 @@
 
 (rf/reg-sub
  :audio/playlist
- (fn [_ _] (rf/subscribe [:audio/summary]))
+ :<- [:audio/summary]
  playlist)
 
 (defn current-song
@@ -98,7 +120,7 @@
 
 (rf/reg-sub
  :audio/current-song
- (fn [_ _] (rf/subscribe [:audio/playlist]))
+ :<- [:audio/playlist]
  current-song)
 
 (defn playback-status
@@ -108,7 +130,7 @@
 
 (rf/reg-sub
  :audio/playback-status
- (fn [_ _] (rf/subscribe [:audio/summary]))
+ :<- [:audio/summary]
  playback-status)
 
 (defn is-playing?
@@ -119,5 +141,5 @@
 
 (rf/reg-sub
  :audio/is-playing?
- (fn [_ _] (rf/subscribe [:audio/playback-status]))
+ :<- [:audio/playback-status]
  is-playing?)
