@@ -30,11 +30,12 @@
     "create-react-class": "^15.6.3",
     "open-iconic": "^1.1.1",
     "react": "^16.8.1",
-    "react-dom": "^16.8.1"
+    "react-dom": "^16.8.1",
+    "react-sortable-hoc": "^1.6.1"
   },
   "devDependencies": {
     "gh-pages": "^1.2.0",
-    "karma": "^3.1.4",
+    "karma": "^4.0.1",
     "karma-chrome-launcher": "^2.2.0",
     "karma-cljs-test": "^0.1.0",
     "karma-notify-reporter": "^1.1.0",
