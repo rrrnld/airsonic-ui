@@ -2,17 +2,6 @@
   (:require [cljs.test :refer [deftest testing is]]
             [airsonic-ui.helpers :as helpers]))
 
-(deftest find-where
-  (testing "Finds the correct item and index"
-    (is (= [0 1] (helpers/find-where (partial = 1) (range 1 10))))
-    (is (= [2 {:foo true, :bar false}] (helpers/find-where :foo '({}
-                                                                  {:foo false
-                                                                   :bar true}
-                                                                  {:foo true
-                                                                   :bar false})))))
-  (testing "Returns nil when nothing is found"
-    (is (nil? (helpers/find-where (partial = 2) (range 2))))))
-
 (deftest add-classes
   (testing "Should add classes to a simple hiccup keyword"
     (is (= :div.foo (helpers/add-classes :div :foo)))
@@ -43,9 +32,3 @@
     (is (= "59:00" (helpers/format-duration (* 59 60) :brief? true)))
     (is (= "01:00" (helpers/format-duration 60 :brief? true)))
     (is (= "00:05" (helpers/format-duration 5 :brief? true)))))
-
-(deftest vector-move
-  (testing "Should correctly move items in a vector"
-    (is (= [1] (helpers/vector-move [1] 0 0)))
-    (is (= [2 1] (helpers/vector-move [1 2] 0 1) (helpers/vector-move [1 2] 1 0)))
-    (is (= [1 4 2 3 5] (helpers/vector-move [1 2 3 4 5] 3 1)))))

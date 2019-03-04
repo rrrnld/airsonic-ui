@@ -9,7 +9,7 @@
  (fn [{:keys [db]} [_ songs start-idx]]
    (let [playlist (-> (playlist/->playlist songs :playback-mode :linear :repeat-mode :repeat-all)
                       (playlist/set-current-song start-idx))]
-     {:audio/play (api/stream-url (:credentials db) (playlist/peek playlist))
+     {:audio/play (api/stream-url (:credentials db) (playlist/current-song playlist))
       :db (assoc-in db [:audio :current-queue] playlist)})))
 
 (rf/reg-event-db
@@ -26,7 +26,7 @@
  :audio-player/next-song
  (fn [{:keys [db]} _]
    (let [db (update-in db [:audio :current-queue] playlist/next-song)
-         next (playlist/peek (get-in db [:audio :current-queue]))]
+         next (playlist/current-song (get-in db [:audio :current-queue]))]
      {:db db
       :audio/play (api/stream-url (:credentials db) next)})))
 
@@ -34,7 +34,7 @@
  :audio-player/previous-song
  (fn [{:keys [db]} _]
    (let [db (update-in db [:audio :current-queue] playlist/previous-song)
-         prev (playlist/peek (get-in db [:audio :current-queue]))]
+         prev (playlist/current-song (get-in db [:audio :current-queue]))]
      {:db db
       :audio/play (api/stream-url (:credentials db) prev)})))
 
@@ -65,7 +65,7 @@
 (rf/reg-event-fx
  :audio-player/seek
  (fn [{:keys [db]} [_ percentage]]
-   (let [duration (:duration (playlist/peek (get-in db [:audio :current-queue])))]
+   (let [duration (:duration (playlist/current-song (get-in db [:audio :current-queue])))]
      {:audio/seek [percentage duration]})))
 
 (rf/reg-event-fx

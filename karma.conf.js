@@ -1,6 +1,7 @@
 module.exports = function (config) {
   const configuration = {
     browsers: ['ChromeHeadless'],
+    autoWatchBatchDelay: 1000,
     // The directory where the output file lives
     basePath: 'public/test',
     // The file itself

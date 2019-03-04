@@ -1,17 +1,20 @@
 (ns airsonic-ui.audio.core-test
   (:require [airsonic-ui.audio.core :as audio]
-            [airsonic-ui.audio.playlist-test :as p]
-            [airsonic-ui.fixtures :as fixtures]
+            #_[airsonic-ui.audio.playlist-test :as p]
+            #_[airsonic-ui.fixtures :as fixtures]
             [cljs.test :refer [deftest testing is]]))
 
 (enable-console-print!)
 
 (deftest current-song-subscription
-  (letfn [(current-song [db]
+  ;; NOTE: Should the subscription be moved to the playlist.cljs?
+  #_(testing "Should provide information about the song"
+    (letfn [(current-song [db]
             (-> (audio/summary db [:audio/summary])
                 (audio/current-song [:audio/current-song])))]
-    (testing "Should provide information about the song"
-      (= fixtures/song (current-song p/fixture)))))
+      (= fixtures/song (current-song p/fixture))))
+  (testing "Should work fine when no song is playing"
+    (is (nil? (audio/current-song nil [:audio/current-song])))))
 
 (deftest playback-status-subscription
   (letfn [(is-playing? [playback-status]
