@@ -11,11 +11,11 @@
   [funcool/bide "1.6.0"]
   [fipp "0.6.14"]
   ;; debugging
-  [day8.re-frame/re-frame-10x "0.3.3-react16"]
-  [day8.re-frame/tracing "0.5.1"]
-  [philoskim/debux "0.4.11"]
+  [day8.re-frame/re-frame-10x "0.3.7-react16"]
+  #_[day8.re-frame/tracing "0.5.1"]
+  [philoskim/debux "0.5.5"]
   ;; for CIDER
-  [cider/cider-nrepl "0.18.0"]]
+  [cider/cider-nrepl "0.21.1"]]
 
  :nrepl {:port 9000}
 

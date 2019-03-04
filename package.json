@@ -44,6 +44,6 @@
     "react-flip-move": "^3.0.3",
     "react-highlight.js": "^1.0.7",
     "sass": "^1.17.0",
-    "shadow-cljs": "^2.7.30"
+    "shadow-cljs": "^2.8.14"
   }
 }
