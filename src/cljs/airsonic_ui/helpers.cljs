@@ -55,3 +55,10 @@
     (if brief?
       (brief-duration hours minutes seconds)
       (long-duration hours minutes seconds))))
+
+(defn vector-move [coll prev-index new-index]
+  (let [items (into (subvec coll 0 prev-index)
+                    (subvec coll (inc prev-index)))]
+    (-> (subvec items 0 new-index)
+        (conj (get coll prev-index))
+        (into (subvec items new-index)))))

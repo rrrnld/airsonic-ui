@@ -3,58 +3,21 @@
             [clojure.string :as str]
             ["react-sortable-hoc" :refer [SortableHandle SortableElement
                                           SortableContainer]]))
+;; this code is taken and adapted from https://github.com/reagent-project/reagent/blob/72c95257c13e5de1531e16d1a06da7686041d3f4/examples/react-sortable-hoc/src/example/core.cljs
 
-(defonce state
-  (r/atom {:items (vec (map #(str "Item " %) (range 1 11)))
-           :sort-enabled? true}))
-
-;; this code is taken from https://github.com/reagent-project/reagent/blob/72c95257c13e5de1531e16d1a06da7686041d3f4/examples/react-sortable-hoc/src/example/core.cljs
-(def DragHandle
-  (SortableHandle.
-    ;; Alternative to r/reactify-component, which doens't convert props and hiccup,
-    ;; is to just provide fn as component and use as-element or create-element
-    ;; to return React elements from the component.
-    (fn []
-      (r/as-element [:span {:style {:WebkitTouchCallout "none"
-                                    :WebkitUserSelect "none"
-                                    :KhtmlUserSelect "none"
-                                    :MozUserSelect "none"
-                                    ;; NOTE: lowercase "ms" prefix
-                                    ;; https://www.andismith.com/blogs/2012/02/modernizr-prefixed/
-                                    :msUserSelect "none"
-                                    :userSelect "none"}}
-                     "::"]))))
-
-(def SortableRow
-  (SortableElement.
-   (r/reactify-component (fn [{:keys [value]}]
-                           [:tr
-                            [:td value]
-                            (when (:sort-enabled? @state)
-                              [:td [:> DragHandle]])]))))
-
-(def SortableTable
-  (SortableContainer.
-   (r/reactify-component
-    (fn [{:keys [items]}]
-      [:table.table.is-fullwidth>tbody
-       (for [[idx value] (map-indexed vector items)]
-         ;; No :> or adapt-react-class here because that would convert value to JS
-         (r/create-element
-          SortableRow
-          #js {:key (str "item-" idx)
-               :index idx
-               :value value}))]))))
-
-(defn vector-move [coll prev-index new-index]
-  (let [items (into (subvec coll 0 prev-index)
-                    (subvec coll (inc prev-index)))]
-    (-> (subvec items 0 new-index)
-        (conj (get coll prev-index))
-        (into (subvec items new-index)))))
-
-(comment
-  (= [0 2 3 4 1 5] (vector-move [0 1 2 3 4 5] 1 4)))
+(defn make-wrapper [{:keys [container render-item]}]
+  (let [SortableItem (SortableElement.
+                      (r/reactify-component render-item))]
+    (SortableContainer.
+     (r/reactify-component
+      (fn [{:keys [items]}]
+        (into container
+              (for [[idx value] (map-indexed vector items)]
+                (r/create-element
+                 SortableItem
+                 #js {:key (str "item-" idx)
+                      :index idx
+                      :value value}))))))))
 
 (defn style-map
   "Returns a map representing all currently set css styles; this makes sense
@@ -97,24 +60,27 @@
 
 (defonce saved-snapshot (atom nil))
 
-(defn sortable-component []
-  (r/create-element
-   SortableTable
-   #js {:items (:items @state)
-        :helperClass "sortable-is-moving"
+(defn sortable-component [{:keys [container items render-item on-sort-end]}]
+  (let [Wrapper  (make-wrapper {:container container
+                                :render-item render-item})]
+    (r/create-element
+     Wrapper
+     #js {:items items
+          :helperClass "sortable-is-moving"
 
-        ;; save the style of all of the rows children
-        :updateBeforeSortStart
-        (fn [event]
-          (reset! saved-snapshot (style-snapshot (.-node event))))
+          ;; save the style of all of the rows children
+          :updateBeforeSortStart
+          (fn [event]
+            (reset! saved-snapshot (style-snapshot (.-node event))))
+          :onSortStart
+          (fn [_]
+            ;; the node we get passed as parameter is the original node unfortunately
+            (restore-snapshot @saved-snapshot (js/document.querySelector "body > tr:last-of-type")))
 
-        :onSortStart
-        (fn [_]
-          ;; the node we get passed as parameter is the original node unfortunately
-          (restore-snapshot @saved-snapshot (js/document.querySelector "body > tr:last-of-type")))
+          ;; update the state to reflect the new order
+          :onSortEnd
+          (fn [event]
+            (on-sort-end {:old-idx (.-oldIndex event)
+                          :new-idx (.-newIndex event)}))
 
-        ;; update the state to reflect the new order
-        :onSortEnd
-        (fn [event]
-          (swap! state update :items vector-move (.-oldIndex event) (.-newIndex event)))
-        :useDragHandle true}))
+          :useDragHandle true})))

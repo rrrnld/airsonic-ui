@@ -43,3 +43,9 @@
     (is (= "59:00" (helpers/format-duration (* 59 60) :brief? true)))
     (is (= "01:00" (helpers/format-duration 60 :brief? true)))
     (is (= "00:05" (helpers/format-duration 5 :brief? true)))))
+
+(deftest vector-move
+  (testing "Should correctly move items in a vector"
+    (is (= [1] (helpers/vector-move [1] 0 0)))
+    (is (= [2 1] (helpers/vector-move [1 2] 0 1) (helpers/vector-move [1 2] 1 0)))
+    (is (= [1 4 2 3 5] (helpers/vector-move [1 2 3 4 5] 3 1)))))
