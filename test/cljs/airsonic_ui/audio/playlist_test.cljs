@@ -62,6 +62,9 @@
       (let [queue (song-queue 10)
             linear (playlist/->playlist queue :playback-mode :linear :repeat-mode :repeat-none)
             shuffled (playlist/set-playback-mode linear :shuffled)]
+        (testing "should indicate the new playback mode"
+          (is (= :linear (:playback-mode linear)))
+          (is (= :shuffled (:playback-mode shuffled))))
         (testing "should re-order the tracks"
           (is (not= (:items shuffled) (:items linear))))
         (testing "should not change the currently playing track"
@@ -72,10 +75,16 @@
       (let [queue (song-queue 10)
             shuffled (playlist/->playlist queue :playback-mode :shuffled :repeat-mode :repeat-none)
             linear (playlist/set-playback-mode shuffled :linear)]
+        (testing "should indicate the new playback mode"
+          (is (= :linear (:playback-mode linear)))
+          (is (= :shuffled (:playback-mode shuffled))))
         (testing "should set the correct order for tracks"
-          (is (every? #(apply same-song? %) (interleave queue (vals (:items linear)))))
-          (is (< (:playlist/linear-order (meta (first (vals (:items linear)))))
-                 (:playlist/linear-order (meta (last (vals (:items linear))))))))
+          (let [linear-order (comp :playlist/linear-order meta)]
+            (is (every? #(apply same-song? %) (interleave queue (vals (:items linear)))))
+            ;; every song should have a smaller order than its successor
+            (is (->> (map linear-order (vals (:items linear)))
+                     (partition 2 1)
+                     (every? (fn [[a b]] (< a b)))))))
         (testing "should not change the currently playing track"
           (is (same-song? (playlist/current-song linear) (playlist/current-song shuffled))))
         (testing "should not change the repeat mode"

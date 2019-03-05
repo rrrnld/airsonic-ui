@@ -27,7 +27,7 @@
   "This function is used if we switch from linear to shuffled; it allows us to
   restore the order of the queue when it was created."
   [items]
-  (->> (sort-by (comp meta :playlist/linear-order) items)
+  (->> (sort-by (comp :playlist/linear-order meta) items)
        (map-indexed (fn [idx item]
                       (vary-meta item assoc :playlist/linear-order idx)))))
 
@@ -85,7 +85,8 @@
           queue-fn (case playback-mode
                      :shuffled shuffled-queue
                      :linear linear-queue)
-          next-playlist (update playlist :items (comp queue-fn vals))
+          next-playlist (-> (assoc playlist :playback-mode playback-mode)
+                            (update :items (comp queue-fn vals)))
           next-idx (first (keep (fn [[idx song]]
                                   (when (= song current-song)
                                     idx))

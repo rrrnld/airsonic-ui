@@ -51,6 +51,7 @@
         [:td.sort-handle.is-narrow [:> SortHandle]]
         [:td.song-artist [artist-link song]]
         [:td.song-title (:title song)]
+        [:td.meta>code (str (meta song))]
         [:td.song-duration (helpers/format-duration (:duration song) :brief? true)]
         [:td.song-actions.is-narrow [song-actions]]])
 
