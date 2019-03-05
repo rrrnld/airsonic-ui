@@ -2,26 +2,10 @@
   (:require [cljs.test :refer [deftest testing is]]
             [airsonic-ui.audio.playlist :as playlist]
             [airsonic-ui.fixtures :as fixtures]
-            [airsonic-ui.test-helpers :as helpers]
-            [debux.cs.core :refer-macros [dbg]]))
+            [airsonic-ui.test-helpers :refer [song song-queue]]
+            #_[debux.cs.core :refer-macros [dbg]]))
 
 (enable-console-print!)
-
-(defn- song []
-  (hash-map :id (rand-int 9999)
-            :coverArt (rand-int 9999)
-            :year (+ 1900 (rand-int 118))
-            :artist (helpers/rand-str)
-            :artistId (rand-int 100000)
-            :title (helpers/rand-str)
-            :album (helpers/rand-str)))
-
-(defn- song-queue
-  "Generates a seq of n different songs"
-  [n]
-  (let [r-int (atom 0)]
-    (with-redefs [rand-int #(mod (swap! r-int inc) %1)]
-      (repeatedly n song))))
 
 (def fixture
   {:audio {:current-song fixtures/song

@@ -3,7 +3,6 @@
             [reagent.core :as r]
             ["react-sortable-hoc" :refer [SortableHandle]]
             [airsonic-ui.helpers :as helpers]
-            [airsonic-ui.views.song :as song]
             [airsonic-ui.views.icon :refer [icon]]
             [airsonic-ui.components.sortable.views :as sortable]
             [airsonic-ui.routes :as routes]))
@@ -39,6 +38,12 @@
     [:a {:href (routes/url-for ::routes/artist.detail {:id id})} artist]
     artist))
 
+(defn song-link [song idx]
+  [:a
+   {:href "#"
+    :on-click (helpers/muted-dispatch [:audio-player/set-current-song idx])}
+   (:title song)])
+
 (defn song-table [{:keys [songs current-song]}]
   [:table.song-listing-table.table.is-fullwidth
    [sortable/sortable-component
@@ -46,12 +51,11 @@
      :items songs
 
      :render-item
-     (fn [{song :value}]
+     (fn [{[idx song] :value}]
        [(if (= (:id song) (:id current-song)) :tr.is-playing :tr)
         [:td.sort-handle.is-narrow [:> SortHandle]]
         [:td.song-artist [artist-link song]]
-        [:td.song-title (:title song)]
-        [:td.meta>code (str (meta song))]
+        [:td.song-title [song-link song idx]]
         [:td.song-duration (helpers/format-duration (:duration song) :brief? true)]
         [:td.song-actions.is-narrow [song-actions]]])
 
@@ -62,10 +66,10 @@
 (defn current-queue []
   [:section.section>div.container
    [:h1.title "Current Queue"]
-   (let [current-queue @(subscribe [:audio/current-queue])
+   (let [current-playlist @(subscribe [:audio/current-playlist])
          current-song @(subscribe [:audio/current-song])]
-     (if (some? current-queue)
-       [song-table {:songs current-queue
-                    :current-song current-song}]
+     (if (empty? current-playlist)
        [:p "You are currently not playing anything. Use the search or go to your "
-        [:a {:href (routes/url-for ::routes/library)} "Library"] " to start playing some music."]))])
+        [:a {:href (routes/url-for ::routes/library)} "Library"] " to start playing some music."]
+       [song-table {:songs (:items current-playlist)
+                    :current-song current-song}]))])

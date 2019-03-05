@@ -48,8 +48,12 @@
 
 (defrecord Playlist [items current-idx playback-mode repeat-mode]
   cljs.core/ICounted
-  (-count [this]
+  (-count [_]
     (count items))
+
+  cljs.core/ISequential
+  cljs.core/ISeqable
+  (-seq [_] items)
 
   IPlaylist
   (current-song [_]

@@ -34,9 +34,17 @@
  :audio-player/previous-song
  (fn [{:keys [db]} _]
    (let [db (update-in db [:audio :current-playlist] playlist/previous-song)
-         prev (playlist/current-song (get-in db [:audio :current-playlist]))]
+         song (playlist/current-song (get-in db [:audio :current-playlist]))]
      {:db db
-      :audio/play (api/stream-url (:credentials db) prev)})))
+      :audio/play (api/stream-url (:credentials db) song)})))
+
+(defn set-current-song [{:keys [db]} [_ idx]]
+  (let [db (update-in db [:audio :current-playlist] playlist/set-current-song idx)
+        song (playlist/current-song (get-in db [:audio :current-playlist]))]
+    {:db db
+     :audio/play (api/stream-url (:credentials db) song)}))
+
+(rf/reg-event-fx :audio-player/set-current-song set-current-song)
 
 (rf/reg-event-db
  :audio-player/enqueue-next
