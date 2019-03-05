@@ -1,13 +1,12 @@
 (ns airsonic-ui.components.current-queue.views
-  (:require [re-frame.core :refer [subscribe]]
-            [reagent.core :as reagent]
+  (:require [re-frame.core :refer [subscribe dispatch]]
+            [reagent.core :as r]
             ["react-sortable-hoc" :refer [SortableHandle]]
             [airsonic-ui.helpers :as helpers]
             [airsonic-ui.views.song :as song]
+            [airsonic-ui.views.icon :refer [icon]]
             [airsonic-ui.components.sortable.views :as sortable]
-            [airsonic-ui.routes :as r]))
-
-(defonce items (reagent/atom [1 2 3 4 5 6 7]))
+            [airsonic-ui.routes :as routes]))
 
 (def SortHandle
   (SortableHandle.
@@ -15,39 +14,57 @@
    ;; is to just provide fn as component and use as-element or create-element
    ;; to return React elements from the component.
    (fn []
-     (reagent/as-element [:span {:style {:WebkitTouchCallout "none"
-                                         :WebkitUserSelect "none"
-                                         :KhtmlUserSelect "none"
-                                         :MozUserSelect "none"
-                                         ;; NOTE: lowercase "ms" prefix
-                                         ;; https://www.andismith.com/blogs/2012/02/modernizr-prefixed/
-                                         :msUserSelect "none"
-                                         :userSelect "none"}}
-                          "::"]))))
+     (r/as-element [:span.is-size-7.has-text-grey-lighter
+                          [icon :elevator]]))))
+
+(defn song-actions []
+  (let [controls-id (str "song-actions-" (random-uuid))
+        is-active? (r/atom false)]
+    (fn []
+      [(if @is-active? :div.dropdown.is-right.is-active :div.dropdown.is-right)
+       [:div.dropdown-trigger
+        [:span.is-small.button {:aria-haspopup "true"
+                                :aria-controls controls-id
+                                :on-click #(swap! is-active? not)}
+         [icon :ellipses]]]
+       [:div.dropdown-menu {:id controls-id, :role "menu"}
+        [:div.dropdown-content
+         ;; TODO: Implement removal
+         [:a.dropdown-item {:href "#"} "Remove from queue"]
+         ;; TODO: Implement "Go to source"
+         [:a.dropdown-item {:href "#"} "Go to source"]]]])))
+
+(defn artist-link [{id :artistId, artist :artist}]
+  (if id
+    [:a {:href (routes/url-for ::routes/artist.detail {:id id})} artist]
+    artist))
+
+(defn song-table [{:keys [songs current-song]}]
+  [:table.song-listing-table.table.is-fullwidth
+   [sortable/sortable-component
+    {:container [:tbody]
+     :items songs
+
+     :render-item
+     (fn [{song :value}]
+       [(if (= (:id song) (:id current-song)) :tr.is-playing :tr)
+        [:td.sort-handle.is-narrow [:> SortHandle]]
+        [:td.song-artist [artist-link song]]
+        [:td.song-title (:title song)]
+        [:td.song-duration (helpers/format-duration (:duration song) :brief? true)]
+        [:td.song-actions.is-narrow [song-actions]]])
+
+     :on-sort-end
+     (fn [{:keys [old-idx new-idx]}]
+       )}]])
 
 (defn current-queue []
-  (let [is-sortable? (reagent/atom true)]
-    (fn []
-      [:section.section>div.container
-       [:h1.title "Current Queue"]
-       [sortable/sortable-component {:container [:table.table.is-fullwidth>tbody]
-                                     :items @items
-
-                                     :render-item
-                                     (fn [{:keys [value]}]
-                                       [:tr
-                                        [:td "Some table cell"]
-                                        [:td (str "Value: " value)]
-                                        [:td [:a {:on-click #(swap! is-sortable? not)} (str "Is sortable: " @is-sortable?)]]
-                                        [:td (when @is-sortable?
-                                               [:> SortHandle])]])
-
-                                     :on-sort-end
-                                     (fn [{:keys [old-idx new-idx]}]
-                                       (swap! items helpers/vector-move old-idx new-idx))}]
-       (let [current-queue @(subscribe [:audio/current-queue])
-             #_#_ current-song @(subscribe [:audio/current-song])]
-         (if (some? current-queue)
-           [song/listing (:items current-queue)]
-           [:p "You are currently not playing anything. Use the search or go to your "
-            [:a {:href (r/url-for ::r/library)} "Library"] " to start playing some music."]))])))
+  [:section.section>div.container
+   [:h1.title "Current Queue"]
+   (let [current-queue @(subscribe [:audio/current-queue])
+         current-song @(subscribe [:audio/current-song])]
+     (if (some? current-queue)
+       [song-table {:songs current-queue
+                    :current-song current-song}]
+       [:p "You are currently not playing anything. Use the search or go to your "
+        [:a {:href (routes/url-for ::routes/library)} "Library"] " to start playing some music."]))])

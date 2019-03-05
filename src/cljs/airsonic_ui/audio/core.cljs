@@ -99,14 +99,23 @@
 
 (rf/reg-sub :audio/summary summary)
 
-(defn current-queue
+(defn current-playlist
   "Lists the complete current-queue"
   [summary _]
-  (:current-queue summary))
+  (:current-playlist summary))
+
+(rf/reg-sub
+ :audio/current-playlist
+ :<- [:audio/summary]
+ current-playlist)
+
+(defn current-queue
+  [playlist _]
+  (vals (:items playlist)))
 
 (rf/reg-sub
  :audio/current-queue
- :<- [:audio/summary]
+ :<- [:audio/current-playlist]
  current-queue)
 
 (defn current-song
@@ -116,10 +125,9 @@
   (when-not (empty? playlist)
     (playlist/current-song playlist)))
 
-
 (rf/reg-sub
  :audio/current-song
- :<- [:audio/current-queue]
+ :<- [:audio/current-playlist]
  current-song)
 
 (defn playback-status
