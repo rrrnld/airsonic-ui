@@ -60,13 +60,25 @@
 
 (defonce saved-snapshot (atom nil))
 
-(defn sortable-component [{:keys [container items render-item on-sort-end]}]
+(defn sortable-component
+  "This function allows us to generate sortable components in a reusable way.
+  It takes a prop-map with several keys:
+
+  - :container    A hiccup-vector that will be used as the container
+  - :items        A seq containing the values we want to render and sort
+  - :render-item  Decides how we render each child; will be passed {:value value}
+  - :on-sort-end  Will be called with a map containing :old-idx & :new-idx
+  - :helper-class Will be appended to the element that's sorted when it's
+                  appended to the body"
+  [{:keys [container items render-item on-sort-end helper-class]}]
   (let [Wrapper  (make-wrapper {:container container
                                 :render-item render-item})]
     (r/create-element
      Wrapper
      #js {:items items
-          :helperClass "sortable-is-moving"
+          :helperClass helper-class
+          :axis "y"
+          :lockAxis "y"
 
           ;; save the style of all of the rows children
           :updateBeforeSortStart
@@ -75,7 +87,7 @@
           :onSortStart
           (fn [_]
             ;; the node we get passed as parameter is the original node unfortunately
-            (restore-snapshot @saved-snapshot (js/document.querySelector "body > tr:last-of-type")))
+            (restore-snapshot @saved-snapshot (js/document.querySelector "body > :last-child")))
 
           ;; update the state to reflect the new order
           :onSortEnd

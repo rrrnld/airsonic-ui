@@ -56,6 +56,11 @@
  (fn [db [_ song]]
    (update-in db [:audio :current-playlist] #(playlist/enqueue-last % song))))
 
+(rf/reg-event-db
+ :audio-player/move-song
+ (fn [db [_ from-idx to-idx]]
+   (update-in db [:audio :current-playlist] #(playlist/move-song % from-idx to-idx))))
+
 (rf/reg-event-fx
  :audio-player/toggle-play-pause
  (fn [_ _]

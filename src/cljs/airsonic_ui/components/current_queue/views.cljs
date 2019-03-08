@@ -46,14 +46,21 @@
 
 (defn song-table [{:keys [songs current-song]}]
   [:table.song-listing-table.table.is-fullwidth
+   [:thead>tr
+    [:td.is-narrow]
+    [:td.song-artist "Artist"]
+    [:td.song-title "Title"]
+    [:td.song-duration "Duration"]
+    [:td.is-narrow]]
    [sortable/sortable-component
-    {:container [:tbody]
-     :items songs
+    {:items songs
+     :container [:tbody]
+     :helper-class "sortable-is-moving"
 
      :render-item
      (fn [{[idx song] :value}]
        [(if (= (:id song) (:id current-song)) :tr.is-playing :tr)
-        [:td.sort-handle.is-narrow [:> SortHandle]]
+        [:td.sortable-handle.is-narrow [:> SortHandle]]
         [:td.song-artist [artist-link song]]
         [:td.song-title [song-link song idx]]
         [:td.song-duration (helpers/format-duration (:duration song) :brief? true)]
@@ -61,7 +68,8 @@
 
      :on-sort-end
      (fn [{:keys [old-idx new-idx]}]
-       )}]])
+       (println "moving from" old-idx "to" new-idx)
+       (dispatch [:audio-player/move-song old-idx new-idx]))}]])
 
 (defn current-queue []
   [:section.section>div.container
