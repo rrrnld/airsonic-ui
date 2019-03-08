@@ -19,7 +19,10 @@
     "Allows you to change how the next and previous song are selected")
 
   (enqueue-last [this song])
-  (enqueue-next [this song]))
+  (enqueue-next [this song])
+
+  (move-song [this from-idx to-idx]
+    "Allows you to move a song in a playlist"))
 
 ;; helpers to manage creating playlists
 
@@ -117,7 +120,29 @@
                         (conj (vary-meta song assoc :playlist/linear-order (inc current-idx)))
                         (concat (subvec songs (inc current-idx))))]
       (assoc this :items (->> (map-indexed vector reordered)
-                              (into (sorted-map)))))))
+                              (into (sorted-map))))))
+
+  (move-song [this from-idx to-idx]
+    ;; we have to decide whether we move all items in-between
+    ;; one up or one down; this depends on whether we move our
+    ;; item to the front or to the back
+    (let [shift-fn (cond
+                     (< from-idx to-idx) inc
+                     (> from-idx to-idx) dec)
+          start (min from-idx to-idx)
+          end (inc (max from-idx to-idx))
+          steps (range start end)
+          result (update this :items
+                         (fn [items]
+                           (-> (reduce (fn [result idx]
+                                         (assoc result idx (get items (shift-fn idx))))
+                                       items steps)
+                               (assoc to-idx (get items from-idx)))))]
+      (cond
+        (= from-idx current-idx) (assoc result :current-idx to-idx)
+        (<= to-idx current-idx from-idx) (update result :current-idx inc)
+        (>= to-idx current-idx from-idx) (update result :current-idx dec)
+        :else result))))
 
 ;; constructor wrapper
 

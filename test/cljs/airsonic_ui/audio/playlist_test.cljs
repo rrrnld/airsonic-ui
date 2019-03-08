@@ -250,11 +250,62 @@
 
 (deftest enqueue-next
   (testing "Should play the song after the currently playing song"
-    (doseq [playback-mode '(:linear :shuffled)
-            repeat-mode '(:repeat-none :repeat-all)]
+    (doseq [playback-mode [:linear :shuffled]
+            repeat-mode [:repeat-none :repeat-all]]
       (let [length 5, queue (song-queue length)
             playlist (playlist/->playlist queue :playback-mode playback-mode :repeat-mode repeat-mode)
             next-song (song)]
         (is (same-song? next-song (-> (playlist/enqueue-next playlist next-song)
                                       (playlist/next-song)
-                                    (playlist/current-song))))))))
+                                      (playlist/current-song))))))))
+
+(deftest move-track
+  (testing "Should correctly set the new order"
+    (doseq [playback-mode [:linear :shuffled]
+            repeat-mode [:repeat-none :repeat-all :repeat-single]]
+      (let [n-songs 10
+            queue (song-queue n-songs)
+            playlist (playlist/->playlist queue :repeat-mode repeat-mode :playback-mode playback-mode)]
+        (is (same-song? (-> (playlist/next-song playlist)
+                            (playlist/next-song)
+                            (playlist/current-song))
+                        (-> (playlist/move-song playlist 2 1)
+                            (playlist/next-song)
+                            (playlist/current-song)))))))
+  (testing "Should update the currently playing track's index"
+    (testing "when inserting a track before"
+      (doseq [playback-mode [:linear :shuffled]
+              repeat-mode [:repeat-none :repeat-all :repeat-single]]
+        (let [n-songs 10
+              queue (song-queue n-songs)
+              playlist (playlist/->playlist queue :repeat-mode repeat-mode :playback-mode playback-mode)]
+          (is (= 4 (-> (playlist/set-current-song playlist 3)
+                       (playlist/move-song 5 3)
+                       :current-idx))))))
+    (testing "when moving a track behind it"
+      (doseq [playback-mode [:linear :shuffled]
+              repeat-mode [:repeat-none :repeat-all :repeat-single]]
+        (let [n-songs 10
+              queue (song-queue n-songs)
+              playlist (playlist/->playlist queue :repeat-mode repeat-mode :playback-mode playback-mode)]
+          (is (= 2 (-> (playlist/set-current-song playlist 3)
+                       (playlist/move-song 2 5)
+                       :current-idx))))))
+    (testing "when moving it"
+      (doseq [playback-mode [:linear :shuffled]
+              repeat-mode [:repeat-none :repeat-all :repeat-single]]
+        (let [n-songs 10
+              queue (song-queue n-songs)
+              playlist (playlist/->playlist queue :repeat-mode repeat-mode :playback-mode playback-mode)]
+          (is (= 7 (-> (playlist/set-current-song playlist 3)
+                       (playlist/move-song 3 7)
+                       :current-idx))))))
+    (testing "when the current track is outside of the modified range"
+      (doseq [playback-mode [:linear :shuffled]
+              repeat-mode [:repeat-none :repeat-all :repeat-single]]
+        (let [n-songs 10
+              queue (song-queue n-songs)
+              playlist (playlist/->playlist queue :repeat-mode repeat-mode :playback-mode playback-mode)]
+          (is (= 3 (-> (playlist/set-current-song playlist 3)
+                       (playlist/move-song 4 7)
+                       :current-idx))))))))
