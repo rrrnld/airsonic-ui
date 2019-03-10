@@ -22,7 +22,9 @@
   (enqueue-next [this song])
 
   (move-song [this from-idx to-idx]
-    "Allows you to move a song in a playlist"))
+    "Allows you to move a song in a playlist")
+  (remove-song [this song-idx]
+    "Removes a song from the playlist"))
 
 ;; helpers to manage creating playlists
 
@@ -142,7 +144,15 @@
         (= from-idx current-idx) (assoc result :current-idx to-idx)
         (<= to-idx current-idx from-idx) (update result :current-idx inc)
         (>= to-idx current-idx from-idx) (update result :current-idx dec)
-        :else result))))
+        :else result)))
+
+  (remove-song [this song-idx]
+    (cond-> (update this :items #(let [n-items (count %)]
+                                   (-> (reduce (fn [items idx]
+                                                 (assoc items idx (get items (inc idx))))
+                                               % (range song-idx n-items))
+                                       (dissoc (dec n-items)))))
+      (= song-idx current-idx) (assoc :current-idx -1))))
 
 ;; constructor wrapper
 

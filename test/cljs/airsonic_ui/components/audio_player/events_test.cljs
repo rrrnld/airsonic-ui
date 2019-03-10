@@ -27,3 +27,13 @@
                    (:current-idx)))
             (str "for playback-mode " playback-mode " and repeat-mode " repeat-mode))
         (is (contains? effects :audio/play))))))
+
+(deftest removing-currently-playing-song
+  (testing "Should stop all audio when removing the currently playing song"
+    (doseq [playback-mode [:linear :shuffled]
+            repeat-mode [:repeat-none :repeat-single :repeat-all]]
+      (let [n-songs 100
+            fixture {:db {:credentials fixtures/credentials
+                          :audio {:current-playlist (playlist/->playlist (song-queue n-songs) :playback-mode playback-mode :repeat-mode repeat-mode)}}}]
+        (is (contains? (events/remove-song fixture [:audio/remove-song 0]) :audio/stop))
+        (is (not (contains? (events/remove-song fixture [:audio/remove-song 99]) :audio/stop)))))))

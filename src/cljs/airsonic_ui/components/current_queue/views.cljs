@@ -21,10 +21,10 @@
      (r/as-element [:span.is-size-7.has-text-grey-lighter
                     [icon :elevator]]))))
 
-(defn song-actions []
+(defn song-actions [{:keys [song idx]}]
   ;; TODO: Implement both of these
   [dropdown {:items [{:label "Remove from queue"
-                      :event []}
+                      :event [:audio-player/remove-song idx]}
                      {:label "Go to source"
                       :event []}]}])
 
@@ -62,7 +62,8 @@
          [:td.song-artist [artist-link song]]
          [:td.song-title [song-link song idx]]
          [:td.song-duration (helpers/format-duration (:duration song) :brief? true)]
-         [:td.song-actions.is-narrow [song-actions]]])
+         [:td.song-actions.is-narrow [song-actions {:song song
+                                                    :idx idx}]]])
 
       :on-sort-end
       (fn [{:keys [old-idx new-idx]}]

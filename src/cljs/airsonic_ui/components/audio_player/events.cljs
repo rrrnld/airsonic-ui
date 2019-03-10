@@ -66,6 +66,14 @@
  (fn [_ _]
    {:audio/toggle-play-pause nil}))
 
+(defn remove-song [{:keys [db]} [_ song-idx]]
+  (let [song-removed (update-in db [:audio :current-playlist] #(playlist/remove-song % song-idx))]
+    (cond-> {:db song-removed}
+      (nil? (playlist/current-song (get-in song-removed [:audio :current-playlist])))
+      (assoc :audio/stop nil))))
+
+(rf/reg-event-fx :audio-player/remove-song remove-song)
+
 (defn audio-update
   "Reacts to audio events fired by the HTML5 audio player and plays the next
   track if necessary."

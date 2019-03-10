@@ -53,7 +53,8 @@
  (fn [_]
    (when-let [audio @audio]
      (.pause audio)
-     (set! (.-currentTime audio) 0))))
+     (set! (.-currentTime audio) 0)
+     (set! (.-src audio) ""))))
 
 (rf/reg-fx
  :audio/toggle-play-pause

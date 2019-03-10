@@ -309,3 +309,33 @@
           (is (= 3 (-> (playlist/set-current-song playlist 3)
                        (playlist/move-song 4 7)
                        :current-idx))))))))
+
+(deftest remove-song
+  (with-redefs [shuffle identity]
+    (testing "Should remove a single song from the playlist"
+      (doseq [playback-mode [:linear :shuffled]
+              repeat-mode [:repeat-none :repeat-all :repeat-single]]
+        (let [n-songs 10
+              queue (song-queue n-songs)
+              playlist (playlist/->playlist queue :repeat-mode repeat-mode :playback-mode playback-mode)
+              first-removed (playlist/remove-song playlist 0)
+              middle-removed (playlist/remove-song playlist 5)
+              last-removed (playlist/remove-song playlist 9)
+              song-not-in-list? (fn [song playlist]
+                                  (every? #(not (same-song? % song))
+                                          (vals (:items playlist))))]
+          (is (= 9 (count first-removed) (count middle-removed) (count last-removed)))
+          (is (song-not-in-list? (first queue) first-removed))
+          (is (same-song? (second queue) (get (:items first-removed) 0)))
+          (is (song-not-in-list? (nth queue 5) middle-removed))
+          (is (same-song? (nth queue 6) (get (:items middle-removed) 5)))
+          (is (song-not-in-list? (last queue) last-removed)))))
+    (testing "Should pause if the currently playing song is removed"
+      (doseq [playback-mode [:linear :shuffled]
+              repeat-mode [:repeat-none :repeat-all :repeat-single]]
+        (let [n-songs 10
+              queue (song-queue n-songs)]
+          (is (nil? (-> (playlist/->playlist queue :repeat-mode repeat-mode :playback-mode playback-mode)
+                        (playlist/set-current-song 5)
+                        (playlist/remove-song 5)
+                        (playlist/current-song)))))))))
