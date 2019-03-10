@@ -1,5 +1,5 @@
 (ns airsonic-ui.components.current-queue.views
-  (:require [re-frame.core :refer [subscribe dispatch]]
+  (:require [re-frame.core :refer [subscribe dispatch-sync]]
             [reagent.core :as r]
             ["react-sortable-hoc" :refer [SortableHandle]]
             [bulma.icon :refer [icon]]
@@ -7,6 +7,8 @@
             [airsonic-ui.helpers :as helpers]
             [airsonic-ui.components.sortable.views :as sortable]
             [airsonic-ui.routes :as routes]
+
+            ;; ↓ registers subscription handlers ↓
             [airsonic-ui.components.current-queue.subs]))
 
 (def SortHandle
@@ -60,7 +62,9 @@
 
      :on-sort-end
      (fn [{:keys [old-idx new-idx]}]
-       (dispatch [:audio-player/move-song old-idx new-idx]))}]])
+       ;; if we don't dispatch-sync, the UI sometimes places the row back and
+       ;; resorts it a litle later
+       (dispatch-sync [:audio-player/move-song old-idx new-idx]))}]])
 
 (defn collection-info [{:keys [playlist-info]}]
   [:ul.is-smaller.collection-info

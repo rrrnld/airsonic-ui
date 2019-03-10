@@ -109,15 +109,6 @@
  :<- [:audio/summary]
  current-playlist)
 
-(defn current-queue
-  [playlist _]
-  (vals (:items playlist)))
-
-(rf/reg-sub
- :audio/current-queue
- :<- [:audio/current-playlist]
- current-queue)
-
 (defn current-song
   "Gives us information about the currently played song as presented by
   the airsonic api"

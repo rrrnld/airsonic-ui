@@ -5,12 +5,10 @@
             [bulma.dropdown.events :as ev]
             [bulma.dropdown.subs :as sub]))
 
-;; there's "muted-dispatch" in airsonic-ui.helpers which does the same thing
-;; it's not used here because all the bulma.*-components should work independently
-
-(defn muted-dispatch [event-vector]
+(defn choose-action [event-vector]
   (fn [e]
     (.preventDefault e)
+    (dispatch [::ev/hide])
     (dispatch event-vector)))
 
 (defn generate-id []
@@ -42,4 +40,4 @@
            (for [[idx {:keys [label event]}] (map-indexed vector items)]
              ^{:key (str dropdown-id "-" idx)}
              [:a.dropdown-item {:href "#"
-                                :on-click (muted-dispatch event)} label])]]]))))
+                                :on-click (choose-action event)} label])]]]))))
