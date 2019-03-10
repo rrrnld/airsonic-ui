@@ -54,29 +54,36 @@
   [dropdown {:items [{:label "Play next" :event [:audio-player/enqueue-next song]}
                      {:label "Play last" :event [:audio-player/enqueue-last song]}]}])
 
-(defn song-table [songs]
+(defn default-thead []
+  [:thead>tr
+   [:td.is-narrow]
+   [:td.song-artist "Artist"]
+   [:td.song-title "Title"]
+   [:td.song-duration "Duration"]
+   [:td.is-narrow]])
+
+(defn default-tbody [{:keys [songs current-song]}]
+  [:tbody
+   (for [[idx song] (map-indexed vector songs)]
+     ^{:key idx}
+     [(if (= (:id song) (:id current-song)) :tr.is-playing :tr)
+      [:td.song-tracknr.is-narrow (:track song)]
+      [:td.song-artist [artist-link song]]
+      [:td.song-title [song-link {:songs songs
+                                  :song song
+                                  :idx idx}]]
+      [:td.song-duration (h/format-duration (:duration song) :brief? true)]
+      [:td.song-actions.is-narrow [song-actions song]]])])
+
+(defn song-table [{:keys [songs thead tbody]
+                   :or {thead default-thead, tbody default-tbody}}]
   ;; we subscribe here instead of one level higher up to make this a more
   ;; reusable component; this way we can for example get a list of all songs
   ;; in a search result and easily highlight the currently playing track
   (let [current-song @(subscribe [:audio/current-song])]
     [:table.song-listing-table.table.is-fullwidth
-     [:thead>tr
-      [:td.is-narrow]
-      [:td.song-artist "Artist"]
-      [:td.song-title "Title"]
-      [:td.song-duration "Duration"]
-      [:td.is-narrow]]
-     [:tbody
-      (for [[idx song] (map-indexed vector songs)]
-        ^{:key idx}
-        [(if (= (:id song) (:id current-song)) :tr.is-playing :tr)
-         [:td.song-tracknr.is-narrow (:track song)]
-         [:td.song-artist [artist-link song]]
-         [:td.song-title [song-link {:songs songs
-                                     :song song
-                                     :idx idx}]]
-         [:td.song-duration (h/format-duration (:duration song) :brief? true)]
-         [:td.song-actions.is-narrow [song-actions song]]])]]))
+     [thead]
+     [tbody {:songs songs, :current-song current-song}]]))
 
 (defn detail
   "Shows a detail view of a single album, listing all "
@@ -91,4 +98,4 @@
        [:h3.subtitle (:artist album)]
        [collection-info album]]]]]
    [:section.section>div.container
-    [song-table (:song album)]]])
+    [song-table {:songs (:song album)}]]])

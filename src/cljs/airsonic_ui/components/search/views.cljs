@@ -2,13 +2,15 @@
   (:require [re-frame.core :refer [dispatch subscribe]]
             [goog.functions :refer [debounce]]
             [airsonic-ui.routes :as routes :refer [url-for]]
-            [airsonic-ui.components.collection.views :refer [song-table]]
-            [airsonic-ui.components.debug :refer [debug]]
+            [airsonic-ui.helpers :as h]
+            [airsonic-ui.components.collection.views :as collection]
             [airsonic-ui.views.cover :refer [card]]))
 
+(def search
+  (debounce #(dispatch [:search/do-search (.. % -target -value)]) 100))
+
 (defn form []
-  (let [search-term @(subscribe [:search/current-term])
-        throttled-search (debounce #(dispatch [:search/do-search (.. % -target -value)]) 100)]
+  (let [search-term @(subscribe [:search/current-term])]
     (fn []
       [:form {:on-submit #(.preventDefault %)}
        [:div.feld>p.control
@@ -16,7 +18,7 @@
                                     ;; the event might be gone when we the dispatched
                                     ;; function is fired, we need to persist it
                                     (.persist e)
-                                    (throttled-search e))
+                                    (search e))
                        :default-value search-term
                        :placeholder "Search"}]]])))
 
@@ -42,9 +44,34 @@
 (defn album-results [{:keys [album]}]
   [result-cards (map (juxt album-url identity) album)])
 
+(defn song-table-thead []
+  [:thead
+   [:td.song-artist "Artist"]
+   [:td.song-album "Album"]
+   [:td.song-title "Title"]
+   [:td.song-duration "Duration"]
+   [:td.song-actions.is-narrow]])
+
+(defn album-link [{id :albumId :as song}]
+  [:a {:href (routes/url-for ::routes/album.detail {:id id})} (:album song)])
+
+(defn song-table-tbody [{:keys [songs current-song]}]
+  [:tbody
+   (for [[idx song] (map-indexed vector songs)]
+     ^{:key idx}
+     [(if (= (:id song) (:id current-song)) :tr.is-playing :tr)
+      [:td.song-artist [collection/artist-link song]]
+      [:td.song-album [album-link song]]
+      [:td.song-title [collection/song-link {:songs songs
+                                             :song song
+                                             :idx idx}]]
+      [:td.song-duration (h/format-duration (:duration song) :brief? true)]
+      [:td.song-actions.is-narrow [collection/song-actions song]]])])
+
 (defn song-results [{songs :song}]
-  []
-  [song-table songs])
+  [collection/song-table {:songs songs
+                           :thead song-table-thead
+                           :tbody song-table-tbody}])
 
 (defn results [{:keys [search]}]
   (let [term @(subscribe [:search/current-term])]
