@@ -3,14 +3,18 @@
             [airsonic-ui.audio.playlist :as playlist]
             [airsonic-ui.api.helpers :as api]))
 
+; sets up the db, starts to play a song and adds the rest to a playlist
+(defn play-all-songs [{:keys [db]
+                       :routes/keys [current-route]} [_ songs start-idx]]
+  (let [playlist (-> (playlist/->playlist songs :playback-mode :linear :repeat-mode :repeat-all :source current-route)
+                     (playlist/set-current-song start-idx))]
+    {:audio/play (api/stream-url (:credentials db) (playlist/current-song playlist))
+     :db (assoc-in db [:audio :current-playlist] playlist)}))
+
 (rf/reg-event-fx
- ; sets up the db, starts to play a song and adds the rest to a playlist
  :audio-player/play-all
- (fn [{:keys [db]} [_ songs start-idx]]
-   (let [playlist (-> (playlist/->playlist songs :playback-mode :linear :repeat-mode :repeat-all)
-                      (playlist/set-current-song start-idx))]
-     {:audio/play (api/stream-url (:credentials db) (playlist/current-song playlist))
-      :db (assoc-in db [:audio :current-playlist] playlist)})))
+ [(rf/inject-cofx :routes/current-route)]
+ play-all-songs)
 
 (rf/reg-event-db
  :audio-player/set-playback-mode
@@ -46,15 +50,19 @@
 
 (rf/reg-event-fx :audio-player/set-current-song set-current-song)
 
-(rf/reg-event-db
+(rf/reg-event-fx
  :audio-player/enqueue-next
- (fn [db [_ song]]
-   (update-in db [:audio :current-playlist] #(playlist/enqueue-next % song))))
+ [(rf/inject-cofx :routes/current-route)]
+ (fn [{:keys [db]
+       :routes/keys [current-route]} [_ song]]
+   {:db (update-in db [:audio :current-playlist] #(playlist/enqueue-next % song current-route))}))
 
-(rf/reg-event-db
+(rf/reg-event-fx
  :audio-player/enqueue-last
- (fn [db [_ song]]
-   (update-in db [:audio :current-playlist] #(playlist/enqueue-last % song))))
+ [(rf/inject-cofx :routes/current-route)]
+ (fn [{:keys [db]
+       :routes/keys [current-route]} [_ song]]
+   {:db (update-in db [:audio :current-playlist] #(playlist/enqueue-last % song current-route))}))
 
 (rf/reg-event-db
  :audio-player/move-song

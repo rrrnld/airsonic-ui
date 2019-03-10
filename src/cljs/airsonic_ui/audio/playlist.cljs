@@ -18,8 +18,14 @@
   (set-repeat-mode [this repeat-mode]
     "Allows you to change how the next and previous song are selected")
 
-  (enqueue-last [this song])
-  (enqueue-next [this song])
+  (enqueue-last
+    [this song source]
+    [this song]
+    "Registers a song to be played last, optionally remembering the source route")
+  (enqueue-next
+    [this song source]
+    [this song]
+    "Registers a song to be played next, optionally remembering the source route")
 
   (move-song [this from-idx to-idx]
     "Allows you to move a song in a playlist")
@@ -107,22 +113,28 @@
   (set-repeat-mode [playlist repeat-mode]
     (assoc playlist :repeat-mode repeat-mode))
 
-  (enqueue-last [this song]
+  (enqueue-last [this song source]
     (let [order (inc (key (last items)))]
       ;; Arguably this is a bit weird; but if you want to play something last in
       ;; a shuffled playlist, you want to play it last I guess.
       (assoc-in this [:items order]
-                (vary-meta song assoc :playlist/linear-order order))))
+                (vary-meta song assoc
+                           :playlist/linear-order order
+                           :playlist/source source))))
+  (enqueue-last [this song] (enqueue-last this song nil))
 
-  (enqueue-next [this song]
+  (enqueue-next [this song source]
     ;; we slice the songs up until the currently playing one and increase the
     ;; order for all the songs after
     (let [songs (vec (vals items))
           reordered (-> (subvec songs 0 (inc current-idx))
-                        (conj (vary-meta song assoc :playlist/linear-order (inc current-idx)))
+                        (conj (vary-meta song assoc
+                                         :playlist/linear-order (inc current-idx)
+                                         :playlist/source source))
                         (concat (subvec songs (inc current-idx))))]
       (assoc this :items (->> (map-indexed vector reordered)
                               (into (sorted-map))))))
+  (enqueue-next [this song] (enqueue-next this song nil))
 
   (move-song [this from-idx to-idx]
     ;; we have to decide whether we move all items in-between
@@ -156,15 +168,29 @@
 
 ;; constructor wrapper
 
+(defn set-item-source
+  "Can be used to attach a source route to an item"
+  [item source]
+  (vary-meta item assoc :playlist/source source))
+
+(defn item-source
+  "Retrieve the source of an item in the playlist"
+  [item]
+  (:playlist/source (meta item)))
+
 (defmulti ->playlist
   "Creates a new playlist that behaves according to the given playback- and
   repeat-mode parameters."
   (fn [_ & {:keys [playback-mode]}] playback-mode))
 
 (defmethod ->playlist :linear
-  [items & {:keys [playback-mode repeat-mode]}]
-  (->Playlist (linear-queue items) 0 playback-mode repeat-mode))
+  [items & {:keys [playback-mode repeat-mode source]}]
+  (->Playlist (->> (map #(set-item-source % source) items)
+                   (linear-queue))
+              0 playback-mode repeat-mode))
 
 (defmethod ->playlist :shuffled
-  [items & {:keys [playback-mode repeat-mode]}]
-  (->Playlist (shuffled-queue items) 0 playback-mode repeat-mode))
+  [items & {:keys [playback-mode repeat-mode source]}]
+  (->Playlist (->> (map #(set-item-source % source) items)
+                   (shuffled-queue))
+              0 playback-mode repeat-mode))

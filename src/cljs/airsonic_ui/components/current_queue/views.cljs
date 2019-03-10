@@ -5,6 +5,7 @@
             [bulma.icon :refer [icon]]
             [bulma.dropdown.views :refer [dropdown]]
             [airsonic-ui.helpers :as helpers]
+            [airsonic-ui.audio.playlist :as playlist]
             [airsonic-ui.components.collection.views :as collection]
             [airsonic-ui.components.sortable.views :as sortable]
             [airsonic-ui.routes :as routes]
@@ -22,11 +23,10 @@
                     [icon :elevator]]))))
 
 (defn song-actions [{:keys [song idx]}]
-  ;; TODO: Implement both of these
   [dropdown {:items [{:label "Remove from queue"
                       :event [:audio-player/remove-song idx]}
                      {:label "Go to source"
-                      :event []}]}])
+                      :event [:routes/do-navigation (playlist/item-source song)]}]}])
 
 (defn artist-link [{id :artistId, artist :artist}]
   (if id
