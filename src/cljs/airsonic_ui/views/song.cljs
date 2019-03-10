@@ -2,7 +2,7 @@
   (:require [re-frame.core :refer [subscribe]]
             [airsonic-ui.helpers :refer [muted-dispatch format-duration]]
             [airsonic-ui.routes :as routes :refer [url-for]]
-            [airsonic-ui.views.icon :refer [icon]]))
+            [bulma.icon :refer [icon]]))
 
 (defn item [songs song idx]
   (let [artist-id (:artistId song)

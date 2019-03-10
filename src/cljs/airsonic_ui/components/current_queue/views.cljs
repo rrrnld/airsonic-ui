@@ -2,8 +2,8 @@
   (:require [re-frame.core :refer [subscribe dispatch]]
             [reagent.core :as r]
             ["react-sortable-hoc" :refer [SortableHandle]]
+            [bulma.icon :refer [icon]]
             [airsonic-ui.helpers :as helpers]
-            [airsonic-ui.views.icon :refer [icon]]
             [airsonic-ui.components.sortable.views :as sortable]
             [airsonic-ui.routes :as routes]))
 

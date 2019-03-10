@@ -4,7 +4,7 @@
             [airsonic-ui.routes :as routes]
             [airsonic-ui.helpers :as h]
             [airsonic-ui.views.cover :refer [cover]]
-            [airsonic-ui.views.icon :refer [icon]]))
+            [bulma.icon :refer [icon]]))
 
 ;; currently playing / coming next / audio controls...
 

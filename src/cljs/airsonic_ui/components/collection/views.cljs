@@ -4,8 +4,7 @@
   (:require [airsonic-ui.helpers :refer [format-duration]]
             [airsonic-ui.routes :as routes :refer [url-for]]
             [airsonic-ui.views.cover :refer [cover card]]
-            [airsonic-ui.views.icon :refer [icon]]
-            [airsonic-ui.views.song :as song]))
+            [bulma.icon :refer [icon]]))
 
 (defn collection-info [{:keys [songCount duration year]}]
   (vec (cond-> [:ul.is-smaller.collection-info

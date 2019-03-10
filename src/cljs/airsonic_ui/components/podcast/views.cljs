@@ -4,7 +4,7 @@
             [airsonic-ui.routes :as routes :refer [url-for]]
             [airsonic-ui.components.podcast.subs :as subs]
             [airsonic-ui.views.cover :refer [cover card]]
-            [airsonic-ui.views.icon :refer [icon]]
+            [bulma.icon :refer [icon]]
             [airsonic-ui.components.debug.views :refer [debug]]))
 
 ;; TODO: Implement detail pages for podcasts

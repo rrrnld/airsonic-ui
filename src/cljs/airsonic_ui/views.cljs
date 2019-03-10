@@ -11,7 +11,7 @@
             [airsonic-ui.views.notifications :refer [notification-list]]
             [airsonic-ui.views.breadcrumbs :refer [breadcrumbs]]
             [airsonic-ui.views.login :refer [login-form]]
-            [airsonic-ui.views.icon :refer [icon]]
+            [bulma.icon :refer [icon]]
 
             [airsonic-ui.components.about.views :refer [about]]
             [airsonic-ui.components.artist.views :as artist]

@@ -1,4 +1,4 @@
-(ns airsonic-ui.views.icon)
+(ns bulma.icon)
 
-(defn icon [glyph & extra]
+(defn icon [glyph]
   [:span.icon [:span.oi {:data-glyph (name glyph)}]])
