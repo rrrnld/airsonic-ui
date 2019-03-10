@@ -45,16 +45,16 @@
     [:a {:href (routes/url-for ::routes/artist.detail {:id id})} artist]
     artist))
 
-(defn song-link [{:keys [song album idx]}]
+(defn song-link [{:keys [songs song idx]}]
   [:a
-   {:href "#" :on-click (h/muted-dispatch [:audio-player/play-all (:song album) idx] :sync? true)}
+   {:href "#" :on-click (h/muted-dispatch [:audio-player/play-all songs idx] :sync? true)}
    (:title song)])
 
-(defn song-actions [{:keys [song album idx]}]
+(defn song-actions [song]
   [dropdown {:items [{:label "Play next" :event [:audio-player/enqueue-next song]}
                      {:label "Play last" :event [:audio-player/enqueue-last song]}]}])
 
-(defn song-table [{:keys [album]}]
+(defn song-table [songs]
   ;; we subscribe here instead of one level higher up to make this a more
   ;; reusable component; this way we can for example get a list of all songs
   ;; in a search result and easily highlight the currently playing track
@@ -67,18 +67,16 @@
       [:td.song-duration "Duration"]
       [:td.is-narrow]]
      [:tbody
-      (for [[idx song] (map-indexed vector (:song album))]
+      (for [[idx song] (map-indexed vector songs)]
         ^{:key idx}
         [(if (= (:id song) (:id current-song)) :tr.is-playing :tr)
          [:td.song-tracknr.is-narrow (:track song)]
          [:td.song-artist [artist-link song]]
-         [:td.song-title [song-link {:album album
+         [:td.song-title [song-link {:songs songs
                                      :song song
                                      :idx idx}]]
          [:td.song-duration (h/format-duration (:duration song) :brief? true)]
-         [:td.song-actions.is-narrow [song-actions {:album album
-                                                    :song song
-                                                    :idx idx}]]])]]))
+         [:td.song-actions.is-narrow [song-actions song]]])]]))
 
 (defn detail
   "Shows a detail view of a single album, listing all "
@@ -93,4 +91,4 @@
        [:h3.subtitle (:artist album)]
        [collection-info album]]]]]
    [:section.section>div.container
-    [song-table {:album album}]]])
+    [song-table (:song album)]]])

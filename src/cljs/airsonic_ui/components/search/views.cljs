@@ -2,7 +2,8 @@
   (:require [re-frame.core :refer [dispatch subscribe]]
             [goog.functions :refer [debounce]]
             [airsonic-ui.routes :as routes :refer [url-for]]
-            [airsonic-ui.views.song :as song]
+            [airsonic-ui.components.collection.views :refer [song-table]]
+            [airsonic-ui.components.debug :refer [debug]]
             [airsonic-ui.views.cover :refer [card]]))
 
 (defn form []
@@ -41,8 +42,9 @@
 (defn album-results [{:keys [album]}]
   [result-cards (map (juxt album-url identity) album)])
 
-(defn song-results [{:keys [song]}]
-  [song/listing song])
+(defn song-results [{songs :song}]
+  []
+  [song-table songs])
 
 (defn results [{:keys [search]}]
   (let [term @(subscribe [:search/current-term])]
