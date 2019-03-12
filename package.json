@@ -5,13 +5,13 @@
   "main": "index.js",
   "scripts": {
     "build:cljs": "shadow-cljs release app",
-    "build:sass": "node-sass --output-style compressed src/sass/app.sass public/app/style.css",
+    "build:sass": "node-sass --output-style compressed src/sass/app.sass | postcss -o public/app/style.css",
     "build": "rm -r public/*; run-p copy:* build:*",
     "copy:assets": "cp -R src/assets/* public/",
     "copy:icons": "cp -R node_modules/open-iconic/font/fonts public",
     "deploy": "npm run build && gh-pages -d public -m \"Deploying $(git rev-parse --short HEAD)\"",
     "dev:cljs": "shadow-cljs watch app test",
-    "dev:sass": "npm run build:sass; node-sass -w src/sass/app.sass public/app/style.css",
+    "dev:sass": "npm run build:sass; node-sass -w src/sass/app.sass | postcss -o public/app/style.css",
     "dev:test": "karma start --reporters notify,progress --auto-watch",
     "dev": "rm -r public/*; npm-run-all copy:* test:compile -p dev:*",
     "test": "run-s test:compile test:run",
@@ -26,15 +26,18 @@
   },
   "dependencies": {
     "@hugojosefson/color-hash": "^2.0.3",
+    "autoprefixer": "^9.4.10",
     "bulma": "^0.7.3",
     "create-react-class": "^15.6.3",
     "open-iconic": "^1.1.1",
-    "react": "^16.8.1",
-    "react-dom": "^16.8.1"
+    "postcss-cli": "^6.1.2",
+    "react": "^16.8.4",
+    "react-dom": "^16.8.4",
+    "react-sortable-hoc": "^1.6.1"
   },
   "devDependencies": {
     "gh-pages": "^1.2.0",
-    "karma": "^3.1.4",
+    "karma": "^4.0.1",
     "karma-chrome-launcher": "^2.2.0",
     "karma-cljs-test": "^0.1.0",
     "karma-notify-reporter": "^1.1.0",
@@ -43,6 +46,6 @@
     "react-flip-move": "^3.0.3",
     "react-highlight.js": "^1.0.7",
     "sass": "^1.17.0",
-    "shadow-cljs": "^2.7.30"
+    "shadow-cljs": "^2.8.14"
   }
 }

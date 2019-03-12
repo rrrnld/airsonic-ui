@@ -1,6 +1,12 @@
 module.exports = function (config) {
   const configuration = {
     browsers: ['ChromeHeadless'],
+    // The tests are sometimes run before the tests were completely written
+    // to disc; this is a known problem unfortunately. This is a hack to at
+    // least keep the browsers connected so the tests are compiled and run
+    // again even if a developer isn't aware of this
+    autoWatchBatchDelay: 100,
+    browserNoActivityTimeout: 60 * 1000 * 10,
     // The directory where the output file lives
     basePath: 'public/test',
     // The file itself
