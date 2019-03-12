@@ -18,15 +18,15 @@ module.exports = function (config) {
     },
     // configure travis-ci; based on this: https://stackoverflow.com/questions/19255976/how-to-make-travis-execute-angular-tests-on-chrome-please-set-env-variable-chr#25661593
     customLaunchers: {
-      ChromeHeadlessTravisCI: {
+      ChromeHeadlessCI: {
         base: 'ChromeHeadless',
-        flags: ['--no-sandbox']
+        flags: ['--no-sandbox', '--headless', '--nogpu']
       }
     }
   }
 
-  if (process.env.TRAVIS) {
-    configuration.browsers = ['ChromeHeadlessTravisCI']
+  if (process.env.TRAVIS || process.env.CI) {
+    configuration.browsers = ['ChromeHeadlessCI']
   }
 
 

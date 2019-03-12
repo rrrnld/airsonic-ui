@@ -1,0 +1,25 @@
+version: 2
+jobs:
+  test:
+    working_directory: ~/repo
+    docker:
+      - image: circleci/openjdk:11-jdk-stretch-node-browsers
+        environment:
+          - CHROME_BIN: "/usr/bin/google-chrome"
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - build_cache-{{ checksum "package.json" }}-{{ checksum "shadow-cljs.edn" }}
+      - run: npm install
+      - run: npm run test
+      - save_cache:
+          paths:
+            - node_modules
+            - ~/.m2
+          key: build_cache-{{ checksum "package.json" }}-{{ checksum "shadow-cljs.edn" }}
+workflows:
+  version: 2
+  test:
+    jobs:
+      - test
