@@ -17,3 +17,19 @@
          (from arr #(-> (str 0 (.toString % 16))
                         (.substr -2)))
          (join "")))))
+
+(defn song []
+  (hash-map :id (rand-int 9999)
+            :coverArt (rand-int 9999)
+            :year (+ 1900 (rand-int 118))
+            :artist (rand-str)
+            :artistId (rand-int 100000)
+            :title (rand-str)
+            :album (rand-str)))
+
+(defn song-queue
+  "Generates a seq of n different songs"
+  [n]
+  (let [r-int (atom 0)]
+    (with-redefs [rand-int #(mod (swap! r-int inc) %1)]
+      (repeatedly n song))))

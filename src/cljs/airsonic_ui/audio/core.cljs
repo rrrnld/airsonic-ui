@@ -6,8 +6,6 @@
             [airsonic-ui.audio.playlist :as playlist]
             [goog.functions :refer [throttle]]))
 
-;; TODO: Manage buffering
-
 (defonce audio (atom nil))
 
 (defn normalize-time-ranges [time-ranges]
@@ -27,7 +25,6 @@
    :volume (.-volume elem)})
 
  ; explanation of these events: https://developer.mozilla.org/en-US/Apps/Fundamentals/Audio_and_video_delivery/Cross-browser_audio_basics
-
 
 (defn attach-listeners! [el]
   (let [emit-audio-update (throttle #(rf/dispatch [:audio/update (->status el)]) 16)]
@@ -56,7 +53,8 @@
  (fn [_]
    (when-let [audio @audio]
      (.pause audio)
-     (set! (.-currentTime audio) 0))))
+     (set! (.-currentTime audio) 0)
+     (set! (.-src audio) ""))))
 
 (rf/reg-fx
  :audio/toggle-play-pause
@@ -102,25 +100,26 @@
 
 (rf/reg-sub :audio/summary summary)
 
-(defn playlist
-  "Lists the complete playlist"
+(defn current-playlist
+  "Lists the complete current-queue"
   [summary _]
-  (:playlist summary))
+  (:current-playlist summary))
 
 (rf/reg-sub
- :audio/playlist
+ :audio/current-playlist
  :<- [:audio/summary]
- playlist)
+ current-playlist)
 
 (defn current-song
   "Gives us information about the currently played song as presented by
   the airsonic api"
   [playlist _]
-  (playlist/peek playlist))
+  (when-not (empty? playlist)
+    (playlist/current-song playlist)))
 
 (rf/reg-sub
  :audio/current-song
- :<- [:audio/playlist]
+ :<- [:audio/current-playlist]
  current-song)
 
 (defn playback-status

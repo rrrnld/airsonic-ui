@@ -218,18 +218,6 @@
   .grow
     width: 100%
 
-// duh
-.song-list
-  .song
-    .duration
-      padding-left: .5rem
-      color: $grey-light
-      font-weight: normal
-
-    &.is-playing
-      background-color: $light !important
-      font-weight: bold
-
 // useful in general to pull elements closer together; bulma es very generous
 // with whitespace
 .section
@@ -302,17 +290,6 @@
         margin-right: 1rem
         margin-bottom: 0
 
-  .collection-info
-    list-style: none
-
-    li
-      display: inline-block
-      margin-left: 0.75rem
-
-      &:first-child
-        margin-left: 0
-
-
   .song-list
     counter-reset: track
 
@@ -326,3 +303,54 @@
         font-weight: normal
         display: inline
         padding-right: 0.375rem
+
+.collection-info
+  list-style: none
+
+  li
+    display: inline-block
+    margin-left: 0.75rem
+
+    &:first-child
+      margin-left: 0
+
+.song-listing-table
+  tr.is-playing
+    background-color: $table-row-active-background-color
+    color: $table-row-active-color
+
+    a, strong, td.song-duration, td.sort-handle span
+       color: currentColor
+
+    span.button, div.dropdown
+      color: $table-color
+
+  td
+    &.is-narrow
+      white-space: nowrap
+
+    &.song-duration
+      text-align: right
+
+    &.sortable-handle
+      -webkit-touch-callout: none
+      user-select: none
+
+  tbody .song-duration
+    color: $grey-light
+
+  tr:hover
+    .button
+
+// drag'n'drop
+.sortable-handle
+  span
+    cursor: grabbing
+    user-select: none
+
+tr.sortable-is-moving.is-playing
+  background-color: $table-row-active-background-color
+  color: $table-row-active-color
+
+  a, strong, td.song-duration, td.sort-handle span
+    color: currentColor

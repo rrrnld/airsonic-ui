@@ -4,7 +4,7 @@
             [airsonic-ui.routes :as routes]
             [airsonic-ui.helpers :as h]
             [airsonic-ui.views.cover :refer [cover]]
-            [airsonic-ui.views.icon :refer [icon]]))
+            [bulma.icon :refer [icon]]))
 
 ;; currently playing / coming next / audio controls...
 
@@ -121,9 +121,8 @@
       {:on-click toggle-volume-slider}
       [icon volume-icon]]]))
 
-(defn playback-mode-controls [playlist]
-  (let [{:keys [repeat-mode playback-mode]} playlist
-        button :p.control>button.button.is-light
+(defn playback-mode-controls [{:keys [repeat-mode playback-mode]}]
+  (let [button :p.control>button.button.is-light
         shuffle-button (h/add-classes button (when (= playback-mode :shuffled) :is-primary))
         repeat-button (h/add-classes button (case repeat-mode
                                               :repeat-single :is-info
@@ -142,7 +141,7 @@
 
 (defn audio-player []
   (let [current-song @(subscribe [:audio/current-song])
-        playlist @(subscribe [:audio/playlist])
+        current-playlist @(subscribe [:audio/current-playlist])
         playback-status @(subscribe [:audio/playback-status])
         is-playing? @(subscribe [:audio/is-playing?])]
     [:nav.audio-player
@@ -153,6 +152,6 @@
         [progress-indicators current-song playback-status]
         [playback-controls is-playing?]
         [volume-controls playback-status]
-        [playback-mode-controls playlist]]
+        [playback-mode-controls current-playlist]]
        ;; not playing anything
        [:p.navbar-item.idle-notification "No audio playing"])]))
