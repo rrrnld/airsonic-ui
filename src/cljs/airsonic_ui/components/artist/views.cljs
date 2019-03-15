@@ -33,7 +33,7 @@
   [{similar-artists :similarArtist}]
   [:div.tags.similar-artists
    (for [{:keys [id name]} similar-artists]
-     ^{:key id} [:a.tag {:href (routes/url-for ::routes/artist.detail {:id id})} name])])
+     ^{:key id} [:a.tag.is-link {:href (routes/url-for ::routes/artist.detail {:id id})} name])])
 
 (defn detail
   "Creates a nice artist page displaying the artist's name, bio (if available and
