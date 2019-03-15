@@ -1,15 +1,8 @@
 (ns airsonic-ui.components.library.views
   (:require [re-frame.core :refer [subscribe]]
+            [bulma.tabs :refer [tabs]]
             [airsonic-ui.routes :as routes :refer [url-for]]
             [airsonic-ui.components.collection.views :as collection]))
-
-(defn tabs [{:keys [items active-item]}]
-  [:div.tabs
-   [:ul (for [[idx [route label]] (map-indexed vector items)]
-          (let [[_ params _] route]
-            ^{:key idx} [:li (when (= params active-item)
-                               {:class "is-active"})
-                         [:a {:href (apply url-for route)} label]]))]])
 
 ;; this variable determines how many pages before the first known page we should list
 (def page-padding 2)
@@ -58,24 +51,31 @@
       (when (< current-page (- num-pages page-padding))
         [:li [pagination-link current-page num-pages (url-fn num-pages)]])]]))
 
-(def tab-items [[[::routes/library {:kind "recent"} nil] "Recently played"]
-                [[::routes/library {:kind "newest"} nil] "Newest additions"]
-                [[::routes/library {:kind "starred"} nil] "Starred"]])
+(defn tab-items [[current-id current-params :as current-route]]
+  (->>
+   [[[::routes/library {:kind "recent"}] "Recently played"]
+    [[::routes/library {:kind "newest"}] "Newest additions"]
+    [[::routes/library {:kind "starred"}] "Starred"]]
+   (map (fn [[[id params :as route] label]]
+          (cond-> {:href (apply routes/url-for route)
+                   :label label}
+            (and (= id current-id)
+                 (= (:kind params) (:kind current-params)))
+            (assoc :active? true))))))
 
 (defn main
   "Renders the pagination and shows a list of all albums with their cover art.
   The first parameter is the route that's passed in, the second one is the
   content that has been fetched for that route."
-  [[_ {:keys [kind]} {:keys [page]
-                      :or {page 1}}]
+  [[_ {:keys [kind]} {:keys [page] :or {page 1}} :as current-route]
    {:keys [scan-status]}]
-  (let [page (int page)
-        library @(subscribe [:library/paginated kind])
+  (let [library @(subscribe [:library/paginated kind])
+        page (int page)
         current-items (get library page)
         url-fn #(url-for ::routes/library {:kind kind} {:page %})
-        pagination [pagination {:current-page page
-                                :items library
-                                :url-fn url-fn}]]
+        pagination-links [pagination {:current-page page
+                                      :items library
+                                      :url-fn url-fn}]]
     [:div
      [:section.hero.is-small>div.hero-body>div.container
       [:h2.title "Your library"]
@@ -83,8 +83,8 @@
         [:p.subtitle.is-5.has-text-grey [:strong (:count scan-status)] " items"]
         (when (:scanning scan-status)
           [:p.subtitle.is-5.has-text-grey "Scanning…"]))]
-     [:section.section>div.container
-      [tabs {:items tab-items :active-item {:kind kind}}]
-      pagination
-      [:section.section [collection/listing current-items]]
-      pagination]]))
+     [:section.section.is-small>div.container
+      [tabs {:items (tab-items current-route)}]]
+     [:section.section.is-tiny>div.container pagination-links]
+     [:section.section.is-tiny>div.container [collection/listing current-items]]
+     [:section.section.is-tiny>div.container pagination-links]]))

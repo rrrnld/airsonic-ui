@@ -232,9 +232,13 @@
 
 // useful in general to pull elements closer together; bulma es very generous
 // with whitespace
-.section.is-small
-    padding-top: 24px
-    padding-bottom: 24px
+.section
+  // $section-padding: 3rem 1.5rem
+  &.is-small
+    padding: 1.5rem 1.5rem
+
+  &.is-tiny
+    padding: 0.75rem 1.5rem
 
 // occurs on many pages at the top to show details
 .hero
