@@ -54,8 +54,9 @@
 (defn tab-items [[current-id current-params :as current-route]]
   (->>
    [[[::routes/library {:kind "recent"}] "Recently played"]
-    [[::routes/library {:kind "newest"}] "Newest additions"]
-    [[::routes/library {:kind "starred"}] "Starred"]]
+    [[::routes/library {:kind "newest"}] "Recently added"]
+    [[::routes/library {:kind "starred"}] "Starred"]
+    [[::routes/artist.overview {:kind "artists"}] "Artists"]]
    (map (fn [[[id params :as route] label]]
           (cond-> {:href (apply routes/url-for route)
                    :label label}
