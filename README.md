@@ -1,4 +1,4 @@
-# Airsonic Web Client [![Build Status](https://travis-ci.org/heyarne/airsonic-ui.svg?branch=master)](https://travis-ci.org/heyarne/airsonic-ui) [![CircleCI](https://circleci.com/gh/heyarne/airsonic-ui.svg?style=svg)](https://circleci.com/gh/heyarne/airsonic-ui)
+# Airsonic Web Client [![Build Status](https://travis-ci.org/heyarne/airsonic-ui.svg?branch=master)](https://travis-ci.org/heyarne/airsonic-ui) [![CircleCI](https://circleci.com/gh/heyarne/airsonic-ui.svg?style=svg)](https://circleci.com/gh/heyarne/airsonic-ui) [![Greenkeeper badge](https://badges.greenkeeper.io/heyarne/airsonic-ui.svg)](https://greenkeeper.io/)
 
 This repository contains an alternative web frontend for [airsonic](https://github.com/airsonic/airsonic). The goal is to eventually be able to fully replace the current web interface.
 
