@@ -36,9 +36,9 @@
     "react-sortable-hoc": "^1.8.3"
   },
   "devDependencies": {
-    "gh-pages": "^1.2.0",
+    "gh-pages": "^2.0.1",
     "karma": "^4.0.1",
-    "karma-chrome-launcher": "^2.2.0",
+    "karma-chrome-launcher": "^3.0.0",
     "karma-cljs-test": "^0.1.0",
     "karma-notify-reporter": "^1.1.0",
     "node-sass": "^4.11.0",
