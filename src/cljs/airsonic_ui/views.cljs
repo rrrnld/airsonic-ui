@@ -60,9 +60,10 @@
     [:nav.navbar.is-fixed-top.is-dark {:role "navigation", :aria-label "search and navigation"}
      ;; user is `nil` when we're not logged in, we can hide the extended navigation
      [:div.navbar-brand
-      [:div.navbar-item>img {:src logo-url}]
-      [:div.navbar-burger.burger {:on-click toggle-navbar-active!}
-       (for [idx (range 3)] ^{:key (str "burger-" idx)} [:span])]]
+      [:div.navbar-item      
+       [:a {:href (url-for ::routes/library)} [:img {:src logo-url}]]
+       [:div.navbar-burger.burger {:on-click toggle-navbar-active!}
+        (for [idx (range 3)] ^{:key (str "burger-" idx)} [:span])]]]
      (when user
        [(if @navbar-active? :div.navbar-menu.is-active :div.navbar-menu)
         [:div.navbar-start
