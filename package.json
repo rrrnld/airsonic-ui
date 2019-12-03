@@ -27,7 +27,7 @@
   "dependencies": {
     "@hugojosefson/color-hash": "^2.0.3",
     "autoprefixer": "^9.5.0",
-    "bulma": "^0.7.4",
+    "bulma": "^0.8.0",
     "create-react-class": "^15.6.3",
     "open-iconic": "^1.1.1",
     "postcss-cli": "^6.1.2",
