@@ -17,36 +17,48 @@
         (when content-pending? [:span.loader])]]]]))
 
 (defmulti breadcrumbs
-  (fn dispatch-on [[route-id] content] route-id))
+  ;; the first parameter is always the current route, the second parameter is
+  ;; whatever the subscriptions return as the current content (e.g. album title)
+  (fn dispatch-on [[route-id] _] route-id))
 
 (defmethod breadcrumbs :default [_ _]
-  [bulma-breadcrumbs "Start"])
+  [bulma-breadcrumbs "Airsonic"])
 
-(def start [(url-for ::routes/library) "Start"])
+(defmethod breadcrumbs ::routes/library [[_ params] _]
+  [bulma-breadcrumbs
+   [(url-for ::routes/library {:kind "recent"}) "Library"]
+   (case (:kind params)
+     "recent" "Recently played"
+     "newest" "Newest additions"
+     "starred" "Starred")])
 
 (defmethod breadcrumbs ::routes/artist.overview [_ _]
-  [bulma-breadcrumbs start "Artists"])
+  [bulma-breadcrumbs
+   [(url-for ::routes/library {:kind "recent"}) "Library"]
+   "Artists"])
 
 (defmethod breadcrumbs ::routes/artist.detail [_ {:keys [artist]}]
-  [bulma-breadcrumbs start
+  [bulma-breadcrumbs
+   [(url-for ::routes/library {:kind "recent"}) "Library"]
    [(url-for ::routes/artist.overview) "Artists"]
    (:name artist)])
 
 (defmethod breadcrumbs ::routes/album.detail [_ {:keys [album]}]
-  [bulma-breadcrumbs start
+  [bulma-breadcrumbs
+   [(url-for ::routes/library {:kind "recent"}) "Library"]
    [(url-for ::routes/artist.overview) "Artists"]
    [(url-for ::routes/artist.detail {:id (:artistId album)}) (:artist album)]
    (:name album)])
 
 (defmethod breadcrumbs ::routes/search [_ _]
-  [bulma-breadcrumbs start "Search"])
+  [bulma-breadcrumbs "Search"])
 
 (defmethod breadcrumbs ::routes/podcast.overview [_ _]
   ;; TODO: Detail view
-  [bulma-breadcrumbs start "Podcasts"])
+  [bulma-breadcrumbs "Podcasts"])
 
 (defmethod breadcrumbs ::routes/current-queue [_ _]
-  [bulma-breadcrumbs start "Current Queue"])
+  [bulma-breadcrumbs "Current Queue"])
 
 (defmethod breadcrumbs ::routes/about [_ _]
-  [bulma-breadcrumbs start "About"])
+  [bulma-breadcrumbs "About"])

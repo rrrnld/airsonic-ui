@@ -60,17 +60,19 @@
     [:nav.navbar.is-fixed-top.is-dark {:role "navigation", :aria-label "search and navigation"}
      ;; user is `nil` when we're not logged in, we can hide the extended navigation
      [:div.navbar-brand
-      [:div.navbar-item      
+      [:div.navbar-item
        [:a {:href (url-for ::routes/library)} [:img {:src logo-url}]]
        [:div.navbar-burger.burger {:on-click toggle-navbar-active!}
-        (for [idx (range 3)] ^{:key (str "burger-" idx)} [:span])]]]
+        [:span]
+        [:span]
+        [:span]]]]
      (when user
        [(if @navbar-active? :div.navbar-menu.is-active :div.navbar-menu)
         [:div.navbar-start
          [:div.navbar-item [search/form]]]
         [:div.navbar-end
          [:a.navbar-item {:href (url-for ::routes/current-queue)
-                          :title "Current queue"} [icon :audio-spectrum]]
+                          :title "Current queue"} [:span.heart-beat [icon :audio-spectrum]]]
          (when stream-role
            [navbar-dropdown "Library"
             [[{:href (url-for ::routes/library {:kind "recent"})} "Recently played"]
@@ -112,7 +114,7 @@
       [breadcrumbs route content]
       (case route-id
         ::routes/library [library/main route content]
-        ::routes/artist.overview [artist/overview content]
+        ::routes/artist.overview [artist/overview route content]
         ::routes/artist.detail [artist/detail content]
         ::routes/album.detail [collection/detail content]
         ::routes/search [search/results content]

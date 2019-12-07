@@ -67,7 +67,7 @@
                 :uri (api/url credentials "getUser" {:username (:u credentials)})
                 :response-format (ajax/json-response-format {:keywords? true})
                 :on-success [:credentials/authentication-response credentials]
-                :on-failure [:api/failed-response]}}) ; <- we don't need endpoint and params here because the response is not cached
+                :on-failure [:api.response/failed]}}) ; <- we don't need endpoint and params here because the response is not cached
 
 (rf/reg-event-fx :credentials/send-authentication-request authentication-request)
 

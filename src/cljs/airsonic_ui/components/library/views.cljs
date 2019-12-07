@@ -55,7 +55,8 @@
   (->>
    [[[::routes/library {:kind "recent"}] "Recently played"]
     [[::routes/library {:kind "newest"}] "Newest additions"]
-    [[::routes/library {:kind "starred"}] "Starred"]]
+    [[::routes/library {:kind "starred"}] "Starred"]
+    [[::routes/artist.overview] "Artists"]]
    (map (fn [[[id params :as route] label]]
           (cond-> {:href (apply routes/url-for route)
                    :label label}
@@ -63,12 +64,17 @@
                  (= (:kind params) (:kind current-params)))
             (assoc :active? true))))))
 
+(defn tab-section [current-route]
+  [:section.section.ui-tab-bar.is-small>div.container
+   [tabs {:items (tab-items current-route)}]])
+
 (defn main
   "Renders the pagination and shows a list of all albums with their cover art.
   The first parameter is the route that's passed in, the second one is the
   content that has been fetched for that route."
   [[_ {:keys [kind]} {:keys [page] :or {page 1}} :as current-route]
    {:keys [scan-status]}]
+  (println "scan-status" scan-status)
   (let [library @(subscribe [:library/paginated kind])
         page (int page)
         current-items (get library page)
@@ -77,14 +83,13 @@
                                       :items library
                                       :url-fn url-fn}]]
     [:div
-     [:section.hero.is-small>div.hero-body>div.container
+     [tab-section current-route]
+     [:section.hero.single-line.is-small>div.hero-body>div.container
       [:h2.title "Your library"]
       (if (:count scan-status)
         [:p.subtitle.is-5.has-text-grey [:strong (:count scan-status)] " items"]
         (when (:scanning scan-status)
           [:p.subtitle.is-5.has-text-grey "Scanning…"]))]
-     [:section.section.is-small>div.container
-      [tabs {:items (tab-items current-route)}]]
      [:section.section.is-tiny>div.container pagination-links]
      [:section.section.is-tiny>div.container [collection/listing current-items]]
      [:section.section.is-tiny>div.container pagination-links]]))

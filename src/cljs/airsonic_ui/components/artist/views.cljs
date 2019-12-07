@@ -1,5 +1,6 @@
 (ns airsonic-ui.components.artist.views
   (:require [airsonic-ui.components.collection.views :as collection]
+            [airsonic-ui.components.library.views :as library]
             [airsonic-ui.routes :as routes]
             [clojure.string :as str]))
 
@@ -68,7 +69,7 @@
 (defn overview
   "Displays the alphabetical listing of all artists along with some additional
   information about the collection"
-  [{:keys [artists]}]
+  [current-route {:keys [artists]}]
   (let [artists (:index artists)
         ;; TODO: Calculations in views should be avoided
         artists-count (count (mapcat :artist artists))
@@ -76,8 +77,9 @@
                          (map :albumCount)
                          (reduce +))]
     [:div
-     [:section.hero.is-small>div.hero-body
+     [library/tab-section current-route]
+     [:section.hero.single-line.is-small>div.hero-body
       [:div.container
        [:h1.title "Artists"]
-       [:p.subtitle.is-5.has-text-grey [:strong artists-count] " artists in your collection with " [:strong album-count] " albums"]]]
+       [:p.subtitle.is-5.has-text-grey [:strong artists-count] " artists  with " [:strong album-count] " albums"]]]
      [:section.section>div.container [alphabetical-listing artists]]]))

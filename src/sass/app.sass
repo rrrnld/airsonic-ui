@@ -228,13 +228,29 @@
   &.is-tiny
     padding: 0.75rem 1.5rem
 
+  // tab bar on top
+  &.ui-tab-bar
+    padding-bottom: 0.75rem
+
 // occurs on many pages at the top to show details
 .hero
   &.is-small + .section
-    padding-top: 0
+    padding: 1.5rem 1.5rem
+
+  &.is-tiny + .section
+    padding: 0.75rem 1.5rem
 
   .media-content
     align-self: center
+
+  // modifies our headlines to be next to each other
+  +tablet
+    &.single-line .container
+      display: flex
+      align-items: baseline
+      .title
+        flex-grow: 1
+        margin-bottom: 0
 
 // floating notifications
 .notifications:not(:empty)
