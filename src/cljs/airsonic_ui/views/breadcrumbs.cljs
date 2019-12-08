@@ -28,8 +28,8 @@
   [bulma-breadcrumbs
    [(url-for ::routes/library {:kind "recent"}) "Library"]
    (case (:kind params)
-     "recent" "Recently played"
-     "newest" "Newest additions"
+     "recent" "Recently Played"
+     "newest" "Newest Additions"
      "starred" "Starred")])
 
 (defmethod breadcrumbs ::routes/artist.overview [_ _]

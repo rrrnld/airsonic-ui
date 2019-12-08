@@ -75,10 +75,10 @@
                           :title "Current queue"} [:span.heart-beat [icon :audio-spectrum]]]
          (when stream-role
            [navbar-dropdown "Library"
-            [[{:href (url-for ::routes/library {:kind "recent"})} "Recently played"]
-             [{:href (url-for ::routes/library {:kind "newest"})} "Newest additions"]
+            [[{:href (url-for ::routes/library {:kind "recent"})} "Recently Played"]
+             [{:href (url-for ::routes/library {:kind "newest"})} "Newest Additions"]
              [{:href (url-for ::routes/library {:kind "starred"})} "Starred"]
-             [{:href (url-for ::routes/artist.overview)} "By artist"]]])
+             [{:href (url-for ::routes/artist.overview)} "Artists"]]])
          (when podcast-role
            #_(let [podcast-url (url-for ::routes/podcast.overview)]
              [navbar-dropdown "Podcast" {:href podcast-url}

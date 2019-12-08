@@ -51,8 +51,8 @@
    (:title song)])
 
 (defn song-actions [song]
-  [dropdown {:items [{:label "Play next" :event [:audio-player/enqueue-next song]}
-                     {:label "Play last" :event [:audio-player/enqueue-last song]}]}])
+  [dropdown {:items [{:label "Play Next" :event [:audio-player/enqueue-next song]}
+                     {:label "Play Last" :event [:audio-player/enqueue-last song]}]}])
 
 (defn default-thead []
   [:thead>tr

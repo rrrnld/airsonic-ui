@@ -29,11 +29,11 @@
 (defn- episode-actions [episode]
   (case (:status episode)
     "completed"
-    [[:td>a {:title "Play next"
+    [[:td>a {:title "Play Next"
              :href "#"
              :on-click (muted-dispatch [:audio-player/enqueue-next episode])}
       [icon :plus]]
-     [:td>a {:title "Play last"
+     [:td>a {:title "Play Last"
              :href "#"
              :on-click (muted-dispatch [:audio-player/enqueue-last episode])}
       [icon :caret-right]]]

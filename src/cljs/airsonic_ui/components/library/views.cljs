@@ -53,8 +53,8 @@
 
 (defn tab-items [[current-id current-params :as current-route]]
   (->>
-   [[[::routes/library {:kind "recent"}] "Recently played"]
-    [[::routes/library {:kind "newest"}] "Newest additions"]
+   [[[::routes/library {:kind "recent"}] "Recently Played"]
+    [[::routes/library {:kind "newest"}] "Newest Additions"]
     [[::routes/library {:kind "starred"}] "Starred"]
     [[::routes/artist.overview] "Artists"]]
    (map (fn [[[id params :as route] label]]
@@ -85,7 +85,7 @@
     [:div
      [tab-section current-route]
      [:section.hero.single-line.is-small>div.hero-body>div.container
-      [:h2.title "Your library"]
+      [:h2.title "Your Library"]
       (if (:count scan-status)
         [:p.subtitle.is-5.has-text-grey [:strong (:count scan-status)] " items"]
         (when (:scanning scan-status)
