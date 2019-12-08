@@ -10,6 +10,17 @@ This repository contains an alternative web frontend for [airsonic](https://gith
 * A currently playing queue with next, previous, repeat and shuffle
 * Information about the current track with the ability to seek
 
+## How Do I Host This Myself?
+
+There are two options:
+
+- You build it yourself by cloning the repository and running `npm run build`
+- You grab a pre-built version from the [gh-pages branch](https://github.com/heyarne/airsonic-ui/tree/gh-pages) (just click the download button)
+
+The files you receive either way should be identical. There's [an article about setting up nginx](https://github.com/heyarne/airsonic-ui/wiki/Self%E2%80%93hosting) in the repository wiki.
+
+If you have any questions please ask them in the [airsonic matrix channel](https://riot.im/app/#/room/#airsonic:matrix.org).
+
 ## Development
 
 The project is written in [ClojureScript](https://clojurescript.org/) and uses [re-frame](https://github.com/Day8/re-frame) for structure and peace of mind. The build tool is [shadow-cljs](https://shadow-cljs.github.io/docs/UsersGuide.html), which offers nice editor integration and interoparibility with the whole JavaScript ecosystem.
