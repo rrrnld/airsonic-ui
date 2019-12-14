@@ -79,8 +79,9 @@ workflows:
             branches:
               ignore:
                 - gh-pages
-      - build
-      - deploy:
+      - build:
           requires:
             - test
+      - deploy:
+          requires:
             - build
