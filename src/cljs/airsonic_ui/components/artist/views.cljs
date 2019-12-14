@@ -32,9 +32,9 @@
 (defn similar-artists
   "Given an artist-info response will return a list of similar artists"
   [{similar-artists :similarArtist}]
-  [:div.tags.similar-artists
+  [:div.tags.are-medium.similar-artists
    (for [{:keys [id name]} similar-artists]
-     ^{:key id} [:a.tag.is-link {:href (routes/url-for ::routes/artist.detail {:id id})} name])])
+     ^{:key id} [:a.tag.is-link.is-light {:href (routes/url-for ::routes/artist.detail {:id id})} name])])
 
 (defn detail
   "Creates a nice artist page displaying the artist's name, bio (if available and
