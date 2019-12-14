@@ -29,9 +29,6 @@ jobs:
     docker:
       - image: circleci/openjdk:11-jdk-stretch-node-browsers
     steps:
-      - add_ssh_keys:
-          fingerprints:
-            - "85:2f:28:0f:b9:45:b8:f1:0f:c2:0a:1c:5e:4d:a2:06"
       - checkout
       - restore_cache:
           keys:
