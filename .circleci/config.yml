@@ -21,6 +21,7 @@ jobs:
       - save_cache:
           paths:
             - node_modules
+            - .shadow-cljs
             - ~/.m2
             - ~/.npm
           key: build_cache-{{ checksum "package.json" }}-{{ checksum "shadow-cljs.edn" }}
@@ -42,6 +43,7 @@ jobs:
       - save_cache:
           paths:
             - node_modules
+            - .shadow-cljs
             - ~/.m2
             - ~/.npm
           key: build_cache-{{ checksum "package.json" }}-{{ checksum "shadow-cljs.edn" }}
