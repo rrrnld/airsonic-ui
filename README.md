@@ -37,9 +37,11 @@ $ npm install
 $ npm run dev
 ```
 
+All other build tasks are defined in the `package.json` (more below).
+
 ### Editor integration
 
-Integrating shadow-cljs with your editor helps tremendously with development. After having run `npm run dev` as described above you can connect to the REPL and get features like in-editor code execution and code completion / documentation lookup. For further information see [this part of the shadow-cljs user guide](https://shadow-cljs.github.io/docs/UsersGuide.html#_editor_integration), which contains instructions for Emacs, Atom, VSCode and other editors. Make sure to open `localhost:8080` in the browser to execute ClojureScript code.
+Integrating shadow-cljs with your editor helps tremendously with development. After having run `npm run dev` as described above you can connect to the REPL and get features like in-editor code execution and code completion / documentation lookup. For further information see [this part of the shadow-cljs user guide](https://shadow-cljs.github.io/docs/UsersGuide.html#_editor_integration). Recommended editors and plugins are Calva for VSCode and CIDER for Emacs (comes with Spacemacs). Make sure to open `localhost:8080` in the browser after starting the `dev:cljs` task to execute ClojureScript code in a live REPL.
 
 ### re-frame-10x
 
