@@ -66,9 +66,11 @@ $ npm test
 # build and optimize the code once for production
 $ npm run build
 
-# runs npm run build and publishes everything via gh-pages
+# publishes everything via gh-pages
 $ npm run deploy
 ```
+
+There is continuous deployment set up on [circleci](https://circleci.com/gh/heyarne/airsonic-ui) that builds and deploys to `gh-pages` after a commit to the `master` branch.
 
 **Note:** If you have a continuous build running and run `npm run build` or `npm run deploy`, it will delete the compiled tests, causing the continuous tests to not run anymore. This can be fixed by running `npm test` again.
 

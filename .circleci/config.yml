@@ -49,6 +49,26 @@ jobs:
           root: /home/circleci/repo/public
           paths:
             - "*"
+  deploy:
+    working_directory: ~/repo
+    docker:
+      - image: circleci/openjdk:11-jdk-stretch-node-browsers
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /home/circleci/repo/public
+      - restore_cache:
+          keys:
+            - build_cache-{{ checksum "package.json" }}-{{ checksum "shadow-cljs.edn" }}
+      - run:
+          name: Install dependencies
+          command: npm install
+      - run:
+          name: Deploy to gh-pages branch
+          command: |
+            git config user.email "build@circleci.com"
+            git config user.name "ci-build"
+            npm run deploy
 
 workflows:
   version: 2
@@ -60,3 +80,7 @@ workflows:
               ignore:
                 - gh-pages
       - build
+      - deploy:
+          requires:
+            - test
+            - build
