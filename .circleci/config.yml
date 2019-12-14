@@ -1,4 +1,5 @@
 version: 2
+
 jobs:
   test:
     working_directory: ~/repo
@@ -11,19 +12,51 @@ jobs:
       - restore_cache:
           keys:
             - build_cache-{{ checksum "package.json" }}-{{ checksum "shadow-cljs.edn" }}
-      - run: npm install
-      - run: npm run test
+      - run:
+          name: Install dependencies
+          command: npm install
+      - run:
+          name: Test
+          command: npm test
       - save_cache:
           paths:
             - node_modules
             - ~/.m2
+            - ~/.npm
           key: build_cache-{{ checksum "package.json" }}-{{ checksum "shadow-cljs.edn" }}
+  build:
+    working_directory: ~/repo
+    docker:
+      - image: circleci/openjdk:11-jdk-stretch-node-browsers
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - build_cache-{{ checksum "package.json" }}-{{ checksum "shadow-cljs.edn" }}
+      - run:
+          name: Install dependencies
+          command: npm install
+      - run: 
+          name: Build SPA
+          command: npm run build
+      - save_cache:
+          paths:
+            - node_modules
+            - ~/.m2
+            - ~/.npm
+          key: build_cache-{{ checksum "package.json" }}-{{ checksum "shadow-cljs.edn" }}
+      - persist_to_workspace:
+          root: /home/circleci/repo/public
+          paths:
+            - "*"
+
 workflows:
   version: 2
-  test:
+  build:
     jobs:
       - test:
           filters:
             branches:
               ignore:
                 - gh-pages
+      - build
