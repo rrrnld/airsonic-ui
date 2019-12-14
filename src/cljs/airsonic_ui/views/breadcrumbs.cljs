@@ -30,7 +30,8 @@
    (case (:kind params)
      "recent" "Recently Played"
      "newest" "Newest Additions"
-     "starred" "Starred")])
+     "starred" "Starred"
+     "…")])
 
 (defmethod breadcrumbs ::routes/artist.overview [_ _]
   [bulma-breadcrumbs
