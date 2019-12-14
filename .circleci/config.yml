@@ -1,3 +1,6 @@
+# Deployment is configured following these instructions:
+# https://circleci.com/blog/deploying-documentation-to-github-pages-with-continuous-integration/
+
 version: 2
 
 jobs:
@@ -85,12 +88,12 @@ workflows:
               ignore:
                 - gh-pages
       - build:
+          requires:
+            - test
           filters:
             branches:
               ignore:
                 - gh-pages
-          requires:
-            - test
       - deploy:
           requires:
             - build

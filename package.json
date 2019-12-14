@@ -10,7 +10,7 @@
     "build": "mkdir -p public; rm -r public/*; run-p copy:* build:*",
     "copy:assets": "cp -R src/assets/* public/",
     "copy:icons": "cp -R node_modules/open-iconic/font/fonts public",
-    "deploy": "gh-pages -d public -m \"Deploying $(git rev-parse --short HEAD)\"",
+    "deploy": "gh-pages -d public -m \"[skip ci] Deploying $(git rev-parse --short HEAD)\"",
     "dev:cljs": "shadow-cljs watch app test",
     "dev:sass": "node-sass -w src/sass/app.sass -o public/app",
     "dev:test": "karma start --reporters notify,progress --auto-watch",
