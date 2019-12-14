@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build:cljs": "shadow-cljs release app",
-    "build:cljs-report": "shadow-cljs run shadow.cljs.build-report app public/build-report.html",
+    "build-extra:cljs-report": "shadow-cljs run shadow.cljs.build-report app public/build-report.html",
     "build:sass": "node-sass --output-style compressed src/sass/app.sass | postcss -o public/app/app.css",
     "build": "mkdir -p public; rm -r public/*; run-p copy:* build:*",
     "copy:assets": "cp -R src/assets/* public/",
