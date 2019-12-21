@@ -1,6 +1,23 @@
+const { execSync } = require('child_process')
+
 module.exports = function (config) {
+
+  let browsers = null;
+  if (process.env.TRAVIS || process.env.CI) {
+    // custom config for continuous integration
+    browsers = ['ChromeHeadlessCI']
+  } else {
+    try {
+      // if Firefox is installed, use that as the test runner
+      execSync('which firefox')
+      browsers = ['FirefoxHeadless']
+    } catch (_) {
+      browsers = ['ChromeHeadless']
+    }
+  }
+
   const configuration = {
-    browsers: ['ChromeHeadless'],
+    browsers: browsers,
     // The tests are sometimes run before the tests were completely written
     // to disc; this is a known problem unfortunately. This is a hack to at
     // least keep the browsers connected so the tests are compiled and run
@@ -15,6 +32,7 @@ module.exports = function (config) {
     plugins: [
       'karma-cljs-test',
       'karma-chrome-launcher',
+      'karma-firefox-launcher',
       'karma-notify-reporter' // reporters are set in package.json
     ],
     colors: true,
@@ -30,11 +48,6 @@ module.exports = function (config) {
       }
     }
   }
-
-  if (process.env.TRAVIS || process.env.CI) {
-    configuration.browsers = ['ChromeHeadlessCI']
-  }
-
 
   config.set(configuration)
 }
