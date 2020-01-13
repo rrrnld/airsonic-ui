@@ -1,4 +1,8 @@
+# Deployment is configured following these instructions:
+# https://circleci.com/blog/deploying-documentation-to-github-pages-with-continuous-integration/
+
 version: 2
+
 jobs:
   test:
     working_directory: ~/repo
@@ -11,19 +15,88 @@ jobs:
       - restore_cache:
           keys:
             - build_cache-{{ checksum "package.json" }}-{{ checksum "shadow-cljs.edn" }}
-      - run: npm install
-      - run: npm run test
+      - run:
+          name: Install dependencies
+          command: npm install
+      - run:
+          name: Test
+          command: npm test
       - save_cache:
           paths:
             - node_modules
+            - .shadow-cljs
             - ~/.m2
+            - ~/.npm
           key: build_cache-{{ checksum "package.json" }}-{{ checksum "shadow-cljs.edn" }}
+  build:
+    working_directory: ~/repo
+    docker:
+      - image: circleci/openjdk:11-jdk-stretch-node-browsers
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - build_cache-{{ checksum "package.json" }}-{{ checksum "shadow-cljs.edn" }}
+      - run:
+          name: Install dependencies
+          command: npm install
+      - run: 
+          name: Build SPA
+          command: npm run build
+      - save_cache:
+          paths:
+            - node_modules
+            - .shadow-cljs
+            - ~/.m2
+            - ~/.npm
+          key: build_cache-{{ checksum "package.json" }}-{{ checksum "shadow-cljs.edn" }}
+      - persist_to_workspace:
+          root: /home/circleci/repo/public
+          paths:
+            - "*"
+  deploy:
+    working_directory: ~/repo
+    docker:
+      - image: circleci/openjdk:11-jdk-stretch-node-browsers
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "85:2f:28:0f:b9:45:b8:f1:0f:c2:0a:1c:5e:4d:a2:06"
+      - checkout
+      - attach_workspace:
+          at: /home/circleci/repo/public
+      - restore_cache:
+          keys:
+            - build_cache-{{ checksum "package.json" }}-{{ checksum "shadow-cljs.edn" }}
+      - run:
+          name: Install dependencies
+          command: npm install
+      - run:
+          name: Deploy to gh-pages branch
+          command: |
+            git config user.email "build@circleci.com"
+            git config user.name "ci-build"
+            npm run deploy
+
 workflows:
   version: 2
-  test:
+  test-build-deploy:
     jobs:
       - test:
           filters:
             branches:
               ignore:
                 - gh-pages
+      - build:
+          requires:
+            - test
+          filters:
+            branches:
+              ignore:
+                - gh-pages
+      - deploy:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master

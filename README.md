@@ -1,8 +1,8 @@
-# Airsonic Web Client [![Build Status](https://travis-ci.org/heyarne/airsonic-ui.svg?branch=master)](https://travis-ci.org/heyarne/airsonic-ui) [![CircleCI](https://circleci.com/gh/heyarne/airsonic-ui.svg?style=svg)](https://circleci.com/gh/heyarne/airsonic-ui) [![Greenkeeper badge](https://badges.greenkeeper.io/heyarne/airsonic-ui.svg)](https://greenkeeper.io/)
+# Airsonic Web Client [![CircleCI](https://circleci.com/gh/heyarne/airsonic-ui.svg?style=svg)](https://circleci.com/gh/heyarne/airsonic-ui) [![Greenkeeper badge](https://badges.greenkeeper.io/heyarne/airsonic-ui.svg)](https://greenkeeper.io/)
 
 This repository contains an alternative web frontend for [airsonic](https://github.com/airsonic/airsonic). The goal is to eventually be able to fully replace the current web interface.
 
-## Implemented so far
+## Implemented So Far
 
 * Login with persisting credentials
 * Browse your library by newest / most recently played / starred
@@ -37,9 +37,11 @@ $ npm install
 $ npm run dev
 ```
 
-### Editor integration
+All other build tasks are defined in the `package.json` (more below).
 
-Integrating shadow-cljs with your editor helps tremendously with development. After having run `npm run dev` as described above you can connect to the REPL and get features like in-editor code execution and code completion / documentation lookup. For further information see [this part of the shadow-cljs user guide](https://shadow-cljs.github.io/docs/UsersGuide.html#_editor_integration), which contains instructions for Emacs, Atom, VSCode and other editors. Make sure to open `localhost:8080` in the browser to execute ClojureScript code.
+### Editor Integration
+
+Integrating shadow-cljs with your editor helps tremendously with development. After having run `npm run dev` as described above you can connect to the REPL and get features like in-editor code execution and code completion / documentation lookup. For further information see [this part of the shadow-cljs user guide](https://shadow-cljs.github.io/docs/UsersGuide.html#_editor_integration). Recommended editors and plugins are Calva for VSCode and CIDER for Emacs (comes with Spacemacs). Make sure to open `localhost:8080` in the browser after starting the `dev:cljs` task to execute ClojureScript code in a live REPL.
 
 ### re-frame-10x
 
@@ -51,7 +53,7 @@ It provides you with tools to inspect the state of the application, undo and rep
 
 ## Tests
 
-This project uses [karma](https://karma-runner.github.io/) for tests. Make sure to have Google Chrome installed, otherwise the watcher will time out.
+This project uses [karma](https://karma-runner.github.io/) for tests. There is a check inside `karma.conf.js` to see whether Firefox is installed (via `which firefox` which probably breaks on Windows 🤷); if that command doesn't fail it will be used as the test runner. Otherwise Chrome will be used. If you have Chromium installed, make sure to set the `CHROME_BIN` environment variable to point to Chromium.
 
 ```
 # run tests once
@@ -66,9 +68,11 @@ $ npm test
 # build and optimize the code once for production
 $ npm run build
 
-# runs npm run build and publishes everything via gh-pages
+# publishes everything via gh-pages
 $ npm run deploy
 ```
+
+There is continuous deployment set up on [circleci](https://circleci.com/gh/heyarne/airsonic-ui) that builds and deploys to `gh-pages` after a commit to the `master` branch.
 
 **Note:** If you have a continuous build running and run `npm run build` or `npm run deploy`, it will delete the compiled tests, causing the continuous tests to not run anymore. This can be fixed by running `npm test` again.
 
