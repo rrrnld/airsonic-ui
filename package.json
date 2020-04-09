@@ -39,7 +39,7 @@
   },
   "devDependencies": {
     "gh-pages": "^2.0.1",
-    "karma": "^4.0.1",
+    "karma": "^5.0.0",
     "karma-chrome-launcher": "^3.0.0",
     "karma-cljs-test": "^0.1.0",
     "karma-firefox-launcher": "^1.2.0",
