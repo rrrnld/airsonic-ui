@@ -30,7 +30,7 @@
     "autoprefixer": "^9.5.0",
     "bulma": "^0.8.0",
     "create-react-class": "^15.6.3",
-    "highlight.js": "9.17.1",
+    "highlight.js": "9.18.1",
     "open-iconic": "^1.1.1",
     "postcss-cli": "^7.0.0",
     "react": "^16.8.6",
@@ -39,16 +39,16 @@
   },
   "devDependencies": {
     "gh-pages": "^2.0.1",
-    "karma": "^4.0.1",
+    "karma": "^5.0.0",
     "karma-chrome-launcher": "^3.0.0",
     "karma-cljs-test": "^0.1.0",
     "karma-firefox-launcher": "^1.2.0",
     "karma-notify-reporter": "^1.1.0",
-    "node-sass": "^4.11.0",
+    "node-sass": "^4.13.1",
     "npm-run-all": "^4.1.5",
     "react-flip-move": "^3.0.3",
     "react-highlight.js": "^1.0.7",
     "sass": "^1.17.3",
-    "shadow-cljs": "^2.8.81"
+    "shadow-cljs": "^2.8.93"
   }
 }
