@@ -30,7 +30,7 @@
     "autoprefixer": "^9.5.0",
     "bulma": "^0.8.0",
     "create-react-class": "^15.6.3",
-    "highlight.js": "9.18.1",
+    "highlight.js": "10.0.1",
     "open-iconic": "^1.1.1",
     "postcss-cli": "^7.0.0",
     "react": "^16.8.6",
