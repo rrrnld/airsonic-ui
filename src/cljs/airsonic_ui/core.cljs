@@ -1,5 +1,5 @@
 (ns airsonic-ui.core
-  (:require [reagent.core :as reagent]
+  (:require [reagent.dom :as rdom]
             [re-frame.core :as rf]
             ;; 3rd party effects / coeffects
             [day8.re-frame.http-fx]
@@ -26,7 +26,7 @@
 
 (defn mount-root []
   (rf/clear-subscription-cache!)
-  (reagent/render [views/main-panel] (.getElementById js/document "app")))
+  (rdom/render [views/main-panel] (.getElementById js/document "app")))
 
 (defn ^:export init []
   (storage/reg-co-fx! :airsonic-ui {:fx :store, :cofx :store})
