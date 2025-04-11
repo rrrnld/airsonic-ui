@@ -44,7 +44,7 @@
 
 (defn- unwrap-response* [response]
   (-> (:subsonic-response response)
-      (dissoc :status :version)
+      (dissoc :status :version :type :serverVersion :openSubsonic)
       vals
       first))
 
